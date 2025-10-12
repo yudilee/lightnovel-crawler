@@ -31,7 +31,7 @@ export const ProfileNameChangeButton: React.FC<{
       });
       messageApi.success('Name updated successfully');
       setEditOpen(false);
-      onChange && onChange();
+      if (onChange) onChange();
     } catch (err) {
       console.error(err);
       messageApi.error(stringifyError(err));

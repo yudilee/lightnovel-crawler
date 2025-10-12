@@ -92,7 +92,7 @@ export const ForgotPasswordPage: React.FC<any> = () => {
                 />
               </Form.Item>
 
-              {Boolean(error) ? (
+              {error ? (
                 <Alert
                   type="warning"
                   showIcon

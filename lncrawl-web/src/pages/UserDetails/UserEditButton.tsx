@@ -53,7 +53,7 @@ export const UserEditButton: React.FC<
       await axios.put(`/api/user/${user.id}`, changes);
       messageApi.success('User updated successfully');
       setEditOpen(false);
-      onChange && onChange();
+      if (onChange) onChange();
     } catch (err) {
       console.error(err);
       messageApi.error(stringifyError(err));
