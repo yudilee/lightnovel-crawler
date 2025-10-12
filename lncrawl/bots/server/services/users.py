@@ -7,18 +7,19 @@ from jose import jwt
 from passlib.context import CryptContext
 from sqlmodel import and_, asc, func, or_, select
 
-from ..context import ServerContext
+from ....context import AppContext
+from ....dao import User, VerifiedEmail
+from ....dao.enums import UserRole, UserTier
 from ..exceptions import AppErrors
 from ..models.pagination import Paginated
 from ..models.user import (CreateRequest, LoginRequest, PasswordUpdateRequest,
-                           UpdateRequest, User, UserRole, UserTier,
-                           VerifiedEmail)
+                           UpdateRequest)
 
 logger = logging.getLogger(__name__)
 
 
 class UserService:
-    def __init__(self, ctx: ServerContext) -> None:
+    def __init__(self, ctx: AppContext) -> None:
         self._ctx = ctx
         self._db = ctx.db
         self._passlib = CryptContext(

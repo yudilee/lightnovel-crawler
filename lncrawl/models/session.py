@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Tuple
 
 from box import Box
 
-from .formats import OutputFormat
+from ..dao.enums import OutputFormat
 
 
 class Session(Box):

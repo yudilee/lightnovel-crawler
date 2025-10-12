@@ -8,7 +8,7 @@ import zipfile
 from pathlib import Path
 from typing import Generator, List
 
-from ..models import OutputFormat
+from ..dao.enums import OutputFormat
 
 logger = logging.getLogger(__name__)
 

@@ -20,7 +20,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
 ]
-description = "Download lightnovels from various online sources and generate output in different formats, e.g. epub, mobi, json, html, text, docx, pdf etc."
+description = "Download lightnovels from various online sources and generate output in different formats, e.g. epub, mobi, json, text, docx, pdf, html etc."
 dynamic = ["version", "dependencies"]
 keywords = ["lightnovel", "crawler", "lncrawl", "novel", "pdf", "epub", "mobi", "scraper"]
 license = {file = "LICENSE"}

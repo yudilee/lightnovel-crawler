@@ -2,15 +2,15 @@ from typing import Any, List
 
 from sqlmodel import and_, desc, func, not_, select
 
-from ..context import ServerContext
+from ....context import AppContext
 from ..exceptions import AppErrors
-from ..models.novel import Artifact, Novel
+from ....dao.novel import Artifact, Novel
 from ..models.pagination import Paginated
 from ..models.user import User, UserRole
 
 
 class NovelService:
-    def __init__(self, ctx: ServerContext) -> None:
+    def __init__(self, ctx: AppContext) -> None:
         self._ctx = ctx
         self._db = ctx.db
 

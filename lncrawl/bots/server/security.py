@@ -4,9 +4,9 @@ from fastapi import Depends, Security
 from fastapi.security import (HTTPAuthorizationCredentials, HTTPBasic,
                               HTTPBasicCredentials, HTTPBearer, SecurityScopes)
 
-from .context import ServerContext
+from ...context import AppContext
 from .exceptions import AppErrors
-from .models.user import LoginRequest, User, UserRole
+from .dao.user import LoginRequest, User, UserRole
 
 basic_auth = HTTPBasic(auto_error=False)
 bearer_auth = HTTPBearer(auto_error=False)
@@ -14,7 +14,7 @@ bearer_auth = HTTPBearer(auto_error=False)
 
 def ensure_user(
     security_scopes: SecurityScopes,
-    ctx: ServerContext = Depends(),
+    ctx: AppContext = Depends(),
     basic: Optional[HTTPBasicCredentials] = Depends(basic_auth),
     bearer: Optional[HTTPAuthorizationCredentials] = Depends(bearer_auth),
 ) -> User:

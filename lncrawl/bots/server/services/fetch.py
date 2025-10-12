@@ -1,12 +1,12 @@
 import httpx
 from bs4 import BeautifulSoup
 
-from ..context import ServerContext
+from ....context import AppContext
 from ..exceptions import AppErrors
 
 
 class FetchService:
-    def __init__(self, ctx: ServerContext) -> None:
+    def __init__(self, ctx: AppContext) -> None:
         self._ctx = ctx
 
     async def website_title(self, url: str):

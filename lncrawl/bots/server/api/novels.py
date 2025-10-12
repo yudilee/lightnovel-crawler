@@ -3,8 +3,9 @@ from typing import List
 from fastapi import APIRouter, Depends, Path, Query, Security
 from fastapi.responses import FileResponse
 
-from ..context import ServerContext
-from ..models.novel import Artifact, Novel, NovelChapterContent, NovelVolume
+from ....context import AppContext
+from ....dao import Artifact, Novel
+from ..models.novel import NovelChapterContent, NovelVolume
 from ..models.pagination import Paginated
 from ..security import ensure_user
 
@@ -15,7 +16,7 @@ router = APIRouter()
 @router.get("s", summary='Returns a list of novels',
             dependencies=[Security(ensure_user)],)
 def list_novels(
-    ctx: ServerContext = Depends(),
+    ctx: AppContext = Depends(),
     search: str = Query(default=''),
     offset: int = Query(default=0),
     limit: int = Query(default=20, le=100),
@@ -32,7 +33,7 @@ def list_novels(
 @router.get("/{novel_id}", summary='Returns a novel')
 def get_novel(
     novel_id: str = Path(),
-    ctx: ServerContext = Depends(),
+    ctx: AppContext = Depends(),
 ) -> Novel:
     return ctx.novels.get(novel_id)
 
@@ -41,7 +42,7 @@ def get_novel(
             dependencies=[Security(ensure_user)])
 def get_novel_artifacts(
     novel_id: str = Path(),
-    ctx: ServerContext = Depends(),
+    ctx: AppContext = Depends(),
 ) -> List[Artifact]:
     return ctx.novels.get_artifacts(novel_id)
 
@@ -49,7 +50,7 @@ def get_novel_artifacts(
 @router.get("/{novel_id}/cover", summary='Returns a novel cover')
 async def get_novel_cover(
     novel_id: str = Path(),
-    ctx: ServerContext = Depends(),
+    ctx: AppContext = Depends(),
 ) -> FileResponse:
     return await ctx.metadata.get_novel_cover(novel_id)
 
@@ -57,7 +58,7 @@ async def get_novel_cover(
 @router.get("/{novel_id}/toc", summary='Gets table of contents')
 async def get_novel_toc(
     novel_id: str = Path(),
-    ctx: ServerContext = Depends(),
+    ctx: AppContext = Depends(),
 ) -> List[NovelVolume]:
     return ctx.metadata.get_novel_toc(novel_id)
 
@@ -66,6 +67,6 @@ async def get_novel_toc(
 async def get_chapter_json(
     novel_id: str = Path(),
     hash: str = Path(),
-    ctx: ServerContext = Depends(),
+    ctx: AppContext = Depends(),
 ) -> NovelChapterContent:
     return ctx.metadata.get_novel_chapter_content(novel_id, hash)

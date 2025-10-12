@@ -1,24 +1,23 @@
-import logging
-import shutil
-import os
-from threading import Event
-
+from ....dao.novel import Artifact, Novel
+from ....dao.job import Job, RunState
+from ....context import AppContext
 from sqlmodel import asc, select, true, and_
+from threading import Event
+import os
+import shutil
+import logging
+from ....utils.time_utils import current_timestamp
+from ....utils.file_tools import folder_size, format_size
 
-from ..context import ServerContext
-from ..models.job import Job, RunState
-from ..models.novel import Artifact, Novel
-from ..utils.file_tools import folder_size, format_size
-from ..utils.time_utils import current_timestamp
 
 logger = logging.getLogger(__name__)
 
 
 def microtask(signal=Event()) -> None:
-    ctx = ServerContext()
+    ctx = AppContext()
     sess = ctx.db.session()
     output_folder = ctx.config.app.output_path
-    size_limit = ctx.config.app.disk_size_limit
+    size_limit = ctx.config.server.disk_size_limit
     cutoff = current_timestamp() - 5 * 24 * 3600 * 1000  # 5 days
 
     logger.info("=== Cleanup begin ===")

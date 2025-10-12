@@ -17,6 +17,7 @@ class AppErrors:
     unauthorized = AppError(401, 'Unauthorized')
     server_error = AppError(500, 'Internal Server Error')
 
+    invalid_url = AppError(422, "Invalid URL")
     sort_column_is_none = AppError(422, "No such field to sort by")
 
     no_such_user = AppError(404, "No such user")

@@ -6,8 +6,8 @@ from typing import Optional
 import lxml.etree
 import lxml.html
 
-from ..context import ServerContext
-from ..emails import otp_template, job_template, repass_template
+from ....context import AppContext
+from ..emails import job_template, otp_template, repass_template
 from ..exceptions import AppErrors
 from ..models.job import JobDetail, RunState
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class MailService:
-    def __init__(self, ctx: ServerContext) -> None:
+    def __init__(self, ctx: AppContext) -> None:
         self._ctx = ctx
         self._db = ctx.db
         self.server: Optional[SMTP] = None

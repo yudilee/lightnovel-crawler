@@ -1,10 +1,10 @@
+from ..security import ensure_user
 from fastapi import APIRouter, Body, Depends, Path, Query, Security
 
-from ..context import ServerContext
+from ....context import AppContext
 from ..exceptions import AppErrors
 from ..models.pagination import Paginated
 from ..models.user import CreateRequest, UpdateRequest, User
-from ..security import ensure_user
 
 # The root router
 router = APIRouter()
@@ -12,7 +12,7 @@ router = APIRouter()
 
 @router.get('s', summary='Get list of users')
 def list_users(
-    ctx: ServerContext = Depends(),
+    ctx: AppContext = Depends(),
     search: str = Query(default=''),
     offset: int = Query(default=0),
     limit: int = Query(default=20, le=100),
@@ -22,7 +22,7 @@ def list_users(
 
 @router.post('', summary='Create an user')
 def create_user(
-    ctx: ServerContext = Depends(),
+    ctx: AppContext = Depends(),
     body: CreateRequest = Body(
         default=...,
         description='The signup request',
@@ -33,7 +33,7 @@ def create_user(
 
 @router.get('/{user_id}', summary='Get the user')
 def get_user(
-    ctx: ServerContext = Depends(),
+    ctx: AppContext = Depends(),
     user_id: str = Path(),
 ) -> User:
     return ctx.users.get(user_id)
@@ -41,7 +41,7 @@ def get_user(
 
 @router.put('/{user_id}', summary='Update the user')
 def update_user(
-    ctx: ServerContext = Depends(),
+    ctx: AppContext = Depends(),
     user: User = Security(ensure_user),
     body: UpdateRequest = Body(
         default=...,
@@ -58,7 +58,7 @@ def update_user(
 @router.delete('/{user_id}', summary='Delete the user')
 def delete_user(
     user: User = Security(ensure_user),
-    ctx: ServerContext = Depends(),
+    ctx: AppContext = Depends(),
     user_id: str = Path(),
 ) -> bool:
     if user.id == user_id:

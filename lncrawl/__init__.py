@@ -1,20 +1,15 @@
 #!/usr/bin/env python3
-from __future__ import annotations
-
-import multiprocessing
-
 
 def main():
-    multiprocessing.freeze_support()
-
+    # For executable bundles
     try:
-        from dotenv import load_dotenv
-        load_dotenv()
+        import multiprocessing
+        multiprocessing.freeze_support()
     except Exception:
         pass
 
-    from .core import start_app
-    start_app()
+    from .app import app
+    app()
 
 
 if __name__ == "__main__":

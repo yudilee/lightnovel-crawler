@@ -8,14 +8,14 @@ from fastapi.responses import FileResponse
 
 from lncrawl.assets.version import get_version
 
-from .context import ServerContext
+from ...context import AppContext
 
 app = FastAPI(
     version=get_version(),
     title="Lightnovel Crawler",
     description="Download novels from online sources and generate e-books",
-    on_shutdown=[ServerContext().cleanup],
-    on_startup=[ServerContext().prepare],
+    on_shutdown=[AppContext().cleanup],
+    on_startup=[AppContext().prepare],
 )
 
 app.add_middleware(

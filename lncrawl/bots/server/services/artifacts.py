@@ -3,16 +3,16 @@ from typing import Optional
 
 from sqlmodel import desc, func, select
 
-from ..context import ServerContext
+from ....context import AppContext
+from ....dao import Artifact
+from ....dao.enums import UserRole
 from ..exceptions import AppErrors
-from ..models.enums import UserRole
-from ..models.novel import Artifact
 from ..models.pagination import Paginated
 from ..models.user import User
 
 
 class ArtifactService:
-    def __init__(self, ctx: ServerContext) -> None:
+    def __init__(self, ctx: AppContext) -> None:
         self._ctx = ctx
         self._db = ctx.db
 

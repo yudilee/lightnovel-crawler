@@ -17,12 +17,12 @@ from lncrawl.core.download_chapters import get_chapter_file
 from lncrawl.core.sources import crawler_list, rejected_sources
 from lncrawl.models import Chapter, MetaInfo
 
-from ..context import ServerContext
+from ....context import AppContext
+from ....dao import Novel
+from ....utils.algo import binary_search
 from ..exceptions import AppError, AppErrors
 from ..models.meta import SupportedSource
-from ..models.novel import (Novel, NovelChapter, NovelChapterContent,
-                            NovelVolume)
-from ..utils.algo import binary_search
+from ..models.novel import NovelChapter, NovelChapterContent, NovelVolume
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ router = APIRouter()
 
 
 class MetadataService:
-    def __init__(self, ctx: ServerContext) -> None:
+    def __init__(self, ctx: AppContext) -> None:
         self.ctx = ctx
 
     @lru_cache()

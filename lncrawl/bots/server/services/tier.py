@@ -1,7 +1,4 @@
-from lncrawl.models import OutputFormat
-
-from ..models.job import JobPriority
-from ..models.user import UserTier
+from ....dao.enums import JobPriority, OutputFormat, UserTier
 
 ##
 # For Job creation

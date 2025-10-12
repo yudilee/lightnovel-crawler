@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+from functools import cached_property
 
 if not __package__ and not hasattr(sys, "frozen"):
     import os.path
@@ -11,3 +12,9 @@ if not __package__ and not hasattr(sys, "frozen"):
 if __name__ == "__main__":
     from lncrawl import main
     main()
+
+
+class CrawlerConfig:
+    @cached_property
+    def selenium_grid(self) -> str:
+        return 'true'

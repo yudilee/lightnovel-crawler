@@ -3,7 +3,7 @@ import os
 import subprocess
 from typing import Generator
 
-from lncrawl.models import OutputFormat
+from ..dao.enums import OutputFormat
 
 logger = logging.getLogger(__name__)
 EBOOK_CONVERT = "ebook-convert"

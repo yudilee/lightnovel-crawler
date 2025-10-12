@@ -9,20 +9,18 @@ from lncrawl.core.app import App
 from lncrawl.core.download_chapters import restore_chapter_body
 from lncrawl.core.metadata import (get_metadata_list, load_metadata,
                                    save_metadata)
-from lncrawl.models import OutputFormat
 
-from ..context import ServerContext
-from ..models.enums import JobStatus, RunState
-from ..models.job import Job
-from ..models.novel import Artifact, Novel
+from ....context import AppContext
+from ....dao import Artifact, Job, Novel
+from ....dao.enums import JobStatus, OutputFormat, RunState
+from ....utils.time_utils import current_timestamp
 from ..models.user import User
-from ..utils.time_utils import current_timestamp
 from .tier import ENABLED_FORMATS, SLOT_TIMEOUT_IN_SECOND
 
 
 def microtask(job_id: str, signal=Event()) -> None:
     app = App()
-    ctx = ServerContext()
+    ctx = AppContext()
     sess = ctx.db.session()
     job = sess.get_one(Job, job_id)
     logger = logging.getLogger(f'Job:{job_id}')
@@ -125,7 +123,7 @@ def microtask(job_id: str, signal=Event()) -> None:
         # Restore session
         #
         logger.info('Restoring session')
-        if novel.orphan or not novel.title:
+        if not novel.crawled or not novel.title:
             job.error = 'Failed to fetch novel'
             job.status = JobStatus.COMPLETED
             job.run_state = RunState.FAILED
@@ -211,6 +209,7 @@ def microtask(job_id: str, signal=Event()) -> None:
                 artifact = Artifact(
                     format=fmt,
                     job_id=job.id,
+                    user_id=user.id,
                     novel_id=novel.id,
                     output_file=archive_file,
                 )

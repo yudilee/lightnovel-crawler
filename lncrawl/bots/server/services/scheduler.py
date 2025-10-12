@@ -5,9 +5,11 @@ from typing import Deque, Dict, Optional
 
 from sqlmodel import asc, desc, or_, select
 
-from ..context import ServerContext
-from ..models.job import Job, JobRunnerHistoryItem, JobStatus, RunState
-from ..utils.time_utils import current_timestamp
+from ....context import AppContext
+from ....dao import Job
+from ....dao.enums import JobStatus, RunState
+from ....utils.time_utils import current_timestamp
+from ..models.job import JobRunnerHistoryItem
 from .cleaner import microtask as cleaner_task
 from .runner import microtask
 
@@ -17,7 +19,7 @@ CONCURRENCY = 2
 
 
 class JobScheduler:
-    def __init__(self, ctx: ServerContext) -> None:
+    def __init__(self, ctx: AppContext) -> None:
         self.ctx = ctx
         self.db = ctx.db
         self.start_ts: int = 0
@@ -55,7 +57,7 @@ class JobScheduler:
     def run(self, signal=Event()):
         logger.info("Scheduler started")
         pending_restart = False
-        cfg = self.ctx.config.app
+        cfg = self.ctx.config.server
         reset_interval = cfg.scheduler_reset_interval * 1000
         try:
             while not signal.is_set():
@@ -154,7 +156,7 @@ class JobScheduler:
             return
 
         # skip if cleaner has run recently
-        timeout = self.ctx.config.app.cleaner_cooldown * 1000
+        timeout = self.ctx.config.server.cleaner_cooldown * 1000
         if current_timestamp() - self.last_cleanup_ts < timeout:
             return
         self.last_cleanup_ts = current_timestamp()

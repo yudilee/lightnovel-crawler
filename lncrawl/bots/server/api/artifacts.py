@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, Path, Query, Security
 from fastapi.responses import FileResponse
 
 from ..security import ensure_user
-from ..context import ServerContext
+from ....context import AppContext
 from ..exceptions import AppErrors
-from ..models.job import Artifact
+from ....dao.job import Artifact
 from ..models.pagination import Paginated
 
 # The root router
@@ -18,7 +18,7 @@ router = APIRouter()
 @router.get("s", summary='Returns a list of artifacts',
             dependencies=[Security(ensure_user)],)
 def list_artifacts(
-    ctx: ServerContext = Depends(),
+    ctx: AppContext = Depends(),
     offset: int = Query(default=0),
     limit: int = Query(default=20, le=100),
     novel_id: Optional[str] = Query(default=None),
@@ -34,7 +34,7 @@ def list_artifacts(
             dependencies=[Security(ensure_user)],)
 def get_novel(
     artifact_id: str = Path(),
-    ctx: ServerContext = Depends(),
+    ctx: AppContext = Depends(),
 ) -> Artifact:
     return ctx.artifacts.get(artifact_id)
 
@@ -42,7 +42,7 @@ def get_novel(
 @router.get("/{artifact_id}/download", summary='Download artifact file')
 def get_novel_artifacts(
     artifact_id: str = Path(),
-    ctx: ServerContext = Depends(),
+    ctx: AppContext = Depends(),
 ) -> FileResponse:
     artifact = ctx.artifacts.get(artifact_id)
     file_path = artifact.output_file

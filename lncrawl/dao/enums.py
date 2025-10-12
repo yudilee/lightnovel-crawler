@@ -1,7 +1,5 @@
 from enum import Enum, IntEnum
 
-from lncrawl.models import OutputFormat
-
 __all__ = [
     'OutputFormat',
     'UserRole',
@@ -42,3 +40,26 @@ class RunState(IntEnum):
     FETCHING_NOVEL = 3
     FETCHING_CONTENT = 4
     CREATING_ARTIFACTS = 5
+
+
+class OutputFormat(str, Enum):
+    json = "json"
+    epub = "epub"
+    web = "web"
+    text = "text"
+    pdf = "pdf"
+    mobi = "mobi"
+    docx = "docx"
+    rtf = "rtf"
+    fb2 = "fb2"
+    azw3 = "azw3"
+    lit = "lit"
+    lrf = "lrf"
+    oeb = "oeb"
+    pdb = "pdb"
+    rb = "rb"
+    snb = "snb"
+    tcr = "tcr"
+
+    def __str__(self) -> str:
+        return self.value
