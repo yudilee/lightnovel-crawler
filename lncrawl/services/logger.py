@@ -3,14 +3,12 @@ from typing import Union
 
 from rich.logging import RichHandler
 
-from ..context import AppContext
-
 logger = logging.getLogger(__name__)
 
 
 class Logger:
-    def __init__(self, ctx: AppContext) -> None:
-        self._ctx = ctx
+    def __init__(self) -> None:
+        pass
 
     def setup(self, level: Union[int, str]) -> None:
         if isinstance(level, int):

@@ -4,7 +4,6 @@ import importlib.util
 import io
 import json
 import logging
-import os
 import re
 import time
 from concurrent.futures import Future
@@ -17,6 +16,8 @@ from packaging import version
 
 from ..assets.languages import language_codes
 from ..assets.version import get_version
+from ..config import APP_DIR, ROOT_DIR
+from ..context import ctx
 from ..utils.platforms import Platform
 from .arguments import get_args
 from .crawler import Crawler
@@ -83,19 +84,13 @@ def __download_data(url: str) -> bytes:
 # Checking Updates
 # --------------------------------------------------------------------------- #
 
-
 __index_fetch_internval_in_seconds = 30 * 60
-__github_index_zip_url = "https://raw.githubusercontent.com/dipu-bd/lightnovel-crawler/dev/sources/_index.zip"
 
-__user_data_path = Path("~").expanduser() / ".lncrawl"
-__local_data_path = Path(__file__).parent.parent.absolute()
-if not (__local_data_path / "sources").is_dir():
-    __local_data_path = __local_data_path.parent
+__local_root_path = ROOT_DIR
+if not (__local_root_path / "sources").is_dir():
+    __local_root_path = ROOT_DIR.parent
 
-__is_dev_mode = (
-    os.getenv("LNCRAWL_MODE") == "dev"
-    or (__local_data_path / ".git" / "HEAD").exists()
-)
+__is_dev_mode = (ROOT_DIR.parent / ".git" / "HEAD").exists()
 
 __current_index = {}
 __latest_index = {}
@@ -103,9 +98,9 @@ __latest_index = {}
 
 def __load_current_index():
     try:
-        index_file = __user_data_path / "sources" / "_index.json"
+        index_file = APP_DIR / "sources" / "_index.json"
         if __is_dev_mode or not index_file.is_file():
-            index_file = __local_data_path / "sources" / "_index.json"
+            index_file = __local_root_path / "sources" / "_index.json"
 
         if not index_file.is_file():
             raise LNException("Invalid index file")
@@ -119,7 +114,7 @@ def __load_current_index():
 
 
 def __save_current_index():
-    index_file = __user_data_path / "sources" / "_index.json"
+    index_file = APP_DIR / "sources" / "_index.json"
     index_file.parent.mkdir(parents=True, exist_ok=True)
 
     logger.debug("Saving current index data to %s", index_file)
@@ -131,7 +126,7 @@ def __load_latest_index():
     global __latest_index
     global __current_index
     try:
-        compressed = __download_data(__github_index_zip_url)
+        compressed = __download_data(ctx.config.crawler.index_file_download_url)
         with gzip.GzipFile(fileobj=io.BytesIO(compressed), mode='rb') as fp:
             data = fp.read()
 
@@ -173,7 +168,7 @@ def __check_updates():
 
 def __save_source_data(source_id: str, data: bytes):
     latest = __latest_index["crawlers"][source_id]
-    dst_file = __user_data_path / str(latest["file_path"])
+    dst_file = APP_DIR / str(latest["file_path"])
     dst_dir = dst_file.parent
     temp_file = dst_dir / ("." + dst_file.name)
 
@@ -204,8 +199,8 @@ def __download_sources():
         current = __current_index["crawlers"].get(sid)
         has_new_version = not current or current["version"] < latest["version"]
         __current_index["crawlers"][sid] = latest
-        user_file = (__user_data_path / str(latest["file_path"])).is_file()
-        local_file = (__local_data_path / str(latest["file_path"])).is_file()
+        user_file = (APP_DIR / str(latest["file_path"])).is_file()
+        local_file = (__local_root_path / str(latest["file_path"])).is_file()
         if has_new_version or not (user_file or local_file):
             future = __executor.submit_task(__download_data, latest["url"])
             futures[sid] = future
@@ -364,7 +359,7 @@ def __add_crawlers_from_path(path: Path, no_cache=False):
 
 def __load_crawlers():
     for _, current in __current_index["crawlers"].items():
-        source_file = __user_data_path / str(current["file_path"])
+        source_file = APP_DIR / str(current["file_path"])
         if source_file.is_file():
             __add_crawlers_from_path(source_file)
 
@@ -372,9 +367,6 @@ def __load_crawlers():
 # --------------------------------------------------------------------------- #
 # Public methods
 # --------------------------------------------------------------------------- #
-sources_path = (__local_data_path / "sources").absolute()
-
-
 def load_sources():
     __load_current_index()
     if not __is_dev_mode:
@@ -383,7 +375,7 @@ def load_sources():
         __save_current_index()
 
     __load_rejected_sources()
-    __add_crawlers_from_path(__local_data_path / "sources")
+    __add_crawlers_from_path(__local_root_path / "sources")
 
     if not __is_dev_mode:
         __load_crawlers()

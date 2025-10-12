@@ -1,5 +1,6 @@
 # app requirements
 typer[all]
+httpx[http2,brotli,zstd]
 ascii
 regex
 packaging

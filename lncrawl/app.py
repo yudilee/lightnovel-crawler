@@ -62,6 +62,7 @@ def main(
 ):
     # set context object
     context.obj = ctx
+    context.call_on_close(ctx.cleanup)
 
     # setup logger
     ctx.logger.setup(log_level)
@@ -71,6 +72,7 @@ def main(
 
     # bootstrap database
     ctx.db.bootstrap()
+    ctx.sources.prepare()
 
     # show help if no args
     if context.invoked_subcommand is None:

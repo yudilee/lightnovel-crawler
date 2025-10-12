@@ -14,6 +14,8 @@ class AppContext:
     def cleanup(self):
         global _cache
         _cache = None
+        self.db.close()
+        self.sources.cleanup()
 
     @cached_property
     def config(self):
@@ -23,12 +25,17 @@ class AppContext:
     @cached_property
     def logger(self):
         from .services.logger import Logger
-        return Logger(self)
+        return Logger()
 
     @cached_property
     def db(self):
         from .services.db import DB
-        return DB(self)
+        return DB()
+
+    @cached_property
+    def sources(self):
+        from .services.sources.service import Sources
+        return Sources()
 
     @cached_property
     def users(self):

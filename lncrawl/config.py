@@ -156,10 +156,11 @@ class AppConfig(_Section):
     def output_path(self, path: Optional[str]) -> None:
         self._set("output_path", path)
 
-
 # ------------------------------------------------------------------ #
 #                          Database Section                          #
 # ------------------------------------------------------------------ #
+
+
 class DatabaseConfig(_Section):
     section = "database"
 
@@ -204,6 +205,22 @@ class CrawlerConfig(_Section):
     @selenium_grid.setter
     def selenium_grid(self, url: Optional[str]) -> None:
         self._set("selenium_grid", url)
+
+    @cached_property
+    def local_index_file(self) -> Path:
+        for dir in [ROOT_DIR, ROOT_DIR.parent]:
+            file = dir / "sources" / "_index.json"
+            if file.is_file():
+                return file
+        raise ValueError('No local index file')
+
+    @cached_property
+    def user_index_file(self) -> Path:
+        return APP_DIR / "sources" / "_index.json"
+
+    @property
+    def index_file_download_url(self) -> str:
+        return "https://raw.githubusercontent.com/dipu-bd/lightnovel-crawler/dev/sources/_index.zip"
 
 
 # ------------------------------------------------------------------ #

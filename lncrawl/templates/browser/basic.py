@@ -7,15 +7,15 @@ from typing import Generator, List, Optional
 from PIL import Image
 
 from ...core.browser import Browser, By
-from ...core.crawler import Crawler
 from ...core.exeptions import FallbackToBrowser, ScraperErrorGroup
 from ...models import Chapter
 from ...models.search_result import SearchResult
+from .._base import CrawlerTemplate
 
 logger = logging.getLogger(__name__)
 
 
-class BasicBrowserTemplate(Crawler):
+class BasicBrowserTemplate(CrawlerTemplate):
     """Attempts to crawl using cloudscraper first, if failed use the browser."""
     can_use_browser = True
 

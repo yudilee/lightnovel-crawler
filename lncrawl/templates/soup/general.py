@@ -1,17 +1,17 @@
 import logging
 from abc import abstractmethod
-from typing import Generator, Union, Optional
+from typing import Generator, Optional, Union
 
 from bs4 import BeautifulSoup, Tag
 
-from ...core.crawler import Crawler
 from ...core.exeptions import LNException
 from ...models import Chapter, Volume
+from .._base import CrawlerTemplate
 
 logger = logging.getLogger(__name__)
 
 
-class GeneralSoupTemplate(Crawler):
+class GeneralSoupTemplate(CrawlerTemplate):
     def read_novel_info(self) -> None:
         soup = self.get_novel_soup()
 

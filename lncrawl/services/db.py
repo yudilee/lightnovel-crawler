@@ -4,14 +4,14 @@ from typing import Mapping, Optional, Sequence
 from sqlalchemy import inspect
 from sqlmodel import Session, create_engine
 
-from ..context import AppContext
+from ..context import ctx
 from ..dao import Migration, tables
 
 logger = logging.getLogger(__name__)
 
 
 class DB:
-    def __init__(self, ctx: AppContext) -> None:
+    def __init__(self) -> None:
         self.engine = create_engine(
             ctx.config.db.url,
             echo=ctx.logger.is_debug,
