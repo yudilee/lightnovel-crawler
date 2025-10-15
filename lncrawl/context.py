@@ -1,7 +1,11 @@
+import asyncio
+import logging
 from functools import cached_property
 from typing import Optional
 
 _cache: Optional['AppContext'] = None
+
+logger = logging.getLogger(__name__)
 
 
 class AppContext:
@@ -10,6 +14,12 @@ class AppContext:
         if _cache is None:
             _cache = super().__new__(cls)
         return _cache
+
+    async def prepare(self):
+        await asyncio.gather(
+            self.db.bootstrap(),
+            self.sources.prepare()
+        )
 
     def cleanup(self):
         global _cache

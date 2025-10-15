@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
@@ -11,7 +11,7 @@ def current_timestamp():
     return round(1000 * datetime.now().timestamp())
 
 
-def as_unix_time(time: Any) -> int | None:
+def as_unix_time(time: Any) -> Optional[int]:
     try:
         if isinstance(time, int):
             return time

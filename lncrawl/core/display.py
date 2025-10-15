@@ -6,7 +6,7 @@ from typing import List
 from colorama import Fore, Style
 from questionary import Choice
 
-from ..assets.chars import Chars
+from ..assets.icons import Icons
 from ..models import CombinedSearchResult, SearchResult
 from ..models.meta import MetaInfo
 from ..utils.platforms import Platform
@@ -18,7 +18,6 @@ try:
     row, _ = os.get_terminal_size()
     if row < LINE_SIZE:
         LINE_SIZE = row
-
 except Exception:
     pass
 
@@ -33,7 +32,7 @@ def description():
     else:
         from ..assets.version import get_version
 
-        title = Chars.BOOK + " Lightnovel Crawler v" + get_version()
+        title = Icons.LEDGER + " Lightnovel Crawler v" + get_version()
         padding = " " * ((LINE_SIZE - len(title)) // 2)
         print(Fore.YELLOW, padding + title, Fore.RESET)
         desc = "https://github.com/dipu-bd/lightnovel-crawler"
@@ -51,7 +50,7 @@ def epilog():
     #       'https://discord.gg/7A5Hktx', Fore.RESET)
 
     print(
-        " " + Chars.LINK,
+        " " + Icons.LINK,
         Fore.CYAN,
         "https://github.com/dipu-bd/lightnovel-crawler/issues",
         Fore.RESET,
@@ -61,7 +60,7 @@ def epilog():
 
 
 def debug_mode(level):
-    text = Fore.RED + " " + Chars.SOUND + " "
+    text = Fore.RED + " " + Icons.SOUND + " "
     text += "LOG LEVEL: %s" % level
     text += Fore.RESET
 
@@ -72,7 +71,7 @@ def debug_mode(level):
 
 
 def input_suppression():
-    text = Fore.RED + " " + Chars.ERROR + " "
+    text = Fore.RED + " " + Icons.ERROR + " "
     text += "Input is suppressed"
     text += Fore.RESET
 
@@ -82,7 +81,7 @@ def input_suppression():
 
 def cancel_method():
     print()
-    print(Chars.RIGHT_ARROW, "Press", Fore.MAGENTA, "Ctrl + C", Fore.RESET, "to exit")
+    print(Icons.RIGHT_ARROW, "Press", Fore.MAGENTA, "Ctrl + C", Fore.RESET, "to exit")
     print()
 
 
@@ -90,7 +89,7 @@ def error_message(ex_type, message, tb):
     from ..core.exeptions import LNException
     print()
     tb_summary = "".join(traceback.format_tb(tb)[-4:]).strip()
-    print(Fore.RED, Chars.ERROR, "Error:", message, Fore.RESET)
+    print(Fore.RED, Icons.ERROR, "Error:", message, Fore.RESET)
     if tb_summary and ex_type not in [LNException, KeyboardInterrupt]:
         print(Style.DIM + str(ex_type) + Style.RESET_ALL)
         print(Style.DIM + str(tb_summary) + Style.RESET_ALL)
@@ -100,7 +99,7 @@ def error_message(ex_type, message, tb):
 
 def app_complete():
     print(
-        Style.BRIGHT + Fore.YELLOW + Chars.SPARKLE,
+        Style.BRIGHT + Fore.YELLOW + Icons.SPARKLE,
         "Task completed",
         Fore.RESET,
         Style.RESET_ALL,
@@ -111,7 +110,7 @@ def app_complete():
 def new_version_news(latest):
     print(
         "",
-        Chars.PARTY + Style.BRIGHT + Fore.CYAN,
+        Icons.PACKAGE + Style.BRIGHT + Fore.CYAN,
         "VERSION",
         Fore.RED + latest + Fore.CYAN,
         "IS NOW AVAILABLE!",
@@ -120,7 +119,7 @@ def new_version_news(latest):
 
     print(
         " ",
-        Chars.RIGHT_ARROW,
+        Icons.RIGHT_ARROW,
         Style.DIM + "Upgrade using",
         Fore.YELLOW + "pip install -U lightnovel-crawler",
         Style.RESET_ALL,
@@ -136,23 +135,23 @@ def url_supported_list():
     print(f"List of supported sources in {len(crawlers)} crawlers:")
     for crawler in sorted(crawlers, key=lambda x: x.__name__):
         crawler_name = crawler.__name__.split(".")[-1]
-        crawler_path = getattr(crawler, "file_path", crawler.__module__)
-        print(Fore.LIGHTGREEN_EX + Chars.RIGHT_ARROW, crawler_name + Fore.RESET, end="")
+        crawler_path = getattr(crawler, "__file__", crawler.__module__)
+        print(Fore.LIGHTGREEN_EX + Icons.RIGHT_ARROW, crawler_name + Fore.RESET, end="")
         print(Style.DIM, "(" + crawler_path + ")", Style.RESET_ALL)
         for url in crawler.base_url:
-            print("    " + Fore.CYAN + Chars.LINK, url + Fore.RESET)
+            print("    " + Fore.CYAN + Icons.LINK, url + Fore.RESET)
 
 
 def url_not_recognized():
     print()
     print(
-        Fore.RED, Chars.ERROR, "Sorry! I do not recognize this website yet.", Fore.RESET
+        Fore.RED, Icons.ERROR, "Sorry! I do not recognize this website yet.", Fore.RESET
     )
     print()
     print("Find the list of supported/rejected sources here:")
     print(
         Fore.CYAN,
-        Chars.LINK,
+        Icons.LINK,
         "https://github.com/dipu-bd/lightnovel-crawler#supported-sources",
         Fore.RESET,
     )
@@ -166,7 +165,7 @@ def guessed_url_for_novelupdates():
     print()
     print(
         Fore.GREEN,
-        Chars.CLOVER,
+        Icons.CLOVER,
         "You can search novelupdates to find this novel!",
         Fore.RESET,
     )
@@ -175,8 +174,8 @@ def guessed_url_for_novelupdates():
 
 def url_rejected(reason):
     print()
-    print(Fore.RED, Chars.ERROR, "Sorry! I do not support this website.", Fore.RESET)
-    print(Fore.RED, Chars.EMPTY, "Reason:", reason, Fore.RESET)
+    print(Fore.RED, Icons.ERROR, "Sorry! I do not support this website.", Fore.RESET)
+    print(Fore.RED, " ", "Reason:", reason, Fore.RESET)
     print()
     print("-" * LINE_SIZE)
     print(
@@ -184,7 +183,7 @@ def url_rejected(reason):
     )
     print(
         Fore.CYAN,
-        Chars.LINK,
+        Icons.LINK,
         "https://github.com/dipu-bd/lightnovel-crawler/issues",
         Fore.RESET,
     )
@@ -197,7 +196,7 @@ def __format_search_result_info(short_info):
         textwrap.wrap(
             short_info.strip(),
             width=LINE_SIZE - 10,
-            initial_indent="\n" + (" " * 6) + Chars.INFO + " ",
+            initial_indent="\n" + (" " * 6) + Icons.INFO + " ",
             subsequent_indent=(" " * 8),
             drop_whitespace=True,
             break_long_words=True,
@@ -215,7 +214,7 @@ def format_novel_choices(choices: List[CombinedSearchResult]):
         )
         if len(item.novels) == 1:
             novel = item.novels[0]
-            title += "\n" + (" " * 6) + Chars.LINK + " " + novel.url
+            title += "\n" + (" " * 6) + Icons.LINK + " " + novel.url
             title += __format_search_result_info(novel.info)
         items.append(Choice(value=index, title=title))
     items.append(Choice(title="0. Cancel", value=-1))
@@ -227,7 +226,7 @@ def display_novel_title(title: str, vol_count: int, chap_count: int, link: str):
     print(
         Style.BRIGHT,
         Fore.YELLOW,
-        Chars.BOOK,
+        Icons.LEDGER,
         " ",
         Fore.GREEN,
         title,
@@ -250,7 +249,7 @@ def display_novel_title(title: str, vol_count: int, chap_count: int, link: str):
     )
     print(
         Fore.CYAN,
-        Chars.LINK,
+        Icons.LINK,
         " ",
         link,
         Fore.RESET,
@@ -279,6 +278,6 @@ def format_resume_choices(meta_list: List[MetaInfo]):
             meta.novel.title,
             len(meta.session.chapters_to_download),
         )
-        text += "\n" + (" " * 6) + Chars.LINK + " " + meta.novel.url
+        text += "\n" + (" " * 6) + Icons.LINK + " " + meta.novel.url
         items.append(Choice(value=index, title=text))
     return items

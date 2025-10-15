@@ -17,16 +17,15 @@ class Logger:
         self._level = getattr(logging, level, logging.NOTSET)
 
         if self._level > 0:
+            handler = RichHandler(
+                level=self._level,
+                tracebacks_show_locals=False,
+                rich_tracebacks=True,
+                markup=True,
+            )
             logging.basicConfig(
                 level=self._level,
-                handlers=[
-                    RichHandler(
-                        level=self._level,
-                        # tracebacks_show_locals=True,
-                        # rich_tracebacks=True,
-                        # markup=True,
-                    )
-                ],
+                handlers=[handler],
                 format="%(message)s",
                 datefmt="[%X]",
                 force=True,

@@ -3,7 +3,7 @@ from typing import Type
 
 from colorama import Style
 
-from ...assets.chars import Chars
+from ...assets.icons import Icons
 from ...core.crawler import Crawler
 from ...core.exeptions import LNException
 
@@ -38,9 +38,9 @@ def generate_crawler(
 
     print()
     print(
-        Style.BRIGHT + Chars.PARTY,
+        Style.BRIGHT + Icons.PACKAGE,
         "Generated source file",
-        Chars.PARTY + Style.RESET_ALL,
+        Icons.PACKAGE + Style.RESET_ALL,
     )
-    print(Chars.RIGHT_ARROW, output_file)
+    print(Icons.RIGHT_ARROW, output_file)
     print()

@@ -5,7 +5,7 @@ from typing import Generator
 
 from bs4 import BeautifulSoup
 
-from ..assets.chars import Chars
+from ..utils.platforms import Platform
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,7 @@ def make_texts(app, data) -> Generator[str, None, None]:
                 body = chap["body"].replace("</p><p", "</p>\n<p")
                 soup = BeautifulSoup(body, "lxml")
                 text = "\n\n".join(soup.stripped_strings)
-                text = re.sub(r"[\r\n]+", Chars.EOL + Chars.EOL, text)
+                if Platform.posix:
+                    text = re.sub(r"[\r\n]+", '\n', text)
                 file.write(text)
                 yield file_name

@@ -17,7 +17,7 @@ workdir = Path(__file__).parent.parent.absolute()
 sys.path.insert(0, str(workdir))
 
 try:
-    from lncrawl.assets.chars import Chars
+    from lncrawl.assets.icons import Icons
     from lncrawl.assets.user_agents import user_agents
     from lncrawl.core.sources import crawler_list, load_sources
     from lncrawl.core.taskman import TaskManager
@@ -56,7 +56,7 @@ def main():
     total = len(urls_to_check)
     for i, (url, f) in enumerate(futures.items()):
         print(f'{Style.DIM}{Fore.CYAN}{i + 1:03}/{total:03}{Style.RESET_ALL}', end=' ')
-        print(f'{Style.BRIGHT}{url}{Style.RESET_ALL}', end=f' {Chars.RIGHT_ARROW} ')
+        print(f'{Style.BRIGHT}{url}{Style.RESET_ALL}', end=f' {Icons.RIGHT_ARROW} ')
         try:
             assert isinstance(f, Future)
             response: Response = f.result()

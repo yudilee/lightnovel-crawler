@@ -19,7 +19,7 @@ def init():
 
     os.environ["version"] = get_version()
 
-    colorama.init(wrap=True)
+    # colorama.init(wrap=True)
     description()
 
     configure_logging()

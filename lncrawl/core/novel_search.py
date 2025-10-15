@@ -106,7 +106,7 @@ def search_novels(app):
                 results,
                 link,
                 app.user_input,
-                getattr(CrawlerType, 'file_path'),
+                getattr(CrawlerType, '__file__'),
             ),
         )
 

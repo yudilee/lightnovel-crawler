@@ -21,7 +21,6 @@ class DB:
         logger.info(f'Database URL: "{self.engine.url}"')
 
     def close(self):
-        logger.info('Disposing database engine')
         self.engine.dispose()
 
     def session(
@@ -78,7 +77,7 @@ class DB:
     #                          Prepare Database                          #
     # ------------------------------------------------------------------ #
 
-    def bootstrap(self):
+    async def bootstrap(self):
         # create tables
         table = str(Migration.__tablename__)
         if not inspect(self.engine).has_table(table):

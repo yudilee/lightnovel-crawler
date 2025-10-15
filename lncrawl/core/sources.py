@@ -313,7 +313,7 @@ def __import_crawlers(file_path: Path, no_cache=False) -> List[Type[Crawler]]:
 
         setattr(crawler, "base_url", urls)
         setattr(crawler, "language", language_code)
-        setattr(crawler, "file_path", str(file_path.absolute()))
+        setattr(crawler, "__file__", str(file_path.absolute()))
         setattr(crawler, "can_login", __can_do(crawler, 'login'))
         setattr(crawler, "can_logout", __can_do(crawler, 'logout'))
         setattr(crawler, "can_search", __can_do(crawler, 'search_novel'))
@@ -341,7 +341,7 @@ def __add_crawlers_from_path(path: Path, no_cache=False):
     try:
         crawlers = __import_crawlers(path, no_cache)
         for crawler in crawlers:
-            setattr(crawler, "file_path", str(path.absolute()))
+            setattr(crawler, "__file__", str(path.absolute()))
             base_urls: list[str] = getattr(crawler, "base_url")
             for url in base_urls:
                 no_www = url.replace("://www.", "://")
@@ -422,7 +422,7 @@ def prepare_crawler(url: str, crawler_file: Optional[str] = None) -> Crawler:
 
     logger.info(
         f"Initializing crawler for: {home_url} [%s]",
-        getattr(CrawlerType, "file_path", "."),
+        getattr(CrawlerType, "__file__", "."),
     )
     crawler = CrawlerType()
     crawler.novel_url = url

@@ -7,7 +7,7 @@ _novel
 .idea/
 .pyi/
 .telegram_bot_output/
-.venv/
+.venv*/
 .vscode
 *.egg-info
 *.log

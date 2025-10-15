@@ -1,29 +1,27 @@
+import asyncio
+import gzip
 import hashlib
 import importlib.util
-import json
+import io
 import logging
 import os
-import re
+import shutil
 import time
 from pathlib import Path
-from threading import Semaphore
-from typing import List, Set, Type, Union
-from urllib.parse import urlparse
+from typing import Type
 
 import httpx
 
 from ...context import ctx
 from ...core.crawler import Crawler
 from ...utils.platforms import Platform
+from ...utils.url_tools import validate_url
+from .dto import CrawlerInfo, CrawlerIndex
 
 logger = logging.getLogger(__name__)
 
-__semaphone = Semaphore(5)
-__url_regex = re.compile(r"^^(https?|ftp)://[^\s/$.?#].[^\s]*$", re.I)
-
 
 async def fetch(url: str) -> bytes:
-    logger.info(f"Downloading: {url}")
     name = ctx.config.app.name
     version = ctx.config.app.version
     user_agent = f"{''.join(name.split(' '))}/{version} ({Platform.name})"
@@ -37,15 +35,57 @@ async def fetch(url: str) -> bytes:
         return resp.content
 
 
-async def download(url: str, file: Path) -> None:
-    with __semaphone:
+async def download(lock: asyncio.Semaphore, url: str, file: Path) -> None:
+    async with lock:
+        content = await fetch(url)
         file.parent.mkdir(parents=True, exist_ok=True)
         tid = time.thread_time_ns() % 1000
         tmp = file.with_suffix(f'{file.suffix}.tmp{tid}')
-        content = await fetch(url)
-        tmp.write_bytes(content)
-        os.replace(tmp, file)
-        logger.debug(f'File saved: {file}')
+        try:
+            tmp.write_bytes(content)
+            os.replace(tmp, file)
+        finally:
+            tmp.unlink(missing_ok=True)
+        logger.debug(f'Downloaded: {file}')
+
+
+def load_source(file: Path) -> CrawlerIndex:
+    json_str = file.read_text(encoding='utf-8')
+    return CrawlerIndex.model_validate_json(json_str)
+
+
+def save_source(file: Path, content: CrawlerIndex):
+    file.parent.mkdir(parents=True, exist_ok=True)
+    json_str = content.model_dump_json(indent=2)
+    file.write_text(json_str, encoding='utf-8')
+
+
+async def fetch_online_source() -> CrawlerIndex:
+    compressed = await fetch(ctx.config.crawler.index_file_download_url)
+    with gzip.GzipFile(fileobj=io.BytesIO(compressed), mode='rb') as fp:
+        json_str = fp.read().decode()
+        return CrawlerIndex.model_validate_json(json_str)
+
+
+def load_offline_source() -> CrawlerIndex:
+    # get local index
+    local_file = ctx.config.crawler.local_index_file
+    local_index = load_source(local_file)
+
+    # get user index. use local index if not available
+    user_file = ctx.config.crawler.user_index_file
+    if not user_file.is_file():
+        user_file.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(local_file, user_file)
+        return local_index
+    user_index = load_source(user_file)
+
+    # check latest index. use local index if it is latest
+    if user_index.v < local_index.v:
+        shutil.copy2(local_file, user_file)
+        return local_index
+
+    return user_index
 
 
 def can_do(crawler: Type[Crawler], prop_name: str):
@@ -62,48 +102,37 @@ def has_method(crawler: Type[Crawler], method: str):
     return hasattr(crawler, method) and callable(getattr(crawler, method))
 
 
-def get_keys(urls: Union[str, List[str]]) -> Set[str]:
-    keys = []
-    for url in ([urls] if isinstance(urls, str) else urls):
-        url_host = urlparse(url).hostname
-        no_www = url.replace("://www.", "://")
-        no_www_host = urlparse(no_www).hostname
-        keys += [url, no_www, url_host, no_www_host]
-    return set(filter(None, keys))
+def batch_import_crawlers(*files: Path):
+    return (
+        crawler
+        for file in files
+        if file.is_file()
+        for crawler in import_crawlers(file)
+    )
 
 
-def load_json(file: Path):
-    with open(file, encoding='utf-8') as f:
-        return json.load(f)
-
-
-def save_json(file: Path, content):
-    file.parent.mkdir(parents=True, exist_ok=True)
-    with open(file, 'w', encoding='utf-8') as f:
-        json.dump(content, f, ensure_ascii=False)
-
-
-def import_crawlers(file: Path) -> List[Type[Crawler]]:
+def import_crawlers(file: Path):
     # validate the file
     if not file.is_file():
-        return []
+        return
     file = file.absolute()
+    if file.name.startswith('_'):
+        return
 
     # import modules from the file
     try:
-        module_name = hashlib.md5(file.stem.encode()).hexdigest()
-        spec = importlib.util.spec_from_file_location(module_name, file)
+        mod_name = hashlib.md5(file.name.encode()).hexdigest()
+        spec = importlib.util.spec_from_file_location(mod_name, file)
         if not (spec and spec.loader):
             logger.info(f"[{file}] Unexpected spec")
-            return []
+            return
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
     except Exception as e:
         logger.info(f"[{file}] Failed to load: {repr(e)}")
-        return []
+        return
 
     # import all valid crawlers
-    crawlers = []
     for key in dir(module):
         crawler = getattr(module, key)
 
@@ -113,7 +142,7 @@ def import_crawlers(file: Path) -> List[Type[Crawler]]:
             or type(crawler) is not type(Crawler)
             or not issubclass(crawler, Crawler)
             or crawler.__dict__.get("is_template")
-            or getattr(crawler, '__module__', '') != module_name
+            or getattr(crawler, '__module__', '') != mod_name
         ):
             continue
 
@@ -129,7 +158,7 @@ def import_crawlers(file: Path) -> List[Type[Crawler]]:
         base_url = getattr(crawler, "base_url", [])
         urls = [base_url] if isinstance(base_url, str) else base_url
         urls = [str(url).lower().strip("/") + "/" for url in urls]
-        urls = [url for url in set(urls) if __url_regex.match(url)]
+        urls = [url for url in set(urls) if validate_url(url)]
         if not urls:
             logger.info(f"[{file}] No base url: {crawler}")
             continue
@@ -141,12 +170,27 @@ def import_crawlers(file: Path) -> List[Type[Crawler]]:
         setattr(crawler, "can_search", can_do(crawler, 'search_novel'))
 
         # other metdata
-        setattr(crawler, "file_path", str(file.absolute()))
-        setattr(crawler, "created_at", file.stat().st_ctime)
-        setattr(crawler, "modified_at", file.stat().st_mtime)
+        stat = file.stat()
+        id = hashlib.md5(str(crawler).encode()).hexdigest()
+        setattr(crawler, "__id__", id)
+        setattr(crawler, "__file__", str(file))
+        setattr(crawler, "version", max(stat.st_mtime, stat.st_ctime))
 
-        crawlers.append(crawler)
+        yield crawler
 
-    if not crawlers:
-        logger.info(f"[{file}] No crawler found")
-    return crawlers
+
+def create_crawler_info(crawler: Type[Crawler]):
+    file = getattr(crawler, '__file__')
+    return CrawlerInfo(
+        file_path=file,
+        id=getattr(crawler, '__id__'),
+        md5=getattr(crawler, '__module__'),
+        version=int(getattr(crawler, 'version')),
+        base_urls=getattr(crawler, 'base_url'),
+        has_mtl=getattr(crawler, 'has_mtl'),
+        has_manga=getattr(crawler, 'has_manga'),
+        can_login=getattr(crawler, 'can_login'),
+        can_logout=getattr(crawler, 'can_logout'),
+        can_search=getattr(crawler, 'can_search'),
+        url=f"file:///{Path(file).resolve().as_posix()}",
+    )

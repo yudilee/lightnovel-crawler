@@ -5,7 +5,7 @@ from typing import Type
 
 from colorama import Fore, Style
 
-from ...assets.chars import Chars
+from ...assets.icons import Icons
 from ...core.crawler import Crawler
 from ...core.display import LINE_SIZE
 from ...core.exeptions import LNException
@@ -25,25 +25,25 @@ def analyze_url(base_url: str, url: str) -> Type[Crawler]:
 
     for index, template in enumerate(template_list):
         name = template.__name__
-        print(Style.BRIGHT + Chars.CLOVER, "Checking", name, end=" ")
+        print(Style.BRIGHT + Icons.CLOVER, "Checking", name, end=" ")
         print(f"[{index + 1} of {len(template_list)}]", Style.RESET_ALL)
 
         # To disable tqdm
         debug_mode = os.getenv("debug_mode")
         os.environ["debug_mode"] = "yes"
         try:
-            print(" ", Chars.RIGHT_ARROW, "Create instance", end=" ")
+            print(" ", Icons.RIGHT_ARROW, "Create instance", end=" ")
             template.base_url = [base_url]
             template.is_template = False
             crawler = template()
             print(":", Fore.GREEN + "success" + Fore.RESET)
 
-            print(" ", Chars.RIGHT_ARROW, "initialize()", end=" ")
+            print(" ", Icons.RIGHT_ARROW, "initialize()", end=" ")
             crawler.home_url = base_url
             crawler.initialize()
             print(":", Fore.GREEN + "success" + Fore.RESET)
 
-            print(" ", Chars.RIGHT_ARROW, "read_novel_info()", end=" ")
+            print(" ", Icons.RIGHT_ARROW, "read_novel_info()", end=" ")
             crawler.novel_url = url
             crawler.read_novel_info()
             format_novel(crawler)
@@ -51,7 +51,7 @@ def analyze_url(base_url: str, url: str) -> Type[Crawler]:
             assert crawler.chapters, "Chapters not found"
             print(":", Fore.GREEN + "success" + Fore.RESET)
 
-            print(" ", Chars.RIGHT_ARROW, "download_chapter_body()", end=" ")
+            print(" ", Icons.RIGHT_ARROW, "download_chapter_body()", end=" ")
             chapter = crawler.chapters[-1]
             body = crawler.download_chapter_body(chapter)
             assert body, "Chapter body not found"

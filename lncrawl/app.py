@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from pathlib import Path
 from typing import Optional
 
@@ -15,13 +17,17 @@ from .context import AppContext
 
 # My application context
 ctx = AppContext()
+logger = logging.getLogger(__name__)
 
 # Define typer
 app = typer.Typer(
     context_settings={
         # "auto_envvar_prefix": 'LNC',
         "help_option_names": ["-h", "--help"],
-    }
+    },
+    pretty_exceptions_short=True,
+    pretty_exceptions_enable=True,
+    pretty_exceptions_show_locals=False,
 )
 
 # Register subcommands
@@ -70,9 +76,8 @@ def main(
     # setup config
     ctx.config.load(config)
 
-    # bootstrap database
-    ctx.db.bootstrap()
-    ctx.sources.prepare()
+    # prepare the app
+    asyncio.run(ctx.prepare())
 
     # show help if no args
     if context.invoked_subcommand is None:

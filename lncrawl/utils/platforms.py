@@ -60,6 +60,11 @@ class Platform:
 
     @static_cached_property
     @staticmethod
+    def ci():
+        return 'CI' in os.environ
+
+    @static_cached_property
+    @staticmethod
     def docker():
         if os.path.isfile("/.dockerenv"):
             return True

@@ -60,6 +60,7 @@ try:
     REPO_BRANCH = commit_hash.decode("utf-8").strip()
 except Exception:
     traceback.print_exc()
+    REPO_BRANCH = 'dev'
 
 # =========================================================================================== #
 # The index data
@@ -240,7 +241,7 @@ def process_file(py_file: Path) -> float:
         can_search = Crawler.search_novel != crawler.search_novel
         has_manga = getattr(crawler, "has_manga", False)
         has_mtl = getattr(crawler, "has_mtl", False)
-        source_id = hashlib.md5(str(crawler).encode("utf8")).hexdigest()
+        source_id = hashlib.md5(str(crawler).encode()).hexdigest()
 
         # Test crawler instance
         crawler()
