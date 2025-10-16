@@ -8,7 +8,8 @@ from typing import Iterable, List, Mapping, Tuple
 _INIT_SQL = """
     CREATE VIRTUAL TABLE store USING fts5(
         key,
-        value UNINDEXED
+        value UNINDEXED,
+        tokenize = "unicode61 tokenchars '.:/?&=_-%#+'"
     );
 """
 
@@ -37,9 +38,13 @@ _PURGE_SQL = """
 """
 
 
+def _escape_query(s: str) -> str:
+    return '"' + s.replace('"', '""') + '"' + '*'  # for exact prefix match
+
 # ------------------------------------------------------------------ #
 #                              FTSStore                              #
 # ------------------------------------------------------------------ #
+
 
 class FTSStore:
     """Utility class for key-value substring search using SQLite FTS5."""
@@ -64,8 +69,7 @@ class FTSStore:
 
     def search(self, query: str) -> List[str]:
         """Perform a full-text search on key and return values."""
-        query += '*'  # for prefix match
-        c = self._db.execute(_SEARCH_SQL, [query])
+        c = self._db.execute(_SEARCH_SQL, [_escape_query(query)])
         return list(set([r[0] for r in c.fetchall()]))
 
     def insert_dict(self, mapping: Mapping[str, str]):
@@ -97,8 +101,7 @@ class FTSStore:
 
     def search_and_delete(self, query: str):
         """Insert multiple items by key."""
-        query += '*'  # for prefix match
-        self._db.execute(_DELETE_MATCHING_SQL, [query])
+        self._db.execute(_DELETE_MATCHING_SQL, [_escape_query(query)])
 
 
 # ------------------------------------------------------------------ #

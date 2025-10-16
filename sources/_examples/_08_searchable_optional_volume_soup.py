@@ -39,9 +39,6 @@ class MyCrawlerName(SearchableSoupTemplate, OptionalVolumeSoupTemplate):
 
     # TODO: [OPTIONAL] This is called once per session before searching and fetching novel info.
     def login(self, username_or_email: str, password_or_token: str) -> None:
-        # Examples:
-        # - https://github.com/dipu-bd/lightnovel-crawler/blob/master/sources/multi/mtlnovel.py
-        # - https://github.com/dipu-bd/lightnovel-crawler/blob/master/sources/multi/ranobes.py
         pass
 
     # TODO: [OPTIONAL] If it is necessary to logout after session is finished, you can implement this.
@@ -56,32 +53,29 @@ class MyCrawlerName(SearchableSoupTemplate, OptionalVolumeSoupTemplate):
         #   params = {"searchkey": query}
         #   soup = self.post_soup(f"{self.home_url}search?{urlencode(params)}")
         #   yield from soup.select(".col-content .con .txt h3 a")
-        pass
+        yield from []
 
     # TODO: [REQUIRED] Parse a tag and return single search result
     def parse_search_item(self, tag: Tag) -> SearchResult:
         # The tag here comes from self.select_search_items
-        #
-        # Example:
-        # return SearchResult(
-        #     title=tag.text.strip(),
-        #     url=self.absolute_url(tag["href"]),
-        # )
-        pass
+        return SearchResult(
+            title=tag.get_text(strip=True),
+            url=self.absolute_url(tag["href"]),
+        )
 
     # TODO: [OPTIONAL] Get a BeautifulSoup instance from the self.novel_url
     def get_novel_soup(self) -> BeautifulSoup:
-        return self.get_soup(self.novel_url)
+        return super().get_novel_soup()
 
     # TODO: [REQUIRED] Parse and return the novel title
     def parse_title(self, soup: BeautifulSoup) -> str:
         # The soup here is the result of `self.get_soup(self.novel_url)`
-        pass
+        raise NotImplementedError()
 
     # TODO: [REQUIRED] Parse and return the novel cover
     def parse_cover(self, soup: BeautifulSoup) -> str:
         # The soup here is the result of `self.get_soup(self.novel_url)`
-        pass
+        return ''
 
     # TODO: [OPTIONAL] Parse and return the novel authors
     def parse_authors(self, soup: BeautifulSoup) -> Generator[str, None, None]:
@@ -95,26 +89,26 @@ class MyCrawlerName(SearchableSoupTemplate, OptionalVolumeSoupTemplate):
         # Example 2: <multiple authors example>
         #   for a in soup.select(".m-imgtxt a[href*='/authors/']"):
         #       yield a.text.strip()
-        pass
+        yield from []
 
     # TODO: [OPTIONAL] Parse and return the novel categories or tags
     def parse_genres(self, soup: BeautifulSoup) -> Generator[str, None, None]:
         # The soup here is the result of `self.get_soup(self.novel_url)`
         #
         # See the `parse_authors` example above for a similar implementation.
-        pass
+        yield from []
 
     # TODO: [OPTIONAL] Parse and return the novel summary or synopsis
-    def parse_summary(self, soup: BeautifulSoup) -> Generator[str, None, None]:
+    def parse_summary(self, soup: BeautifulSoup) -> str:
         # The soup here is the result of `self.get_soup(self.novel_url)`
-        pass
+        return ''
 
     # TODO: [OPTIONAL] Select volume list item tags from the page soup
     def select_volume_tags(self, soup: BeautifulSoup) -> Generator[Tag, None, None]:
         # The soup here is the result of `self.get_soup(self.novel_url)`
         #
         # Example: yield from soup.select("#toc .vol-item")
-        pass
+        yield from []
 
     # TODO: [OPTIONAL] Parse a single volume from volume list item tag
     def parse_volume_item(self, tag: Tag, id: int) -> Volume:
@@ -122,44 +116,38 @@ class MyCrawlerName(SearchableSoupTemplate, OptionalVolumeSoupTemplate):
         # The id here is the next available volume id
         #
         # Example:
-        # return Volume(
-        #     id=id,
-        #     title= tag.text.strip(),
-        # )
-        pass
+        return Volume(
+            id=id,
+            title=tag.get_text(strip=True),
+        )
 
     # TODO: [REQUIRED] Select chapter list item tags from volume tag and page soup
-    def select_chapter_tags(self, tag: Tag) -> Generator[Tag, None, None]:
-        # The tag here comes from `self.select_volume_tags`
-        # The vol here comes from `self.parse_volume_item`
+    def select_chapter_tags(self, parent: Tag) -> Generator[Tag, None, None]:
+        # The parent here is either `html` or comes from `self.select_volume_tags`
         #
         # Example: yield from tag.select(".chapter-item")
-        pass
+        yield from []
 
     # TODO: [REQUIRED] Parse a single chapter from chapter list item tag
     def parse_chapter_item(self, tag: Tag, id: int, vol: Volume) -> Chapter:
         # The tag here comes from `self.select_chapter_tags`
         # The vol here comes from `self.parse_volume_item`
         # The id here is the next available chapter id
-        #
-        # Example:
-        # return Chapter(
-        #     id=id,
-        #     volume=vol.id,
-        #     title=tag.text.strip(),
-        #     url=self.absolute_url(tag["href"]),
-        # )
-        pass
-        raise NotImplementedError()
+        return Chapter(
+            id=id,
+            volume=vol.id,
+            title=tag.get_text(strip=True),
+            url=self.absolute_url(tag["href"]),
+        )
 
     # TODO: [REQUIRED] Select the tag containing the chapter text
     def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
         # The soup here is the result of `self.get_soup(chapter.url)`
         #
         # Example: return soup.select_one(".m-read .txt")
-        pass
+        raise NotImplementedError()
 
     # TODO: [OPTIONAL] Return the index in self.chapters which contains a chapter URL
     def index_of_chapter(self, url: str) -> int:
         # To get more help, check the default implemention in the `Crawler` class.
-        pass
+        return super().index_of_chapter(url)

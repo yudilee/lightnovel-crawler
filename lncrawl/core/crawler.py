@@ -88,7 +88,7 @@ class Crawler(Scraper):
     def initialize(self) -> None:
         pass
 
-    def login(self, email: str, password: str) -> None:
+    def login(self, username_or_email: str, password_or_token: str) -> None:
         pass
 
     def logout(self) -> None:

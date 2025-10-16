@@ -176,12 +176,16 @@ class Sources:
         return result
 
     def get(self, query: str) -> Optional[SourceItem]:
-        if query not in self._index.crawlers:
+        if query in self._index.crawlers:
+            info = self._index.crawlers[query]
+        elif query in self.crawlers:
+            id = getattr(self.crawlers[query], '__id__')
+            info = self._index.crawlers[id]
+        else:
             ids = self._store.search(normalize(query))
             if len(ids) != 1:
-                raise Exception(f'{len(ids)} crawlers found by the query')
-            query = ids[0]
-        info = self._index.crawlers[query]
+                return None
+            info = self._index.crawlers[ids[0]]
         return SourceItem(
             info=info,
             crawler=self.crawlers[info.id],

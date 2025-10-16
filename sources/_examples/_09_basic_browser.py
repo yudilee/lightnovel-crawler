@@ -10,7 +10,7 @@ Put your source file inside the language folder. The `en` folder has too many
 files, therefore it is grouped using the first letter of the domain name.
 """
 import logging
-from typing import List
+from typing import Generator
 
 from lncrawl.models.chapter import Chapter
 from lncrawl.models.search_result import SearchResult
@@ -37,9 +37,6 @@ class MyCrawlerName(BasicBrowserTemplate):
 
     # TODO: [OPTIONAL] This is called once per session before searching and fetching novel info.
     def login(self, username_or_email: str, password_or_token: str) -> None:
-        # Examples:
-        # - https://github.com/dipu-bd/lightnovel-crawler/blob/master/sources/multi/mtlnovel.py
-        # - https://github.com/dipu-bd/lightnovel-crawler/blob/master/sources/multi/ranobes.py
         pass
 
     # TODO: [OPTIONAL] If it is necessary to logout after session is finished, you can implement this.
@@ -47,13 +44,13 @@ class MyCrawlerName(BasicBrowserTemplate):
         pass
 
     # TODO: [OPTIONAL] Search for novels with `self.scraper` requests
-    def search_novel_in_soup(self, query: str) -> List[SearchResult]:
-        # raise ScraperNotSupported()
-        pass
+    def search_novel_in_soup(self, query: str) -> Generator[SearchResult, None, None]:
+        # `raise ScraperNotSupported()` to use the browser only.
+        raise NotImplementedError()
 
     # TODO: [OPTIONAL] Search for novels with `self.browser`
-    def search_novel_in_browser(self, query: str) -> List[SearchResult]:
-        pass
+    def search_novel_in_browser(self, query: str) -> Generator[SearchResult, None, None]:
+        raise NotImplementedError()
 
     # TODO: [OPTIONAL] Read novel info with `self.scraper` requests
     def read_novel_info_in_soup(self) -> None:
@@ -99,7 +96,7 @@ class MyCrawlerName(BasicBrowserTemplate):
         # To clean chapter HTML easily, use `self.cleaner.extract_contents`.
         #
         # `raise ScraperNotSupported()` to use the browser only.
-        pass
+        raise NotImplementedError()
 
     # TODO: [REQUIRED] Download the chapter contents using the `self.browser`
     def download_chapter_body_in_browser(self, chapter: Chapter) -> str:
@@ -108,9 +105,9 @@ class MyCrawlerName(BasicBrowserTemplate):
         # There can be only one thread using the browser at a time.
         # Get a BeautifulSoup Tag instance from browser: `self.browser.find(..).as_tag()`
         # To clean chapter HTML easily, use `self.cleaner.extract_contents`.
-        pass
+        raise NotImplementedError()
 
     # TODO: [OPTIONAL] Return the index in self.chapters which contains a chapter URL
     def index_of_chapter(self, url: str) -> int:
         # To get more help, check the default implemention in the `Crawler` class.
-        pass
+        raise NotImplementedError()

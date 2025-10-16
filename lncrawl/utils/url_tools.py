@@ -4,16 +4,12 @@ from .text_tools import normalize
 
 
 def normalize_url(url: str) -> str:
-    """
-    Normalizes the URL string
-    """
+    """Normalizes the URL string"""
     return normalize(url).encode("idna").decode("ascii")
 
 
 def validate_url(url: str, allowed_schemes=['http', 'https']) -> bool:
-    """
-    Return True if `url` is a syntactically valid URL for the given schemes.
-    """
+    """Return True if `url` is a syntactically valid URL for the given schemes."""
     parsed = urlparse(url)
     return all([
         parsed.scheme,
@@ -22,23 +18,14 @@ def validate_url(url: str, allowed_schemes=['http', 'https']) -> bool:
     ])
 
 
+def extract_base(url: str) -> str:
+    """Extracts the base url."""
+    parsed = urlparse(url)
+    return parsed.scheme + '://' + parsed.netloc + '/'
+
+
 def extract_host(url: str) -> str:
-    """
-    Extract and normalize the host (optionally with port) from a URL-like string.
-
-    Returns :
-    - Normalized "host" or "host:port" string.
-    - Normalized original string on failure.
-
-    Examples :
-    ```
-      extract_host("http://www.example.com/foo?q=3")    -> "example.com"
-      extract_host("https://www.Example.com:443/foo")   -> "example.com:443"
-      extract_host("http://user:pass@bücher.de")        -> "xn--bcher-kva.de"
-      extract_host("http://[2001:db8::1]:8080/")        -> "2001:db8::1:8080"
-      extract_host("example.com/path")                  -> ""
-    ```
-    """
+    """Normalize and extracts host with port from a URL-like string."""
     parsed = urlparse(url)
 
     host = parsed.hostname

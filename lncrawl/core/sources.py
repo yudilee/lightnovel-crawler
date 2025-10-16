@@ -14,7 +14,6 @@ from urllib.parse import urlparse
 import requests
 from packaging import version
 
-from ..assets.languages import language_codes
 from ..assets.version import get_version
 from ..config import APP_DIR, ROOT_DIR
 from ..context import ctx
@@ -273,12 +272,6 @@ def __import_crawlers(file_path: Path, no_cache=False) -> List[Type[Crawler]]:
         logger.warning("Module load failed: %s | %s", file_path, e)
         return []
 
-    language_code = ""
-    for part in reversed(file_path.parts):
-        if part in language_codes:
-            language_code = part
-            break
-
     crawlers = []
     for key in dir(module):
         crawler = getattr(module, key)
@@ -312,7 +305,6 @@ def __import_crawlers(file_path: Path, no_cache=False) -> List[Type[Crawler]]:
                 )
 
         setattr(crawler, "base_url", urls)
-        setattr(crawler, "language", language_code)
         setattr(crawler, "__file__", str(file_path.absolute()))
         setattr(crawler, "can_login", __can_do(crawler, 'login'))
         setattr(crawler, "can_logout", __can_do(crawler, 'logout'))

@@ -35,7 +35,7 @@ class MyCrawlerName(SearchableBrowserTemplate):
         # You can customize `TextCleaner` and other necessary things.
         pass
 
-    # TODO: [OPTIONAL] Select novel items found by the query using the browser
+    # TODO: [REQUIRED] Select novel items found by the query using the browser
     def select_search_items_in_browser(self, query: str) -> Generator[Tag, None, None]:
         # The query here is the input from user.
         #
@@ -44,7 +44,7 @@ class MyCrawlerName(SearchableBrowserTemplate):
         #   self.visit(f"{self.home_url}search?{urlencode(params)}")
         #   for elem in self.browser.find_all(".col-content .con .txt h3 a"):
         #       yield elem.as_tag()
-        pass
+        yield from []
 
     # TODO: [REQUIRED] Select novel items found in search page from the query
     def select_search_items(self, query: str) -> Generator[Tag, None, None]:
@@ -56,48 +56,41 @@ class MyCrawlerName(SearchableBrowserTemplate):
         #   yield from soup.select(".col-content .con .txt h3 a")
         #
         # `raise ScraperNotSupported()` to use the browser only.
-        pass
+        yield from []
 
     # TODO: [REQUIRED] Parse a tag and return single search result
     def parse_search_item(self, tag: Tag) -> SearchResult:
         # The tag here comes from self.select_search_items
-        #
-        # Example:
-        # return SearchResult(
-        #     title=tag.text.strip(),
-        #     url=self.absolute_url(tag["href"]),
-        # )
-        pass
+        return SearchResult(
+            title=tag.get_text(strip=True),
+            url=self.absolute_url(tag["href"]),
+        )
 
     # TODO: [OPTIONAL] Open the Novel URL in the browser
-    def visit_novel_page_in_browser(self) -> BeautifulSoup:
-        # self.visit(self.novel_url)
-        pass
+    def visit_novel_page_in_browser(self) -> None:
+        self.visit(self.novel_url)
 
     # TODO: [OPTIONAL] Parse and return the novel title in the browser
     def parse_title_in_browser(self) -> str:
-        # return self.parse_title(self.browser.soup)
-        pass
+        return self.parse_title(self.browser.soup)
 
     # TODO: [REQUIRED] Parse and return the novel title
     def parse_title(self, soup: BeautifulSoup) -> str:
         # The soup here is the result of `self.get_soup(self.novel_url)`
-        pass
+        raise NotImplementedError()
 
     # TODO: [OPTIONAL] Parse and return the novel cover image in the browser
     def parse_cover_in_browser(self) -> str:
-        # return self.parse_cover(self.browser.soup)
-        pass
+        return self.parse_cover(self.browser.soup)
 
     # TODO: [REQUIRED] Parse and return the novel cover
     def parse_cover(self, soup: BeautifulSoup) -> str:
         # The soup here is the result of `self.get_soup(self.novel_url)`
-        pass
+        return ''
 
     # TODO: [OPTIONAL] Parse and return the novel author in the browser
     def parse_authors_in_browser(self) -> Generator[str, None, None]:
-        # yield from self.parse_authors(self.browser.soup)
-        pass
+        yield from self.parse_authors(self.browser.soup)
 
     # TODO: [OPTIONAL] Parse and return the novel authors
     def parse_authors(self, soup: BeautifulSoup) -> Generator[str, None, None]:
@@ -111,62 +104,57 @@ class MyCrawlerName(SearchableBrowserTemplate):
         # Example 2: <multiple authors example>
         #   for a in soup.select(".m-imgtxt a[href*='/authors/']"):
         #       yield a.text.strip()
-        pass
+        yield from []
 
     # TODO: [OPTIONAL] Parse and return the novel author in the browser
-    def parse_categorie_in_browser(self) -> Generator[str, None, None]:
-        # yield from self.parse_genres(self.browser.soup)
-        pass
+    def parse_genres_in_browser(self) -> Generator[str, None, None]:
+        yield from self.parse_genres(self.browser.soup)
 
     # TODO: [OPTIONAL] Parse and return the novel categories or tags
     def parse_genres(self, soup: BeautifulSoup) -> Generator[str, None, None]:
         # The soup here is the result of `self.get_soup(self.novel_url)`
         #
         # See the `parse_authors` example above for a similar implementation.
-        pass
+        yield from []
 
     # TODO: [OPTIONAL] Parse and return the novel summary or synopsis in the browser
     def parse_summary_in_browser(self) -> str:
-        # return self.parse_summary(self.browser.soup)
-        pass
+        return self.parse_summary(self.browser.soup)
 
     # TODO: [OPTIONAL] Parse and return the novel summary or synopsis
-    def parse_summary(self, soup: BeautifulSoup) -> Generator[str, None, None]:
+    def parse_summary(self, soup: BeautifulSoup) -> str:
         # The soup here is the result of `self.get_soup(self.novel_url)`
-        pass
+        return ''
 
     # TODO: [OPTIONAL] Parse and return the volumes and chapters in the browser
     def parse_chapter_list_in_browser(
         self,
     ) -> Generator[Union[Chapter, Volume], None, None]:
-        # return self.parse_chapter_list(self.browser.soup)
-        pass
+        return self.parse_chapter_list(self.browser.soup)
 
     # TODO: [REQUIRED] Parse and set the volumes and chapters
     def parse_chapter_list(
         self, soup: BeautifulSoup
     ) -> Generator[Union[Chapter, Volume], None, None]:
         # The soup here is the result of `self.get_soup(self.novel_url)`
-        pass
+        yield from []
 
     # TODO: [OPTIONAL] Open the Chapter URL in the browser
     def visit_chapter_page_in_browser(self, chapter: Chapter) -> None:
-        # self.visit(chapter.url)
-        pass
+        self.visit(chapter.url)
 
     # TODO: [OPTIONAL] Select the tag containing the chapter text in the browser
     def select_chapter_body_in_browser(self) -> Tag:
-        # return self.select_chapter_body(self.browser.soup)
-        pass
+        return self.select_chapter_body(self.browser.soup)
 
     # TODO: [REQUIRED] Select the tag containing the chapter text
     def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
         # The soup here is the result of `self.get_soup(chapter.url)`
         #
         # Example: return soup.select_one(".m-read .txt")
-        pass
+        raise NotImplementedError()
 
     # TODO: [OPTIONAL] Return the index in self.chapters which contains a chapter URL
     def index_of_chapter(self, url: str) -> int:
         # To get more help, check the default implemention in the `Crawler` class.
-        pass
+        return super().index_of_chapter(url)
