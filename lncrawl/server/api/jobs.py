@@ -1,15 +1,15 @@
-from ..security import ensure_user
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Form, Path, Query, Security
+from fastapi import APIRouter, Form, Path, Query, Security
 from pydantic import HttpUrl
 
-from ....context import AppContext
-from ....dao.enums import JobPriority, JobStatus, RunState
-from ....dao.job import Job, JobDetail
-from ....dao.novel import Artifact, Novel
+from ...context import ctx
+from ...dao import Artifact, Job, Novel
+from ...dao.enums import JobPriority, JobStatus, RunState
+from ..models.job import JobDetail
 from ..models.pagination import Paginated
 from ..models.user import User
+from ..security import ensure_user
 
 # The root router
 router = APIRouter()
@@ -17,7 +17,6 @@ router = APIRouter()
 
 @router.get("s", summary='Returns a list of jobs')
 def list_jobs(
-    ctx: AppContext = Depends(),
     offset: int = Query(default=0),
     limit: int = Query(default=20, le=100),
     sort_by: str = Query(default="created_at"),
@@ -43,7 +42,6 @@ def list_jobs(
 
 @router.post("", summary='Creates a new job')
 async def create_job(
-    ctx: AppContext = Depends(),
     user: User = Security(ensure_user),
     url: HttpUrl = Form(description='The novel page url'),
 ) -> Job:
@@ -54,7 +52,6 @@ async def create_job(
 @router.delete("/{job_id}", summary='Deletes a job')
 def delete_job(
     job_id: str = Path(),
-    ctx: AppContext = Depends(),
     user: User = Security(ensure_user),
 ) -> bool:
     return ctx.jobs.delete(job_id, user)
@@ -63,7 +60,6 @@ def delete_job(
 @router.get("/{job_id}", summary='Returns a job')
 def get_job(
     job_id: str = Path(),
-    ctx: AppContext = Depends(),
 ) -> JobDetail:
     return ctx.jobs.get(job_id)
 
@@ -71,7 +67,6 @@ def get_job(
 @router.post("/{job_id}/cancel", summary='Cancel a job')
 def cancel_job(
     job_id: str = Path(),
-    ctx: AppContext = Depends(),
     user: User = Security(ensure_user),
 ) -> bool:
     return ctx.jobs.cancel(job_id, user)
@@ -80,7 +75,6 @@ def cancel_job(
 @router.get("/{job_id}/novel", summary='Returns a job novel')
 def get_job_novel(
     job_id: str = Path(),
-    ctx: AppContext = Depends(),
 ) -> Novel:
     return ctx.jobs.get_novel(job_id)
 
@@ -88,6 +82,5 @@ def get_job_novel(
 @router.get("/{job_id}/artifacts", summary='Returns job artifacts')
 def get_job_artifacts(
     job_id: str = Path(),
-    ctx: AppContext = Depends(),
 ) -> List[Artifact]:
     return ctx.jobs.get_artifacts(job_id)

@@ -18,14 +18,14 @@ class AppContext:
     async def prepare(self):
         await asyncio.gather(
             self.db.bootstrap(),
-            self.sources.prepare()
+            self.sources.load()
         )
 
     def cleanup(self):
         global _cache
         _cache = None
         self.db.close()
-        self.sources.cleanup()
+        self.sources.close()
 
     @cached_property
     def config(self):
@@ -44,48 +44,48 @@ class AppContext:
 
     @cached_property
     def sources(self):
-        from .services.sources.service import Sources
+        from .services.sources import Sources
         return Sources()
 
     @cached_property
     def users(self):
-        from .bots.server.services.users import UserService
-        return UserService(self)
+        from .server.services.users import UserService
+        return UserService()
 
     @cached_property
     def jobs(self):
-        from .bots.server.services.jobs import JobService
-        return JobService(self)
+        from .server.services.jobs import JobService
+        return JobService()
 
     @cached_property
     def novels(self):
-        from .bots.server.services.novels import NovelService
-        return NovelService(self)
+        from .server.services.novels import NovelService
+        return NovelService()
 
     @cached_property
     def artifacts(self):
-        from .bots.server.services.artifacts import ArtifactService
-        return ArtifactService(self)
+        from .server.services.artifacts import ArtifactService
+        return ArtifactService()
 
     @cached_property
     def scheduler(self):
-        from .bots.server.services.scheduler import JobScheduler
-        return JobScheduler(self)
+        from .server.services.scheduler import JobScheduler
+        return JobScheduler()
 
     @cached_property
     def fetch(self):
-        from .bots.server.services.fetch import FetchService
-        return FetchService(self)
+        from .server.services.fetch import FetchService
+        return FetchService()
 
     @cached_property
     def metadata(self):
-        from .bots.server.services.meta import MetadataService
-        return MetadataService(self)
+        from .server.services.meta import MetadataService
+        return MetadataService()
 
     @cached_property
     def mail(self):
-        from .bots.server.services.mail import MailService
-        return MailService(self)
+        from .server.services.mail import MailService
+        return MailService()
 
 
 ctx = AppContext()

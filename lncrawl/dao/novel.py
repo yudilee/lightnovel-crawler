@@ -17,7 +17,7 @@ class Novel(BaseTable, table=True):
         description="Full URL of the novel main page"
     )
     crawled: bool = Field(
-        default=True,
+        default=False,
         description="True if novel info is available"
     )
 

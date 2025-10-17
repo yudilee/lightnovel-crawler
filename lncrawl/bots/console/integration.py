@@ -1,16 +1,14 @@
 import atexit
 import logging
 import sys
-from urllib.parse import urlparse
 
 from questionary import prompt
 
+from ...context import ctx
 from ...core import display
 from ...core.app import App
 from ...core.arguments import get_args
-from ...core.crawler import Crawler
 from ...core.exeptions import LNException
-from ...core.sources import crawler_list, prepare_crawler, rejected_sources
 from ...utils.platforms import Platform
 from .open_folder_prompt import display_open_folder
 from .resume_download import resume_session
@@ -56,33 +54,27 @@ def start(self):
     self.app.no_suffix_after_filename = args.filename_only
 
     # Process user input
+    search_links = []
     user_inp = self.get_novel_url()
     self.app.user_input = user_inp
     if not user_inp:
         pass  # this case is not possible
     elif not user_inp.startswith("http"):
         logger.info("Detected query input")
-        search_links = [
-            str(link)
-            for link, crawler in crawler_list.items()
-            if crawler.search_novel != Crawler.search_novel and link.startswith("http")
-        ]
+        search_links = [url for url, _ in ctx.sources.list(can_search=True)]
         self.search_mode = True
     else:
-        hostname = urlparse(user_inp).hostname
-        if hostname in rejected_sources:
-            display.url_rejected(rejected_sources[hostname])
-            raise LNException("Fail to init crawler: %s is rejected", hostname)
+        logger.info("Detected URL input")
         try:
-            logger.info("Detected URL input")
-            self.app.crawler = prepare_crawler(user_inp)
+            self.app.crawler = ctx.sources.create_crawler(user_inp)
             self.search_mode = False
         except Exception as e:
             if "No crawler found for" in str(e):
                 display.url_not_recognized()
             else:
                 logger.error("Failed to prepare crawler", e)
-            logger.debug("Trying to find it in novelupdates", e)
+
+            logger.info("Fallback to novelupdates")
             guess = self.app.guess_novel_title(user_inp)
             display.guessed_url_for_novelupdates()
             self.app.user_input = self.confirm_guessed_novel(guess)
@@ -95,12 +87,14 @@ def start(self):
         self.app.search_novel()
 
     def _download_novel():
-        assert isinstance(self.app, App)
+        assert self.app
 
         if self.search_mode:
             novel_url = self.choose_a_novel()
             self.log.info("Selected novel: %s" % novel_url)
-            self.app.crawler = prepare_crawler(novel_url)
+            self.app.crawler = ctx.sources.create_crawler(novel_url)
+
+        assert self.app.crawler
 
         if self.app.can_do("login"):
             self.app.login_data = self.get_login_info()
@@ -145,6 +139,8 @@ def start(self):
 
 
 def process_chapter_range(self, disable_args=False):
+    assert isinstance(self.app, App) and self.app.crawler
+
     chapters = []
     res = self.get_range_selection(disable_args)
 

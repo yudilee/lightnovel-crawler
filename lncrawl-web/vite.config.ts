@@ -7,7 +7,7 @@ export default defineConfig({
   base: '/',
   plugins: [react(), tsconfigPaths()],
   build: {
-    outDir: '../lncrawl/bots/server/web',
+    outDir: '../lncrawl/server/web',
     assetsDir: 'assets',
     emptyOutDir: true,
   },

@@ -39,7 +39,7 @@ export interface Novel {
   updated_at: number;
   url: string;
   title: string;
-  orphan: boolean;
+  crawled: boolean;
   authors: string;
   synopsis: string;
   tags: string[];

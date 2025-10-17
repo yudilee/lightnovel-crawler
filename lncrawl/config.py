@@ -199,6 +199,14 @@ class CrawlerConfig(_Section):
     section = "crawler"
 
     @property
+    def ignore_images(self) -> bool:
+        return self._get("ignore_images", False)
+
+    @property
+    def add_source_url_in_chapter_content(self) -> bool:
+        return self._get("add_source_url_in_chapter_content", False)
+
+    @property
     def selenium_grid(self) -> str:
         return self._get("selenium_grid", "")
 

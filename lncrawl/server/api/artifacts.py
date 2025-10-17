@@ -2,14 +2,14 @@ import mimetypes
 import os
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Path, Query, Security
+from fastapi import APIRouter, Path, Query, Security
 from fastapi.responses import FileResponse
 
-from ..security import ensure_user
-from ....context import AppContext
-from ..exceptions import AppErrors
-from ....dao.job import Artifact
+from ...context import ctx
+from ...dao.artifact import Artifact
+from ..exceptions import ServerErrors
 from ..models.pagination import Paginated
+from ..security import ensure_user
 
 # The root router
 router = APIRouter()
@@ -18,7 +18,6 @@ router = APIRouter()
 @router.get("s", summary='Returns a list of artifacts',
             dependencies=[Security(ensure_user)],)
 def list_artifacts(
-    ctx: AppContext = Depends(),
     offset: int = Query(default=0),
     limit: int = Query(default=20, le=100),
     novel_id: Optional[str] = Query(default=None),
@@ -34,7 +33,6 @@ def list_artifacts(
             dependencies=[Security(ensure_user)],)
 def get_novel(
     artifact_id: str = Path(),
-    ctx: AppContext = Depends(),
 ) -> Artifact:
     return ctx.artifacts.get(artifact_id)
 
@@ -42,12 +40,11 @@ def get_novel(
 @router.get("/{artifact_id}/download", summary='Download artifact file')
 def get_novel_artifacts(
     artifact_id: str = Path(),
-    ctx: AppContext = Depends(),
 ) -> FileResponse:
     artifact = ctx.artifacts.get(artifact_id)
     file_path = artifact.output_file
     if not file_path:
-        raise AppErrors.no_artifact_file
+        raise ServerErrors.no_artifact_file
 
     media_type, _ = mimetypes.guess_type(file_path)
     return FileResponse(

@@ -6,8 +6,8 @@ from typing import Generator, List, Optional, Union
 
 from bs4 import Tag
 
+from ..context import ctx
 from ..models import Chapter, SearchResult, Volume
-from .arguments import get_args
 from .cleaner import TextCleaner
 from .scraper import Scraper
 
@@ -121,8 +121,7 @@ class Crawler(Scraper):
         return 0
 
     def extract_chapter_images(self, chapter: Chapter) -> None:
-        ignore_images = get_args().ignore_images
-        if ignore_images:
+        if ctx.config.crawler.ignore_images:
             return
 
         if not chapter.body:

@@ -9,11 +9,11 @@ from urllib.parse import urlparse
 from readability import Document  # type: ignore
 from slugify import slugify
 
-from .. import constants as C
 from ..binders import generate_books
+from ..context import ctx
 from ..core.exeptions import LNException
-from ..core.sources import crawler_list, prepare_crawler
-from ..models import Chapter, CombinedSearchResult, OutputFormat
+from ..dao.enums import OutputFormat
+from ..models import Chapter, CombinedSearchResult
 from .browser import Browser
 from .crawler import Crawler
 from .download_chapters import fetch_chapter_body
@@ -23,7 +23,6 @@ from .metadata import save_metadata
 from .novel_info import format_novel
 from .novel_search import search_novels
 from .scraper import Scraper
-from .sources import rejected_sources
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +36,7 @@ class App:
         self.crawler: Optional[Crawler] = None
         self.login_data: Optional[Tuple[str, str]] = None
         self.search_results: List[CombinedSearchResult] = []
-        self.output_path = C.DEFAULT_OUTPUT_PATH
+        self.output_path = ctx.config.app.output_path
         self.pack_by_volume = False
         self.chapters: List[Chapter] = []
         self.book_cover: Optional[str] = None
@@ -111,18 +110,12 @@ class App:
 
         if self.user_input.startswith("http"):
             logger.info("Detected URL input")
-            crawler = prepare_crawler(self.user_input)
+            crawler = ctx.sources.create_crawler(self.user_input)
             if not self.crawler or self.crawler.home_url != crawler.home_url:
                 self.crawler = crawler
         else:
             logger.info("Detected query input")
-            self.crawler_links = [
-                str(link)
-                for link, crawler in crawler_list.items()
-                if crawler.search_novel != Crawler.search_novel
-                and link.startswith("http")
-                and link not in rejected_sources
-            ]
+            self.crawler_links = [url for url, _ in ctx.sources.list(can_search=True)]
 
     def guess_novel_title(self, url: str) -> str:
         try:
@@ -211,7 +204,7 @@ class App:
         source_name = slugify(no_www)
 
         self.output_path = str(
-            Path(C.DEFAULT_OUTPUT_PATH) / source_name / self.good_file_name
+            Path(ctx.config.app.output_path) / source_name / self.good_file_name
         )
         os.makedirs(self.output_path, exist_ok=True)
 

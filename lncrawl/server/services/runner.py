@@ -10,17 +10,15 @@ from lncrawl.core.download_chapters import restore_chapter_body
 from lncrawl.core.metadata import (get_metadata_list, load_metadata,
                                    save_metadata)
 
-from ....context import AppContext
-from ....dao import Artifact, Job, Novel
-from ....dao.enums import JobStatus, OutputFormat, RunState
-from ....utils.time_utils import current_timestamp
-from ..models.user import User
+from ...context import ctx
+from ...dao import Artifact, Job, Novel, User
+from ...dao.enums import JobStatus, OutputFormat, RunState
+from ...utils.time_utils import current_timestamp
 from .tier import ENABLED_FORMATS, SLOT_TIMEOUT_IN_SECOND
 
 
 def microtask(job_id: str, signal=Event()) -> None:
     app = App()
-    ctx = AppContext()
     sess = ctx.db.session()
     job = sess.get_one(Job, job_id)
     logger = logging.getLogger(f'Job:{job_id}')
@@ -106,14 +104,14 @@ def microtask(job_id: str, signal=Event()) -> None:
             job.progress = round(app.progress)
             job.run_state = RunState.FETCHING_CONTENT
 
-            novel.orphan = False
+            novel.crawled = True
             novel.title = crawler.novel_title
             novel.cover = crawler.novel_cover
             novel.authors = crawler.novel_author
             novel.synopsis = crawler.novel_synopsis
             novel.tags = crawler.novel_tags or []
-            novel.volume_count = len(crawler.volumes)
-            novel.chapter_count = len(crawler.chapters)
+            # novel.volume_count = len(crawler.volumes)
+            # novel.chapter_count = len(crawler.chapters)
             sess.add(novel)
 
             logger.info(f'Novel: {novel}')

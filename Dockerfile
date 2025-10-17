@@ -54,7 +54,7 @@ COPY sources sources
 COPY lncrawl lncrawl
 
 # Copy web assets
-COPY --from=node --chown=lncrawl:lncrawl /app/lncrawl/bots/server/web lncrawl/bots/server/web
+COPY --from=node --chown=lncrawl:lncrawl /app/lncrawl/server/web lncrawl/server/web
 
 # Copy web assets
 ENV OUTPUT_PATH=/home/lncrawl/output

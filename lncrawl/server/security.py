@@ -4,9 +4,10 @@ from fastapi import Depends, Security
 from fastapi.security import (HTTPAuthorizationCredentials, HTTPBasic,
                               HTTPBasicCredentials, HTTPBearer, SecurityScopes)
 
-from ...context import AppContext
-from .exceptions import AppErrors
-from .dao.user import LoginRequest, User, UserRole
+from ..context import ctx
+from ..dao.user import User, UserRole
+from .exceptions import ServerErrors
+from .models.user import LoginRequest
 
 basic_auth = HTTPBasic(auto_error=False)
 bearer_auth = HTTPBearer(auto_error=False)
@@ -14,7 +15,6 @@ bearer_auth = HTTPBearer(auto_error=False)
 
 def ensure_user(
     security_scopes: SecurityScopes,
-    ctx: AppContext = Depends(),
     basic: Optional[HTTPBasicCredentials] = Depends(basic_auth),
     bearer: Optional[HTTPAuthorizationCredentials] = Depends(bearer_auth),
 ) -> User:
@@ -31,9 +31,9 @@ def ensure_user(
             required_scopes
         )
     else:
-        raise AppErrors.unauthorized
+        raise ServerErrors.unauthorized
     if not user.is_active:
-        raise AppErrors.inactive_user
+        raise ServerErrors.inactive_user
     return user
 
 
@@ -41,5 +41,5 @@ def ensure_admin(
     user: User = Security(ensure_user, scopes=[UserRole.ADMIN]),
 ) -> User:
     if user.role != UserRole.ADMIN:
-        raise AppErrors.forbidden
+        raise ServerErrors.forbidden
     return user

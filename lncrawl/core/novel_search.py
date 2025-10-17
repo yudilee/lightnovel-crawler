@@ -1,6 +1,7 @@
 """
 To search for novels in selected sources
 """
+import asyncio
 import atexit
 import logging
 from concurrent.futures import Future
@@ -8,7 +9,6 @@ from difflib import SequenceMatcher
 from multiprocessing import Manager, Process, Queue
 from threading import Event
 from typing import Dict, List
-from urllib.parse import urlparse
 
 from slugify import slugify
 
@@ -27,10 +27,11 @@ def _search_process(
     file_path: str,
 ):
     try:
+        from ..context import ctx
         from ..models import SearchResult
-        from .sources import prepare_crawler
 
-        crawler = prepare_crawler(link, file_path)
+        asyncio.run(ctx.sources.load())
+        crawler = ctx.sources.create_crawler(link)
         setattr(crawler, 'can_use_browser', False)  # disable browser in search
 
         for item in crawler.search_novel(query):
@@ -71,9 +72,10 @@ def _run(p: Process, hostname: str, signal: Event):
 
 
 def search_novels(app):
+    from ..context import ctx
+    from ..utils.url_tools import extract_host
     from ..models import CombinedSearchResult, SearchResult
     from .app import App
-    from .sources import crawler_list, rejected_sources
     from .taskman import TaskManager
 
     assert isinstance(app, App)
@@ -90,11 +92,11 @@ def search_novels(app):
     signal = Event()
     futures: list[Future] = []
     for link in app.crawler_links:
-        if link in rejected_sources:
+        hostname = extract_host(link)
+        if link in ctx.sources.rejected:
             continue
 
-        hostname = urlparse(link).hostname
-        CrawlerType = crawler_list.get(hostname or '')
+        CrawlerType = ctx.sources.crawlers.get(hostname)
         if CrawlerType in checked:
             continue
         checked.add(CrawlerType)

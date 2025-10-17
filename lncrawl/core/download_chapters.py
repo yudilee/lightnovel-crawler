@@ -8,8 +8,8 @@ from pathlib import Path
 from threading import Event
 from typing import Dict
 
+from ..context import ctx
 from ..models.chapter import Chapter
-from .arguments import get_args
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +33,13 @@ def _save_chapter(file_name: Path, chapter: Chapter):
     if not chapter.body:
         chapter.body = "<p><i>Failed to download chapter body</i></p>"
 
-    args = get_args()
     source_notice = (
         f'<br><p><small>Source: <a href="{chapter.url}">{chapter.url}</a></small></p>'
     )
-    if args.add_source_url and not chapter.body.endswith(source_notice):
+    if (
+        ctx.config.crawler.add_source_url_in_chapter_content
+        and not chapter.body.endswith(source_notice)
+    ):
         chapter.body += source_notice
 
     title = chapter.title

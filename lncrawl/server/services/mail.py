@@ -6,31 +6,30 @@ from typing import Optional
 import lxml.etree
 import lxml.html
 
-from ....context import AppContext
+from ...context import ctx
+from ...dao.enums import RunState
 from ..emails import job_template, otp_template, repass_template
-from ..exceptions import AppErrors
-from ..models.job import JobDetail, RunState
+from ..exceptions import ServerErrors
+from ..models.job import JobDetail
 
 logger = logging.getLogger(__name__)
 
 
 class MailService:
-    def __init__(self, ctx: AppContext) -> None:
-        self._ctx = ctx
-        self._db = ctx.db
+    def __init__(self) -> None:
         self.server: Optional[SMTP] = None
         self.sender = (
-            self._ctx.config.mail.smtp_sender
-            or self._ctx.config.mail.smtp_username
+            ctx.config.mail.smtp_sender
+            or ctx.config.mail.smtp_username
         )
 
     def prepare(self):
         try:
             logger.info('Preparing mail server')
-            smtp_server = self._ctx.config.mail.smtp_server
-            smtp_port = self._ctx.config.mail.smtp_port
-            smtp_user = self._ctx.config.mail.smtp_username
-            smtp_pass = self._ctx.config.mail.smtp_password
+            smtp_server = ctx.config.mail.smtp_server
+            smtp_port = ctx.config.mail.smtp_port
+            smtp_user = ctx.config.mail.smtp_username
+            smtp_pass = ctx.config.mail.smtp_password
 
             self.server = SMTP(smtp_server, smtp_port)
             self.server.starttls()
@@ -47,7 +46,7 @@ class MailService:
 
     def send(self, email: str, subject: str, html_body: str):
         if not self.server:
-            raise AppErrors.smtp_server_unavailable
+            raise ServerErrors.smtp_server_unavailable
 
         # Minify HTML
         tree = lxml.html.fromstring(html_body)
@@ -62,7 +61,7 @@ class MailService:
         try:
             self.server.sendmail(msg['From'], [msg['To']], msg.as_string())
         except Exception as e:
-            raise AppErrors.email_send_failure from e
+            raise ServerErrors.email_send_failure from e
 
     def send_otp(self, email: str, otp: str):
         subject = f'OTP ({otp})'
@@ -80,17 +79,17 @@ class MailService:
             and detail.novel
             and detail.job.run_state == RunState.SUCCESS
         ):
-            raise AppErrors.server_error
+            raise ServerErrors.server_error
 
         if not self.server:
-            raise AppErrors.smtp_server_unavailable
+            raise ServerErrors.smtp_server_unavailable
 
-        base_url = self._ctx.config.server.base_url
+        base_url = ctx.config.server.base_url
         job_url = f'{base_url}/job/{detail.job.id}'
         novel_title = detail.novel.title or "Unknown Title"
         novel_authors = detail.novel.authors or "Unknown Author"
-        chapter_count = str(detail.novel.chapter_count or '?')
-        volume_count = str(detail.novel.volume_count or '?')
+        chapter_count = '?'  # detail.novel.chapter_count
+        volume_count = '?'  # detail.novel.volume_count
         novel_synopsis = detail.novel.synopsis or "No synopsis available."
         artifacts = [
             {

@@ -1,11 +1,12 @@
-from ..security import ensure_user
-from fastapi import APIRouter, Body, Depends, Form, Security
+from fastapi import APIRouter, Body, Form, Security
 
-from ....context import AppContext
+from ...context import ctx
+from ...dao import User
 from ..models.user import (CreateRequest, ForgotPasswordRequest, LoginRequest,
                            LoginResponse, NameUpdateRequest,
                            PasswordUpdateRequest, ResetPasswordRequest,
-                           SignupRequest, TokenResponse, UpdateRequest, User)
+                           SignupRequest, TokenResponse, UpdateRequest)
+from ..security import ensure_user
 
 # The root router
 router = APIRouter()
@@ -13,7 +14,6 @@ router = APIRouter()
 
 @router.post("/login", summary="Login with username or email and password")
 def login(
-    ctx: AppContext = Depends(),
     credentials: LoginRequest = Body(
         default=...,
         description='The login credentials',
@@ -31,7 +31,6 @@ def login(
 
 @router.post('/signup', summary='Signup as a new user')
 def signup(
-    ctx: AppContext = Depends(),
     body: SignupRequest = Body(
         default=...,
         description='The signup request',
@@ -61,7 +60,6 @@ def me(
 
 @router.put('/me/name', summary='Update current user name')
 def self_name_update(
-    ctx: AppContext = Depends(),
     user: User = Security(ensure_user),
     body: NameUpdateRequest = Body(description='The update request'),
 ) -> bool:
@@ -71,7 +69,6 @@ def self_name_update(
 
 @router.put('/me/password', summary='Update current user password')
 def self_password_update(
-    ctx: AppContext = Depends(),
     user: User = Security(ensure_user),
     body: PasswordUpdateRequest = Body(description='The update request'),
 ) -> bool:
@@ -80,7 +77,6 @@ def self_password_update(
 
 @router.post('/send-password-reset-link', summary='Send reset password link to email')
 def send_password_reset_link(
-    ctx: AppContext = Depends(),
     body: ForgotPasswordRequest = Body(description='The request body'),
 ) -> bool:
     return ctx.users.send_password_reset_link(body.email)
@@ -88,7 +84,6 @@ def send_password_reset_link(
 
 @router.post('/reset-password-with-token', summary='Verify token and change password')
 def reset_password_with_token(
-    ctx: AppContext = Depends(),
     user: User = Security(ensure_user),
     body: ResetPasswordRequest = Body(description='The request body'),
 ) -> bool:
@@ -100,7 +95,6 @@ def reset_password_with_token(
 
 @router.post('/me/send-otp', summary='Send OTP to current user email for verification')
 def send_otp(
-    ctx: AppContext = Depends(),
     user: User = Security(ensure_user),
 ) -> TokenResponse:
     token = ctx.users.send_otp(user.email)
@@ -111,6 +105,5 @@ def send_otp(
 def verify_otp(
     otp: str = Form(),
     token: str = Form(),
-    ctx: AppContext = Depends(),
 ) -> bool:
     return ctx.users.verify_otp(token, otp)

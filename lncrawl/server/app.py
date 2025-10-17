@@ -6,16 +6,27 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse
 
-from lncrawl.assets.version import get_version
+from ..assets.version import get_version
+from ..context import ctx
 
-from ...context import AppContext
+
+async def prepare_services():
+    ctx.mail.prepare()
+    ctx.users.prepare()
+    ctx.scheduler.start()
+
+
+async def cleanup_services():
+    ctx.mail.close()
+    ctx.scheduler.close()
+
 
 app = FastAPI(
     version=get_version(),
     title="Lightnovel Crawler",
     description="Download novels from online sources and generate e-books",
-    on_shutdown=[AppContext().cleanup],
-    on_startup=[AppContext().prepare],
+    on_startup=[prepare_services],
+    on_shutdown=[cleanup_services],
 )
 
 app.add_middleware(

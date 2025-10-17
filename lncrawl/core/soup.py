@@ -50,4 +50,4 @@ class SoupMaker(ABC):
         encoding: Optional[str] = None,
     ) -> Tag:
         soup = self.make_soup(data, encoding)
-        return next(soup.find("body").children)
+        return next(soup.find("body").children)  # type: ignore

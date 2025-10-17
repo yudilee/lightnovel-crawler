@@ -3,18 +3,16 @@ from typing import Optional
 
 from sqlmodel import desc, func, select
 
-from ....context import AppContext
-from ....dao import Artifact
-from ....dao.enums import UserRole
-from ..exceptions import AppErrors
+from ...context import ctx
+from ...dao import Artifact, User
+from ...dao.enums import UserRole
+from ..exceptions import ServerErrors
 from ..models.pagination import Paginated
-from ..models.user import User
 
 
 class ArtifactService:
-    def __init__(self, ctx: AppContext) -> None:
-        self._ctx = ctx
-        self._db = ctx.db
+    def __init__(self) -> None:
+        pass
 
     def list(
         self,
@@ -22,7 +20,7 @@ class ArtifactService:
         limit: int = 20,
         novel_id: Optional[str] = None,
     ) -> Paginated[Artifact]:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             stmt = select(Artifact)
 
             # Apply filters
@@ -43,19 +41,19 @@ class ArtifactService:
             )
 
     def get(self, artifact_id: str) -> Artifact:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             artifact = sess.get(Artifact, artifact_id)
             if not artifact:
-                raise AppErrors.no_such_artifact
+                raise ServerErrors.no_such_artifact
             return artifact
 
     def delete(self, artifact_id: str, user: User) -> bool:
         if user.role != UserRole.ADMIN:
-            raise AppErrors.forbidden
-        with self._db.session() as sess:
+            raise ServerErrors.forbidden
+        with ctx.db.session() as sess:
             artifact = sess.get(Artifact, artifact_id)
             if not artifact:
-                raise AppErrors.no_such_artifact
+                raise ServerErrors.no_such_artifact
             sess.delete(artifact)
             sess.commit()
             return True
@@ -64,7 +62,7 @@ class ArtifactService:
         old_file = None
         new_file = item.output_file
 
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             artifact = sess.exec(
                 select(Artifact)
                 .where(Artifact.novel_id == item.novel_id)

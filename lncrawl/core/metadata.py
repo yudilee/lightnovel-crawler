@@ -3,15 +3,16 @@ import logging
 from pathlib import Path
 from typing import Iterable
 
-from .. import constants as C
+from ..context import ctx
 from ..models import Chapter, MetaInfo, Novel, Session
-from .sources import prepare_crawler
 
 logger = logging.getLogger(__name__)
 
+META_FILE_NAME = 'meta.json'
+
 
 def get_metadata_list(output_path: str) -> Iterable[MetaInfo]:
-    for meta_file in Path(output_path).glob("**/" + C.META_FILE_NAME):
+    for meta_file in Path(output_path).glob("**/" + META_FILE_NAME):
         try:
             with open(meta_file, "r", encoding="utf-8") as fp:
                 data = json.load(fp)
@@ -70,7 +71,7 @@ def save_metadata(app, completed=False):
 
     try:
         Path(app.output_path).mkdir(parents=True, exist_ok=True)
-        file_name = Path(app.output_path) / C.META_FILE_NAME
+        file_name = Path(app.output_path) / META_FILE_NAME
         novel.to_json(file_name, encoding="utf-8", indent=2)
     except Exception:
         pass
@@ -100,8 +101,8 @@ def load_metadata(app, meta: MetaInfo):
     app.binding_progress = session.binding_progress
 
     logger.info("Novel Url: %s", novel.url)
-    if not app.crawler:
-        app.crawler = prepare_crawler(novel.url)
+    if app.crawler is None:
+        app.crawler = ctx.sources.create_crawler(novel.url)
 
     app.crawler.novel_title = novel.title
     app.crawler.novel_author = ", ".join(novel.authors)

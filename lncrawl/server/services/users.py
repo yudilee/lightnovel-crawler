@@ -7,10 +7,9 @@ from jose import jwt
 from passlib.context import CryptContext
 from sqlmodel import and_, asc, func, or_, select
 
-from ....context import AppContext
-from ....dao import User, VerifiedEmail
-from ....dao.enums import UserRole, UserTier
-from ..exceptions import AppErrors
+from ...context import ctx
+from ...dao.user import User, UserRole, UserTier, VerifiedEmail
+from ..exceptions import ServerErrors
 from ..models.pagination import Paginated
 from ..models.user import (CreateRequest, LoginRequest, PasswordUpdateRequest,
                            UpdateRequest)
@@ -19,9 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class UserService:
-    def __init__(self, ctx: AppContext) -> None:
-        self._ctx = ctx
-        self._db = ctx.db
+    def __init__(self) -> None:
         self._passlib = CryptContext(
             schemes=['argon2'],
             deprecated='auto',
@@ -34,9 +31,9 @@ class UserService:
         return self._passlib.verify(plain, hashed)
 
     def prepare(self):
-        with self._db.session() as sess:
-            email = self._ctx.config.server.admin_email
-            password = self._ctx.config.server.admin_password
+        with ctx.db.session() as sess:
+            email = ctx.config.db.admin_email
+            password = ctx.config.db.admin_password
             q = select(User).where(User.email == email)
             user = sess.exec(q).first()
             if not user:
@@ -62,20 +59,20 @@ class UserService:
         payload: Dict[str, Any],
         expiry_minutes: Optional[int] = None,
     ) -> str:
-        key = self._ctx.config.server.token_secret
-        algorithm = self._ctx.config.server.token_algo
-        default_expiry = self._ctx.config.server.token_expiry
+        key = ctx.config.server.token_secret
+        algorithm = ctx.config.server.token_algo
+        default_expiry = ctx.config.server.token_expiry
         minutes = expiry_minutes if expiry_minutes else default_expiry
         payload['exp'] = datetime.now() + timedelta(minutes=minutes)
         return jwt.encode(payload, key, algorithm)
 
     def decode_token(self, token: str) -> Dict[str, Any]:
         try:
-            key = self._ctx.config.server.token_secret
-            algorithm = self._ctx.config.server.token_algo
+            key = ctx.config.server.token_secret
+            algorithm = ctx.config.server.token_algo
             return jwt.decode(token, key, algorithm)
         except Exception as e:
-            raise AppErrors.unauthorized from e
+            raise ServerErrors.unauthorized from e
 
     def generate_token(
         self,
@@ -93,9 +90,9 @@ class UserService:
         user_id = payload.get('uid')
         token_scopes = payload.get('scopes', [])
         if not user_id:
-            raise AppErrors.unauthorized
+            raise ServerErrors.unauthorized
         if any(scope not in token_scopes for scope in required_scopes):
-            raise AppErrors.forbidden
+            raise ServerErrors.forbidden
         return self.get(user_id)
 
     def list(
@@ -104,7 +101,7 @@ class UserService:
         limit: int = 20,
         search: Optional[str] = None
     ) -> Paginated[User]:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             stmt = select(User)
             cnt = select(func.count()).select_from(User)
 
@@ -143,29 +140,29 @@ class UserService:
             )
 
     def get(self, user_id: str) -> User:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             user = sess.get(User, user_id)
             if not user:
-                raise AppErrors.no_such_user
+                raise ServerErrors.no_such_user
             return user
 
     def verify(self, creds: LoginRequest) -> User:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             q = select(User).where(User.email == creds.email)
             user = sess.exec(q).first()
             if not user:
-                raise AppErrors.no_such_user
+                raise ServerErrors.no_such_user
             if not user.is_active:
-                raise AppErrors.inactive_user
+                raise ServerErrors.inactive_user
         if not self._check(creds.password, user.password):
-            raise AppErrors.unauthorized
+            raise ServerErrors.unauthorized
         return user
 
     def create(self, body: CreateRequest) -> User:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             q = select(func.count()).where(User.email == body.email)
             if sess.exec(q).one() != 0:
-                raise AppErrors.user_exists
+                raise ServerErrors.user_exists
             user = User(
                 name=body.name,
                 email=body.email,
@@ -179,10 +176,10 @@ class UserService:
             return user
 
     def update(self, user_id: str, body: UpdateRequest) -> bool:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             user = sess.get(User, user_id)
             if not user:
-                raise AppErrors.no_such_user
+                raise ServerErrors.no_such_user
 
             updated = False
             if body.name is not None:
@@ -208,26 +205,26 @@ class UserService:
 
     def change_password(self, user: User, body: PasswordUpdateRequest) -> bool:
         if not self._check(body.old_password, user.password):
-            raise AppErrors.wrong_password
+            raise ServerErrors.wrong_password
         request = UpdateRequest(password=body.new_password)
         return self.update(user.id, request)
 
     def remove(self, user_id: str) -> bool:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             user = sess.get(User, user_id)
             if not user:
-                raise AppErrors.no_such_user
+                raise ServerErrors.no_such_user
             sess.delete(user)
             sess.commit()
             return True
 
     def is_verified(self, email: str) -> bool:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             verified = sess.get(VerifiedEmail, email)
             return bool(verified)
 
     def set_verified(self, email: str) -> bool:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             verified = sess.get(VerifiedEmail, email)
             if verified:
                 return True
@@ -237,13 +234,13 @@ class UserService:
             return True
 
     def send_otp(self, email: str):
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             verified = sess.get(VerifiedEmail, email)
             if verified:
-                raise AppErrors.email_already_verified
+                raise ServerErrors.email_already_verified
 
         otp = str(secrets.randbelow(1000000)).zfill(6)
-        self._ctx.mail.send_otp(email, otp)
+        ctx.mail.send_otp(email, otp)
         return self.encode_token({
             'otp': otp,
             'email': email,
@@ -253,30 +250,30 @@ class UserService:
         payload = self.decode_token(token)
         email = payload.get('email')
         if not email:
-            raise AppErrors.not_found
+            raise ServerErrors.not_found
 
         actual_otp = payload.get('otp')
         if actual_otp != input_otp:
-            raise AppErrors.unauthorized
+            raise ServerErrors.unauthorized
 
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             entry = VerifiedEmail(email=email)
             sess.add(entry)
             sess.commit()
             return True
 
     def send_password_reset_link(self, email: str) -> bool:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             q = select(User).where(User.email == email)
             user = sess.exec(q).first()
             if not user:
-                raise AppErrors.no_such_user
+                raise ServerErrors.no_such_user
             if not user.is_active:
-                raise AppErrors.inactive_user
+                raise ServerErrors.inactive_user
             token = self.generate_token(user, 5)
 
-        base_url = self._ctx.config.server.base_url
+        base_url = ctx.config.server.base_url
         link = f'{base_url}/reset-password?token={token}&email={user.email}'
 
-        self._ctx.mail.send_reset_password_link(email, link)
+        ctx.mail.send_reset_password_link(email, link)
         return True

@@ -2,8 +2,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from ....dao import Artifact, Job, Novel, User
-from ....dao.enums import JobStatus, RunState
+from ...dao import Artifact, Job, Novel, User
+from ...dao.enums import JobStatus, RunState
 
 
 class JobDetail(BaseModel):

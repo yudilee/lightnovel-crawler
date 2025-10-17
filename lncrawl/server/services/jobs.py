@@ -3,20 +3,18 @@ from typing import Any, List, Optional
 from pydantic import HttpUrl
 from sqlmodel import and_, asc, desc, func, select
 
-from ....context import AppContext
-from ....dao import Artifact, Job, Novel
-from ....dao.enums import JobPriority, JobStatus, RunState
-from ..exceptions import AppErrors
+from ...context import ctx
+from ...dao import Artifact, Job, Novel, User
+from ...dao.enums import JobPriority, JobStatus, RunState, UserRole
+from ..exceptions import ServerErrors
 from ..models.job import JobDetail
 from ..models.pagination import Paginated
-from ..models.user import User, UserRole
 from .tier import JOB_PRIORITY_LEVEL
 
 
 class JobService:
-    def __init__(self, ctx: AppContext) -> None:
-        self._ctx = ctx
-        self._db = ctx.db
+    def __init__(self) -> None:
+        pass
 
     def list(
         self,
@@ -30,7 +28,7 @@ class JobService:
         status: Optional[JobStatus] = None,
         run_state: Optional[RunState] = None,
     ) -> Paginated[Job]:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             stmt = select(Job)
             cnt = select(func.count()).select_from(Job)
 
@@ -55,7 +53,7 @@ class JobService:
             # Apply sorting
             sort_column = getattr(Job, sort_by, None)
             if sort_column is None:
-                raise AppErrors.sort_column_is_none
+                raise ServerErrors.sort_column_is_none
             order_fn = desc if order == "desc" else asc
             stmt = stmt.order_by(order_fn(sort_column))
 
@@ -74,8 +72,8 @@ class JobService:
 
     async def create(self, url: HttpUrl, user: User):
         if not url.host:
-            raise AppErrors.invalid_url
-        with self._db.session() as sess:
+            raise ServerErrors.invalid_url
+        with ctx.db.session() as sess:
             # get or create novel
             novel_url = url.encoded_string()
             novel = sess.exec(select(Novel).where(Novel.url == novel_url)).first()
@@ -97,23 +95,23 @@ class JobService:
             return job
 
     def delete(self, job_id: str, user: User) -> bool:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             job = sess.get(Job, job_id)
             if not job:
                 return True
             if job.user_id != user.id and user.role != UserRole.ADMIN:
-                raise AppErrors.forbidden
+                raise ServerErrors.forbidden
             sess.delete(job)
             sess.commit()
             return True
 
     def cancel(self, job_id: str, user: User) -> bool:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             job = sess.get(Job, job_id)
             if not job or job.status == JobStatus.COMPLETED:
                 return True
             if job.user_id != user.id and user.role != UserRole.ADMIN:
-                raise AppErrors.forbidden
+                raise ServerErrors.forbidden
             who = 'user' if job.user_id == user.id else 'admin'
             job.error = f'Canceled by {who}'
             job.status = JobStatus.COMPLETED
@@ -123,10 +121,10 @@ class JobService:
             return True
 
     def get(self, job_id: str) -> JobDetail:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             job = sess.get(Job, job_id)
             if not job:
-                raise AppErrors.no_such_job
+                raise ServerErrors.no_such_job
             user = sess.get_one(User, job.user_id)
             novel = sess.get(Novel, job.novel_id)
             artifacts = sess.exec(
@@ -140,16 +138,16 @@ class JobService:
             )
 
     def get_artifacts(self, job_id: str) -> List[Artifact]:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             q = select(Artifact).where(Artifact.job_id == job_id)
             return list(sess.exec(q).all())
 
     def get_novel(self, job_id: str) -> Novel:
-        with self._db.session() as sess:
+        with ctx.db.session() as sess:
             job = sess.get(Job, job_id)
             if not job:
-                raise AppErrors.no_such_job
+                raise ServerErrors.no_such_job
             novel = sess.get(Novel, job.novel_id)
             if not novel:
-                raise AppErrors.no_such_novel
+                raise ServerErrors.no_such_novel
             return novel

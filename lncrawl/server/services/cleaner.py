@@ -1,20 +1,20 @@
-from ....dao.novel import Artifact, Novel
-from ....dao.job import Job, RunState
-from ....context import AppContext
-from sqlmodel import asc, select, true, and_
-from threading import Event
+import logging
 import os
 import shutil
-import logging
-from ....utils.time_utils import current_timestamp
-from ....utils.file_tools import folder_size, format_size
+from threading import Event
 
+from sqlmodel import and_, asc, false, select
+
+from ...context import ctx
+from ...dao import Artifact, Job, Novel
+from ...dao.enums import RunState
+from ...utils.file_tools import folder_size, format_size
+from ...utils.time_utils import current_timestamp
 
 logger = logging.getLogger(__name__)
 
 
 def microtask(signal=Event()) -> None:
-    ctx = AppContext()
     sess = ctx.db.session()
     output_folder = ctx.config.app.output_path
     size_limit = ctx.config.server.disk_size_limit
@@ -44,7 +44,7 @@ def microtask(signal=Event()) -> None:
             select(Novel)
             .where(
                 and_(
-                    Novel.orphan == true(),
+                    Novel.crawled == false(),
                     Novel.created_at < cutoff,
                 )
             )

@@ -7,10 +7,8 @@ from typing import Optional
 from selenium.webdriver import ChromeOptions
 from selenium.webdriver.remote.webdriver import WebDriver
 
-from ..core.arguments import get_args
+from ..context import ctx
 from ..core.soup import SoupMaker
-from .local import create_local
-from .remote import create_remote
 
 logger = logging.getLogger(__name__)
 
@@ -23,15 +21,16 @@ def create_new(
     headless: bool = False,
     **kwargs,
 ) -> WebDriver:
-    args = get_args()
-    if args.selenium_grid:
+    if ctx.config.crawler.selenium_grid:
+        from .remote import create_remote
         return create_remote(
-            address=args.selenium_grid,
+            address=ctx.config.crawler.selenium_grid,
             options=options,
             timeout=timeout,
             soup_maker=soup_maker,
         )
     else:
+        from .local import create_local
         return create_local(
             options=options,
             timeout=timeout,

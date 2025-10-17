@@ -2,8 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
-from ....dao import User
-from ....dao.enums import UserRole, UserTier
+from ...dao.user import User, UserRole, UserTier
 
 
 class LoginRequest(BaseModel):
