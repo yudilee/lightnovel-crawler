@@ -77,7 +77,7 @@ class DB:
     #                          Prepare Database                          #
     # ------------------------------------------------------------------ #
 
-    async def bootstrap(self):
+    def bootstrap(self):
         # create tables
         table = str(Migration.__tablename__)
         if not inspect(self.engine).has_table(table):
@@ -96,6 +96,9 @@ class DB:
             current = self.__run_migration(current)
             sess.add(Migration(version=current))
             sess.commit()
+
+        # ensure admin user
+        ctx.users.insert_admin()
 
     # ------------------------------------------------------------------ #
     #                           Table Creation                           #

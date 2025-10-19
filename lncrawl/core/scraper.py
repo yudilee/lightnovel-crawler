@@ -7,7 +7,6 @@ from typing import Any, Callable, Dict, MutableMapping, Optional, Tuple, Union
 from urllib.parse import ParseResult, urlparse
 
 from bs4 import BeautifulSoup
-from ..cloudscraper import create_scraper
 from PIL import Image, UnidentifiedImageError
 from requests import Response, Session
 from requests.exceptions import ProxyError
@@ -15,6 +14,7 @@ from requests.structures import CaseInsensitiveDict
 from tenacity import (RetryCallState, retry, retry_if_exception_type,
                       stop_after_attempt, wait_random_exponential)
 
+from ..cloudscraper import create_scraper
 from .exeptions import RetryErrorGroup
 from .proxy import get_a_proxy, remove_faulty_proxies
 from .soup import SoupMaker
@@ -58,7 +58,7 @@ class Scraper(TaskManager, SoupMaker):
 
         self.init_scraper()
         self.init_parser(parser)
-        self.init_executor(workers)
+        super().__init__(workers)
 
     def close(self) -> None:
         if hasattr(self, "scraper"):
@@ -160,15 +160,14 @@ class Scraper(TaskManager, SoupMaker):
             reraise=True,
         )
         def _do_request():
-            with self.domain_gate(_parsed.hostname):
-                response = method_call(
-                    url,
-                    *args,
-                    **kwargs,
-                    headers=headers,
-                )
-                response.raise_for_status()
-                response.encoding = "utf8"
+            response = method_call(
+                url,
+                *args,
+                **kwargs,
+                headers=headers,
+            )
+            response.raise_for_status()
+            response.encoding = "utf8"
 
             self.cookies.update({x.name: x.value for x in response.cookies})
             return response

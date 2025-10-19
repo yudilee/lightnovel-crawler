@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 
 from pydantic import HttpUrl
-from sqlmodel import and_, asc, desc, func, select
+from sqlmodel import and_, asc, desc, func, or_, select
 
 from ...context import ctx
 from ...dao import Artifact, Job, Novel, User
@@ -69,6 +69,23 @@ class JobService:
                 limit=limit,
                 items=list(items),
             )
+
+    def pending_jobs(self, limit: int = 5) -> List[Job]:
+        with ctx.db.session() as sess:
+            stmt = select(Job)
+            stmt = stmt.where(
+                or_(
+                    Job.status == JobStatus.PENDING,
+                    Job.status == JobStatus.RUNNING,
+                )
+            )
+            stmt = stmt.order_by(
+                desc(Job.priority),
+                asc(Job.created_at),
+            )
+            stmt = stmt.limit(limit)
+            jobs = sess.exec(stmt).all()
+            return list(jobs)
 
     async def create(self, url: HttpUrl, user: User):
         if not url.host:

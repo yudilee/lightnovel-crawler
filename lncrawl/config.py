@@ -95,7 +95,17 @@ class Config(object):
 
     # -------------------------------------------------------------- #
 
-    def load(self, file: Optional[Path]) -> None:
+    def load(self, file: Optional[Path] = None) -> None:
+        """
+        Loads configurations from given file, env var or default config.
+
+        - Loads from param `file` if provided
+        - Loads from `LNCRAWL_CONFIG` env var if available
+        - Loads from default config otherwise
+        """
+        env_file = os.getenv('LNCRAWL_CONFIG')
+        if not file and env_file:
+            file = Path(env_file)
         self.config_file = file or DEFAULT_CONFIG_FILE
         logger.info(f'Config file: {self.config_file}')
         if self.config_file.is_file():
@@ -177,7 +187,7 @@ class DatabaseConfig(_Section):
 
     @property
     def admin_email(self) -> str:
-        return self._get("admin_email", "")
+        return self._get("admin_email", "admin")
 
     @admin_email.setter
     def admin_email(self, v: Optional[str]) -> None:
@@ -185,7 +195,7 @@ class DatabaseConfig(_Section):
 
     @property
     def admin_password(self) -> str:
-        return self._get("admin_password", "")
+        return self._get("admin_password", "admin")
 
     @admin_password.setter
     def admin_password(self, v: Optional[str]) -> None:
@@ -230,6 +240,35 @@ class CrawlerConfig(_Section):
     def index_file_download_url(self) -> str:
         return "https://raw.githubusercontent.com/dipu-bd/lightnovel-crawler/dev/sources/_index.zip"
 
+    @property
+    def runner_cooldown(self) -> int:
+        '''Crawler job cooldown in seconds'''
+        return self._get("runner_cooldown", 5)
+
+    @runner_cooldown.setter
+    def runner_cooldown(self, v: Optional[int]) -> None:
+        self._set("runner_cooldown", v)
+
+    @property
+    def cleaner_cooldown(self) -> int:
+        '''Cleaner job cooldown in seconds'''
+        return self._get("cleaner_cooldown", lambda: 6 * 3600)
+
+    @cleaner_cooldown.setter
+    def cleaner_cooldown(self, v: Optional[int]) -> None:
+        self._set("cleaner_cooldown", v)
+
+    @property
+    def disk_size_limit(self) -> int:
+        '''Maximum disk size limit of crawled data in bytes'''
+        mb = self._get("disk_size_limit_mb", 0)
+        return mb * 1024 * 1024
+
+    @disk_size_limit.setter
+    def disk_size_limit(self, bytes_val: Optional[int]) -> None:
+        mb = None if bytes_val is None else bytes_val // (1024 * 1024)
+        self._set("disk_size_limit_mb", mb)
+
 
 # ------------------------------------------------------------------ #
 #                           Server Section                           #
@@ -269,44 +308,11 @@ class ServerConfig(_Section):
     def token_expiry(self, v: Optional[int]) -> None:
         self._set("token_expiry", v)
 
-    @property
-    def runner_cooldown(self) -> int:
-        return self._get("runner_cooldown", 5)
-
-    @runner_cooldown.setter
-    def runner_cooldown(self, v: Optional[int]) -> None:
-        self._set("runner_cooldown", v)
-
-    @property
-    def cleaner_cooldown(self) -> int:
-        return self._get("cleaner_cooldown", lambda: 6 * 3600)
-
-    @cleaner_cooldown.setter
-    def cleaner_cooldown(self, v: Optional[int]) -> None:
-        self._set("cleaner_cooldown", v)
-
-    @property
-    def disk_size_limit(self) -> int:
-        mb = self._get("disk_size_limit_mb", 0)
-        return mb * 1024 * 1024
-
-    @disk_size_limit.setter
-    def disk_size_limit(self, bytes_val: Optional[int]) -> None:
-        mb = None if bytes_val is None else bytes_val // (1024 * 1024)
-        self._set("disk_size_limit_mb", mb)
-
-    @property
-    def scheduler_reset_interval(self) -> int:
-        return self._get("scheduler_reset_interval", lambda: 6 * 3600)
-
-    @scheduler_reset_interval.setter
-    def scheduler_reset_interval(self, v: Optional[int]) -> None:
-        self._set("scheduler_reset_interval", v)
-
-
 # ------------------------------------------------------------------ #
 #                         Third Party Section                        #
 # ------------------------------------------------------------------ #
+
+
 class CloudConfig(_Section):
     section = "cloud"
 

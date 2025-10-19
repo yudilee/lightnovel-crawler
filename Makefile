@@ -67,10 +67,10 @@ build: version install build-web build-wheel build-exe
 
 # Lint project files
 start-server:
-	$(PY) -m lncrawl -b server -ll
+	$(PY) -m lncrawl -ll server
 
 watch-server:
-	$(PY) -m lncrawl -b server -ll --watch
+	$(PY) -m lncrawl -ll server --watch
 
 start-web:
 	$(YARN) dev

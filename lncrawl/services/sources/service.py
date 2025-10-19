@@ -1,26 +1,16 @@
-import asyncio
 import logging
-from typing import Dict, List, Optional, Tuple, Type
+from typing import List, Optional, Tuple
 
-from ...core.crawler import Crawler
 from ...core.exeptions import LNException
-from ...utils.fts_store import FTSStore
 from ...utils.text_tools import normalize
 from ...utils.url_tools import extract_host
-from .dto import CrawlerIndex, SourceItem
+from .dto import SourceItem
 from .loader import SourceLoader
 
 logger = logging.getLogger(__name__)
 
 
 class Sources(SourceLoader):
-    def __init__(self) -> None:
-        self._store: FTSStore
-        self._index: CrawlerIndex
-        self._updater: Optional[asyncio.Task[None]] = None
-        self.rejected: Dict[str, str] = {}            # Map of host -> rejection reason
-        self.crawlers: Dict[str, Type[Crawler]] = {}  # Map of host/id -> crawler
-
     @property
     def version(self) -> int:
         return self._index.v

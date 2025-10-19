@@ -148,7 +148,7 @@ class BasicBrowserTemplate(CrawlerTemplate):
                 self.extract_chapter_images(chapter)
                 chapter.success = True
             except Exception as e:
-                logger.error("Failed to get chapter body: %s", e)
+                logger.error("Failed to get chapter body", exc_info=True)
                 if isinstance(e, KeyboardInterrupt):
                     break
                 if fail_fast:
@@ -175,7 +175,9 @@ class BasicBrowserTemplate(CrawlerTemplate):
             self.init_browser()
             self._browser.visit(url)
             self.browser.wait("img", By.TAG_NAME)
-            png = self.browser.find("img", By.TAG_NAME).screenshot_as_png
+            img = self.browser.find("img", By.TAG_NAME)
+            assert img, 'No img element'
+            png = img.screenshot_as_png
             return Image.open(BytesIO(png))
 
     def search_novel_in_soup(self, query: str) -> Generator[SearchResult, None, None]:

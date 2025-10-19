@@ -1,9 +1,4 @@
-import traceback
-
-from fastapi import Request, HTTPException
-from fastapi.responses import JSONResponse
-
-from .app import app
+from fastapi import HTTPException
 
 
 class ServerError(HTTPException):
@@ -39,36 +34,9 @@ class ServerErrors:
     no_novel_cover = ServerError(500, "Novel cover is not available")
     invalid_image_response = ServerError(500, "Invalid image response")
     smtp_server_unavailable = ServerError(500, "SMTP server is not available")
+    smtp_server_login_fail = ServerError(500, "Failed to login to SMTP server")
     email_send_failure = ServerError(500, "Failed to send email")
     no_novel_output_path = ServerError(500, "Novel output path is not found")
     malformed_json_file = ServerError(500, 'Malformed JSON file')
     no_metadata_file = ServerError(500, "Novel metadata file is not found")
     malformed_metadata_file = ServerError(500, "Novel metadata file is malformed")
-
-
-@app.exception_handler(ServerError)
-async def global_client_error_handler(req: Request, err: ServerError):
-    return JSONResponse(
-        status_code=err.status_code,
-        content={"detail": err.detail},
-        headers=err.headers,
-    )
-
-
-@app.exception_handler(HTTPException)
-async def global_http_exception_handler(req: Request, err: HTTPException):
-    traceback.print_exception(err)
-    return JSONResponse(
-        status_code=err.status_code,
-        content={"detail": err.detail},
-        headers=err.headers,
-    )
-
-
-@app.exception_handler(Exception)
-async def global_exception_handler(req: Request, err: Exception):
-    traceback.print_exception(err)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal Server Error"},
-    )

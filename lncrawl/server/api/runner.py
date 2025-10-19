@@ -9,13 +9,13 @@ router = APIRouter()
 
 @router.get("/status", summary='Get runner status')
 def status() -> bool:
-    return bool(ctx.scheduler.running)
+    return bool(ctx.scheduler.is_running)
 
 
 @router.get("/history", summary='Get runner history')
 def history() -> JobRunnerHistory:
     return JobRunnerHistory(
-        running=ctx.scheduler.running,
+        running=ctx.scheduler.is_running,
         history=list(reversed(ctx.scheduler.history)),
     )
 

@@ -14,10 +14,10 @@ from ...utils.time_utils import current_timestamp
 logger = logging.getLogger(__name__)
 
 
-def microtask(signal=Event()) -> None:
+def run_cleaner(signal=Event()) -> None:
     sess = ctx.db.session()
     output_folder = ctx.config.app.output_path
-    size_limit = ctx.config.server.disk_size_limit
+    size_limit = ctx.config.crawler.disk_size_limit
     cutoff = current_timestamp() - 5 * 24 * 3600 * 1000  # 5 days
 
     logger.info("=== Cleanup begin ===")

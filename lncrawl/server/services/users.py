@@ -30,7 +30,7 @@ class UserService:
     def _check(self, plain: str, hashed: str) -> bool:
         return self._passlib.verify(plain, hashed)
 
-    def prepare(self):
+    def insert_admin(self):
         with ctx.db.session() as sess:
             email = ctx.config.db.admin_email
             password = ctx.config.db.admin_password

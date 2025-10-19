@@ -4,20 +4,18 @@ import time
 from pathlib import Path
 from threading import Event
 
-from lncrawl.cloudscraper import AbortedException
-from lncrawl.core.app import App
-from lncrawl.core.download_chapters import restore_chapter_body
-from lncrawl.core.metadata import (get_metadata_list, load_metadata,
-                                   save_metadata)
-
+from ...cloudscraper import AbortedException
 from ...context import ctx
+from ...core.app import App
+from ...core.download_chapters import restore_chapter_body
+from ...core.metadata import get_metadata_list, load_metadata, save_metadata
 from ...dao import Artifact, Job, Novel, User
 from ...dao.enums import JobStatus, OutputFormat, RunState
+from ...server.services.tier import ENABLED_FORMATS, SLOT_TIMEOUT_IN_SECOND
 from ...utils.time_utils import current_timestamp
-from .tier import ENABLED_FORMATS, SLOT_TIMEOUT_IN_SECOND
 
 
-def microtask(job_id: str, signal=Event()) -> None:
+def run_crawler(job_id: str, signal=Event()) -> None:
     app = App()
     sess = ctx.db.session()
     job = sess.get_one(Job, job_id)
@@ -232,8 +230,8 @@ def microtask(job_id: str, signal=Event()) -> None:
                     detail = ctx.jobs.get(job_id)
                     ctx.mail.send_job_success(user.email, detail)
                     logger.error(f'Success report was sent to <{user.email}>')
-                except Exception as e:
-                    logger.error('Failed to email success report', e)
+                except Exception:
+                    logger.error('Failed to email success report', exc_info=True)
 
     except AbortedException:
         pass

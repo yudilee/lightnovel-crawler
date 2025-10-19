@@ -1,6 +1,5 @@
 import atexit
 import logging
-import os
 import random
 import time
 from threading import Thread
@@ -163,9 +162,8 @@ def __find_proxies():
                 wait_times -= 1
         except RequestException:
             err_count += 1
-        except Exception as e:
-            if os.getenv("debug_mode"):
-                logger.error("Failed to update proxy list", e)
+        except Exception:
+            logger.error("Failed to update proxy list", exc_info=True)
             stop_proxy_fetcher()
 
 

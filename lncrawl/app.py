@@ -1,4 +1,4 @@
-import asyncio
+import os
 import logging
 from pathlib import Path
 from typing import Optional
@@ -68,16 +68,13 @@ def main(
 ):
     # set context object
     context.obj = ctx
-    context.call_on_close(ctx.cleanup)
+    context.call_on_close(ctx.destroy)
 
-    # setup logger
-    ctx.logger.setup(log_level)
-
-    # setup config
-    ctx.config.load(config)
-
-    # prepare the app
-    asyncio.run(ctx.prepare())
+    # setup context
+    if config:
+        os.environ['LNCRAWL_CONFIG'] = str(config)
+    os.environ['LNCRAWL_LOG_LEVEL'] = str(log_level)
+    ctx.setup()
 
     # show help if no args
     if context.invoked_subcommand is None:

@@ -1,7 +1,8 @@
-import asyncio
 import logging
+import os
 from functools import cached_property
-from typing import Optional
+from threading import Thread
+from typing import List, Optional
 
 _cache: Optional['AppContext'] = None
 
@@ -9,24 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 class AppContext:
-    def __new__(cls):
-        global _cache
-        if _cache is None:
-            _cache = super().__new__(cls)
-        return _cache
-
-    async def prepare(self):
-        await asyncio.gather(
-            self.db.bootstrap(),
-            self.sources.load()
-        )
-
-    def cleanup(self):
-        global _cache
-        _cache = None
-        self.db.close()
-        self.sources.close()
-
     @cached_property
     def config(self):
         from .config import Config
@@ -58,6 +41,11 @@ class AppContext:
         return JobService()
 
     @cached_property
+    def scheduler(self):
+        from .services.scheduler import JobScheduler
+        return JobScheduler()
+
+    @cached_property
     def novels(self):
         from .server.services.novels import NovelService
         return NovelService()
@@ -66,11 +54,6 @@ class AppContext:
     def artifacts(self):
         from .server.services.artifacts import ArtifactService
         return ArtifactService()
-
-    @cached_property
-    def scheduler(self):
-        from .server.services.scheduler import JobScheduler
-        return JobScheduler()
 
     @cached_property
     def fetch(self):
@@ -86,6 +69,36 @@ class AppContext:
     def mail(self):
         from .server.services.mail import MailService
         return MailService()
+
+    def __new__(cls):
+        global _cache
+        if _cache is None:
+            _cache = super().__new__(cls)
+        return _cache
+
+    def __init__(self) -> None:
+        self.__prepared = False
+        self.__threads: List[Thread] = []
+
+    def destroy(self):
+        global _cache
+        _cache = None
+        self.db.close()
+        self.mail.close()
+        self.sources.close()
+        self.scheduler.stop()
+        self.__threads.clear()
+
+    def setup(self):
+        if self.__prepared:
+            return
+        self.__prepared = True
+        log_level = int(os.getenv('LNCRAWL_LOG_LEVEL', '0'))
+        self.logger.setup(log_level)
+        self.config.load()
+        self.db.bootstrap()
+        self.sources.load()
+        self.scheduler.start()
 
 
 ctx = AppContext()

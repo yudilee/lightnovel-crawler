@@ -6,9 +6,9 @@ from typing import Optional
 import lxml.etree
 import lxml.html
 
+from ...assets import emails
 from ...context import ctx
 from ...dao.enums import RunState
-from ..emails import job_template, otp_template, repass_template
 from ..exceptions import ServerErrors
 from ..models.job import JobDetail
 
@@ -23,30 +23,35 @@ class MailService:
             or ctx.config.mail.smtp_username
         )
 
-    def prepare(self):
-        try:
-            logger.info('Preparing mail server')
-            smtp_server = ctx.config.mail.smtp_server
-            smtp_port = ctx.config.mail.smtp_port
-            smtp_user = ctx.config.mail.smtp_username
-            smtp_pass = ctx.config.mail.smtp_password
-
-            self.server = SMTP(smtp_server, smtp_port)
-            self.server.starttls()
-            self.server.login(smtp_user, smtp_pass)
-            logger.info(f'Connected with SMTP server: {smtp_server}')
-        except Exception:
-            logger.exception('Failed to connect with SMTP server')
-            self.close()
-
     def close(self):
         if self.server:
             self.server.close()
             self.server = None
 
-    def send(self, email: str, subject: str, html_body: str):
-        if not self.server:
+    def prepare(self):
+        if self.server:
+            return
+
+        smtp_server = ctx.config.mail.smtp_server
+        smtp_port = ctx.config.mail.smtp_port
+        smtp_user = ctx.config.mail.smtp_username
+        smtp_pass = ctx.config.mail.smtp_password
+        if not all([smtp_server, smtp_port, smtp_user, smtp_pass]):
             raise ServerErrors.smtp_server_unavailable
+
+        try:
+            logger.info('Preparing mail server')
+            self.server = SMTP(smtp_server, smtp_port)
+            self.server.starttls()
+            self.server.login(smtp_user, smtp_pass)
+            logger.info(f'Connected with SMTP server: {smtp_server}')
+        except Exception as e:
+            self.close()
+            raise ServerErrors.smtp_server_login_fail from e
+
+    def send(self, email: str, subject: str, html_body: str):
+        # Prepare mail server
+        self.prepare()
 
         # Minify HTML
         tree = lxml.html.fromstring(html_body)
@@ -59,18 +64,19 @@ class MailService:
         msg['To'] = email
 
         try:
+            assert self.server
             self.server.sendmail(msg['From'], [msg['To']], msg.as_string())
         except Exception as e:
             raise ServerErrors.email_send_failure from e
 
     def send_otp(self, email: str, otp: str):
         subject = f'OTP ({otp})'
-        body = otp_template().render(otp=otp)
+        body = emails.otp_template().render(otp=otp)
         self.send(email, subject, body)
 
     def send_reset_password_link(self, email: str, link: str):
         subject = 'Reset Password'
-        body = repass_template().render(link=link)
+        body = emails.repass_template().render(link=link)
         self.send(email, subject, body)
 
     def send_job_success(self, email: str, detail: JobDetail):
@@ -80,9 +86,6 @@ class MailService:
             and detail.job.run_state == RunState.SUCCESS
         ):
             raise ServerErrors.server_error
-
-        if not self.server:
-            raise ServerErrors.smtp_server_unavailable
 
         base_url = ctx.config.server.base_url
         job_url = f'{base_url}/job/{detail.job.id}'
@@ -102,7 +105,7 @@ class MailService:
         if len(novel_synopsis) > 300:
             novel_synopsis = f'{novel_synopsis[:300]}...'
 
-        body = job_template().render(
+        body = emails.job_template().render(
             job_url=job_url,
             artifacts=artifacts,
             novel_title=novel_title,

@@ -14,4 +14,4 @@ def sources(context: typer.Context):
     if context.invoked_subcommand is None:
         typer.echo(context.get_help())
     else:
-        ctx.sources.ensure_complete()
+        ctx.sources.ensure_load()

@@ -1,4 +1,5 @@
 import sqlite3
+import threading
 from typing import Iterable, List, Mapping, Tuple
 
 # ------------------------------------------------------------------ #
@@ -51,30 +52,35 @@ class FTSStore:
 
     def __init__(self):
         """Initialize the in-memory FTSStore."""
-        self._db = sqlite3.connect(":memory:")
+        self._lock = threading.RLock()
+        self._db = sqlite3.connect(":memory:", check_same_thread=False)
         self._db.execute(_INIT_SQL)
 
     def close(self):
         """Close the database connection."""
-        self._db.close()
+        with self._lock:
+            self._db.close()
 
     def clear(self):
         """Remove all items, and cleanup memory."""
-        self._db.executescript(_PURGE_SQL)
+        with self._lock, self._db:
+            self._db.executescript(_PURGE_SQL)
 
     def count(self) -> int:
         """Returns number of items in the store"""
-        c = self._db.execute(_COUNT_SQL)
-        return c.fetchone()[0]
+        with self._lock, self._db:
+            c = self._db.execute(_COUNT_SQL)
+            return c.fetchone()[0]
 
     def search(self, query: str) -> List[str]:
         """Perform a full-text search on key and return values."""
-        c = self._db.execute(_SEARCH_SQL, [_escape_query(query)])
-        return list(set([r[0] for r in c.fetchall()]))
+        with self._lock, self._db:
+            c = self._db.execute(_SEARCH_SQL, [_escape_query(query)])
+            return list(set([r[0] for r in c.fetchall()]))
 
     def insert_dict(self, mapping: Mapping[str, str]):
         """Insert multiple items from a key-value mapping"""
-        with self._db:
+        with self._lock, self._db:
             self._db.executemany(_DELETE_SQL, [[k] for k in mapping.keys()])
             self._db.executemany(_INSERT_SQL, mapping.items())
 
@@ -92,7 +98,7 @@ class FTSStore:
 
     def delete_many(self, keys: Iterable[str]):
         """Insert multiple items by key."""
-        with self._db:
+        with self._lock, self._db:
             self._db.executemany(_DELETE_SQL, [[k] for k in keys])
 
     def delete(self, key: str):
@@ -101,7 +107,8 @@ class FTSStore:
 
     def search_and_delete(self, query: str):
         """Insert multiple items by key."""
-        self._db.execute(_DELETE_MATCHING_SQL, [_escape_query(query)])
+        with self._lock, self._db:
+            self._db.execute(_DELETE_MATCHING_SQL, [_escape_query(query)])
 
 
 # ------------------------------------------------------------------ #
