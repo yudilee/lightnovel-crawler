@@ -16,13 +16,8 @@ class Novel(BaseTable, table=True):
         index=True,
         description="Full URL of the novel main page"
     )
-    crawled: bool = Field(
-        default=False,
-        description="True if novel info is available"
-    )
 
-    title: Optional[str] = Field(
-        default=None,
+    title: str = Field(
         description="Title of the novel"
     )
     cover: Optional[str] = Field(
@@ -38,8 +33,8 @@ class Novel(BaseTable, table=True):
         default=None,
         description="Brief synopsis or novel description"
     )
-    tags: Optional[List[str]] = Field(
-        default=None,
+    tags: List[str] = Field(
+        default=[],
         sa_column=Column(JSON),
         description="List of genre or thematic tags"
     )
@@ -60,6 +55,15 @@ class Novel(BaseTable, table=True):
         default=None,
         sa_column=Column(CHAR(2)),
         description="ISO 639-1 two-letter language code (e.g. 'en', 'ja', 'zh')",
+    )
+
+    volume_count: int = Field(
+        default=0,
+        description="Number of available volumes",
+    )
+    chapter_count: int = Field(
+        default=0,
+        description="Number of available chapters",
     )
 
     extra: Dict[str, Any] = Field(

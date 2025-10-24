@@ -51,6 +51,16 @@ class AppContext:
         return NovelService()
 
     @cached_property
+    def volumes(self):
+        from .services.volumes import VolumeService
+        return VolumeService()
+
+    @cached_property
+    def chapters(self):
+        from .services.chapters import ChapterService
+        return ChapterService()
+
+    @cached_property
     def artifacts(self):
         from .services.artifacts import ArtifactService
         return ArtifactService()
@@ -59,6 +69,11 @@ class AppContext:
     def http(self):
         from .services.fetch import FetchService
         return FetchService()
+
+    @cached_property
+    def crawler(self):
+        from .services.crawler import CrawlerService
+        return CrawlerService()
 
     @cached_property
     def metadata(self):

@@ -10,6 +10,7 @@ from .migration import Migration
 from .novel import Novel
 from .tag import Tag
 from .user import User, VerifiedEmail
+from .volume import Volume
 
 models: List[Type[SQLModel]] = [
     Migration,
@@ -18,6 +19,7 @@ models: List[Type[SQLModel]] = [
     Tag,
     Novel,
     Chapter,
+    Volume,
     Job,
     Artifact,
 ]

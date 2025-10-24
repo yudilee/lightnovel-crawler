@@ -1,28 +1,39 @@
 from typing import Any, Dict, Optional
 
-from sqlmodel import JSON, BigInteger, Column, Field
+from sqlmodel import JSON, BigInteger, Column, Field, UniqueConstraint
 
 from ._base import BaseTable
 
 
 class Chapter(BaseTable, table=True):
+    __table_args__ = (
+        UniqueConstraint("novel_id", "serial"),
+    )
+
     novel_id: str = Field(
         foreign_key="novel.id",
         ondelete='CASCADE'
     )
+    serial: int = Field(
+        index=True,
+        description="Serial number of the volume",
+    )
+    volume_id: Optional[str] = Field(
+        default=None,
+        foreign_key="volume.id",
+        ondelete='SET NULL',
+    )
+
     url: str = Field(
-        unique=True,
         index=True,
         description="Full URL of the chapter content page"
     )
-
-    volume: Optional[str] = Field(
-        default=None,
-        description="Name of the volume if available"
-    )
-    title: Optional[str] = Field(
-        default=None,
+    title: str = Field(
         description="Title of the chapter"
+    )
+    crawled: bool = Field(
+        default=False,
+        description="Whether the content has been crawled"
     )
     content: Optional[str] = Field(
         default=None,

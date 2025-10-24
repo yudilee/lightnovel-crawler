@@ -1,7 +1,7 @@
 import logging
 from typing import Mapping, Optional, Sequence
 
-from sqlalchemy import Inspector, inspect, text
+from sqlalchemy import Inspector, inspect
 from sqlmodel import Session, create_engine
 
 from ..context import ctx
@@ -128,18 +128,8 @@ class DB:
     #                         Database Migrations                        #
     # ------------------------------------------------------------------ #
 
-    latest_version = 1
+    latest_version = 0
     """Latest migration version"""
 
     def __run_migration(self, version: int, inspector: Inspector) -> int:
-        if version == 0:
-            # add `formats` column to `Job` table
-            if self.is_postgres:
-                q = text('ALTER TABLE "job" ADD COLUMN "formats" JSONB DEFAULT \'[]\'::jsonb NOT NULL')
-            else:  # sqlite, and others
-                q = text('ALTER TABLE "job" ADD COLUMN "formats" TEXT DEFAULT \'[]\' NOT NULL')
-            with self.engine.begin() as conn:
-                conn.execute(q)
-            return 1
-
         raise ValueError(f'Unknown version {version}')

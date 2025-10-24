@@ -1,15 +1,15 @@
 from typing import Any, List
 
-from sqlmodel import and_, desc, func, select
+from sqlmodel import and_, asc, func, select
 
 from ..context import ctx
-from ..dao import Artifact, Novel, User
+from ..dao import User, Volume
 from ..dao.enums import UserRole
 from ..exceptions import ServerErrors
 from ..server.models.pagination import Paginated
 
 
-class NovelService:
+class VolumeService:
     def __init__(self) -> None:
         pass
 
@@ -18,19 +18,17 @@ class NovelService:
         search: str = '',
         offset: int = 0,
         limit: int = 20,
-    ) -> Paginated[Novel]:
+    ) -> Paginated[Volume]:
         with ctx.db.session() as sess:
-            stmt = select(Novel)
-            cnt = select(func.count()).select_from(Novel)
+            stmt = select(Volume)
+            cnt = select(func.count()).select_from(Volume)
 
             # Apply filters
             conditions: List[Any] = []
-            conditions.append(Novel.title != '...')
-            conditions.append(Novel.title != '')
 
             if search:
                 q = f"%{search.lower()}%"
-                conditions.append(func.lower(Novel.title).like(q))
+                conditions.append(func.lower(Volume.title).like(q))
 
             if conditions:
                 cnd = and_(*conditions)
@@ -38,7 +36,7 @@ class NovelService:
                 cnt = cnt.where(cnd)
 
             # Apply sorting
-            stmt = stmt.order_by(desc(Novel.updated_at))
+            stmt = stmt.order_by(asc(Volume.serial))
 
             # Apply pagination
             stmt = stmt.offset(offset).limit(limit)
@@ -53,30 +51,31 @@ class NovelService:
                 items=list(items),
             )
 
-    def get(self, novel_id: str) -> Novel:
+    def get(self, volume_id: str) -> Volume:
         with ctx.db.session() as sess:
-            novel = sess.get(Novel, novel_id)
-            if not novel:
-                raise ServerErrors.no_such_novel
-            return novel
+            volume = sess.get(Volume, volume_id)
+            if not volume:
+                raise ServerErrors.no_such_volume
+            return volume
 
-    def delete(self, novel_id: str, user: User) -> bool:
+    def delete(self, volume_id: str, user: User) -> bool:
         if user.role != UserRole.ADMIN:
             raise ServerErrors.forbidden
         with ctx.db.session() as sess:
-            novel = sess.get(Novel, novel_id)
-            if not novel:
+            volume = sess.get(Volume, volume_id)
+            if not volume:
                 return True
-            sess.delete(novel)
+            sess.delete(volume)
             sess.commit()
             return True
 
-    def get_artifacts(self, novel_id: str) -> List[Artifact]:
+    def find(self, novel_id: str, serial: int) -> Volume:
         with ctx.db.session() as sess:
-            novel = sess.get(Novel, novel_id)
-            if not novel:
-                raise ServerErrors.no_such_novel
-            artifacts = sess.exec(
-                select(Artifact).where(Artifact.novel_id == novel.id)
-            ).all()
-            return list(artifacts)
+            stmt = select(Volume).where(
+                Volume.novel_id == novel_id,
+                Volume.serial == serial,
+            )
+            volume = sess.exec(stmt).first()
+            if not volume:
+                raise ServerErrors.no_such_volume
+            return volume

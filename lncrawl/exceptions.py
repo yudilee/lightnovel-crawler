@@ -62,6 +62,8 @@ class ServerErrors:
     duplicate_output_format = ServerError(422, "Duplicate formats are not allowed")
 
     no_such_novel = ServerError(404, "No such novel")
+    no_such_volume = ServerError(404, "No such volume")
+    no_such_chapter = ServerError(404, "No such chapter")
     no_such_artifact = ServerError(404, "No such artifact")
     no_artifact_file = ServerError(404, "Artifact file not available")
     email_already_verified = ServerError(409, "Email is already verified")
