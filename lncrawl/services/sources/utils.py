@@ -3,49 +3,16 @@ import hashlib
 import importlib.util
 import io
 import logging
-import os
 import shutil
-import time
 from pathlib import Path
 from typing import Type
 
-import httpx
-
 from ...context import ctx
 from ...core.crawler import Crawler
-from ...utils.platforms import Platform
 from ...utils.url_tools import validate_url
 from .dto import CrawlerIndex, CrawlerInfo
 
 logger = logging.getLogger(__name__)
-
-
-def fetch(url: str) -> bytes:
-    name = ctx.config.app.name
-    version = ctx.config.app.version
-    user_agent = f"{''.join(name.split(' '))}/{version} ({Platform.name})"
-    with httpx.Client(
-        http2=True,
-        follow_redirects=True,
-        headers={"User-Agent": user_agent},
-    ) as client:
-        resp = client.get(url)
-        resp.raise_for_status()
-        return resp.content
-
-
-def download(url: str, file: Path) -> Path:
-    content = fetch(url)
-    file.parent.mkdir(parents=True, exist_ok=True)
-    tid = time.thread_time_ns() % 1000
-    tmp = file.with_suffix(f'{file.suffix}.tmp{tid}')
-    try:
-        tmp.write_bytes(content)
-        os.replace(tmp, file)
-    finally:
-        tmp.unlink(missing_ok=True)
-    logger.debug(f'Downloaded: {file}')
-    return file
 
 
 def load_source(file: Path) -> CrawlerIndex:
@@ -60,7 +27,7 @@ def save_source(file: Path, content: CrawlerIndex):
 
 
 def fetch_online_source() -> CrawlerIndex:
-    compressed = fetch(ctx.config.crawler.index_file_download_url)
+    compressed = ctx.http.get(ctx.config.crawler.index_file_download_url)
     with gzip.GzipFile(fileobj=io.BytesIO(compressed), mode='rb') as fp:
         json_str = fp.read().decode()
         return CrawlerIndex.model_validate_json(json_str)

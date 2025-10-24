@@ -38,6 +38,10 @@ class ServerError(HTTPException, LNException):
     def __init__(self, status=400, *args, **kwargs) -> None:
         super().__init__(status, *args, **kwargs)
 
+    def with_detail(self, detail: str) -> 'ServerError':
+        self.detail = detail
+        return self
+
 
 class ServerErrors:
     forbidden = ServerError(403, 'Forbidden')
@@ -63,6 +67,8 @@ class ServerErrors:
     email_already_verified = ServerError(409, "Email is already verified")
 
     no_novel_title = ServerError(500, "Novel has no title")
+    no_chapters = ServerError(500, 'No chapters found')
+    no_volumes = ServerError(500, 'No volumes found')
     unable_to_resume_job = ServerError(500, "Unable to resume Job")
     no_novel_cover = ServerError(500, "Novel cover is not available")
     invalid_image_response = ServerError(500, "Invalid image response")
@@ -73,3 +79,7 @@ class ServerErrors:
     malformed_json_file = ServerError(500, 'Malformed JSON file')
     no_metadata_file = ServerError(500, "Novel metadata file is not found")
     malformed_metadata_file = ServerError(500, "Novel metadata file is malformed")
+
+    source_not_loaded = ServerError(500, 'Sources are not loaded')
+    host_rejected = ServerError(500, 'The requested domain is rejected')
+    no_crawlers = ServerError(500, "No crawler found for the domain")

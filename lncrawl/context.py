@@ -56,7 +56,7 @@ class AppContext:
         return ArtifactService()
 
     @cached_property
-    def fetch(self):
+    def http(self):
         from .services.fetch import FetchService
         return FetchService()
 

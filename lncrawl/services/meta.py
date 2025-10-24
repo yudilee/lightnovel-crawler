@@ -207,7 +207,7 @@ class MetadataService:
 
         return result
 
-    async def get_novel_cover(self, novel_id: str):
+    def get_novel_cover(self, novel_id: str):
         with ctx.db.session() as sess:
             novel = sess.get(Novel, novel_id)
             if not novel:
@@ -220,7 +220,7 @@ class MetadataService:
             if not cover_url or not cover_url.startswith('http'):
                 raise ServerErrors.no_novel_cover
 
-            response = await ctx.fetch.image(cover_url)
+            response = ctx.http.image(cover_url)
             content_type = response.headers.get("Content-Type")
             if not content_type:
                 raise ServerErrors.invalid_image_response

@@ -5,8 +5,8 @@ from typing import Dict, Type
 
 from ...context import ctx
 from ...core.crawler import Crawler
-from ...exceptions import LNException
 from ...core.taskman import TaskManager
+from ...exceptions import ServerErrors
 from ...utils.fts_store import FTSStore
 from ...utils.text_tools import normalize
 from ...utils.url_tools import extract_base, extract_host, normalize_url
@@ -138,7 +138,7 @@ class SourceLoader:
                 continue
             user_sources = ctx.config.crawler.user_index_file.parent.parent
             dst_file = (user_sources / source.file_path).resolve()
-            f = self._taskman.submit_task(utils.download, source.url, dst_file)
+            f = self._taskman.submit_task(ctx.http.download, source.url, dst_file)
             futures.append(f)
 
         # wait for completion
@@ -153,17 +153,17 @@ class SourceLoader:
 
     def create_crawler(self, url: str) -> Crawler:
         if not self._index:
-            raise LNException('Sources are not loaded')
+            raise ServerErrors.source_not_loaded
 
         host = extract_host(url)
         if not host:
-            raise LNException('Invalid url')
+            raise ServerErrors.invalid_url
 
         if host in self.rejected:
-            raise LNException(f"{host} is rejected. Reason: {self.rejected[host]}")
+            raise ServerErrors.host_rejected.with_detail(self.rejected[host])
 
         if host not in self.crawlers:
-            raise LNException(f"No crawler found for {host}")
+            raise ServerErrors.no_crawlers.with_detail(host)
 
         logger.info(f"[{host}] Creating crawler instance")
         home_url = extract_base(url)
