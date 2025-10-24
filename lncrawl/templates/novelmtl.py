@@ -5,7 +5,7 @@ from urllib.parse import parse_qs, urlencode, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
-from lncrawl.core.exeptions import LNException
+from lncrawl.exceptions import LNException
 from lncrawl.models import Chapter, SearchResult
 from lncrawl.templates.browser.searchable import SearchableBrowserTemplate
 from lncrawl.templates.browser.chapter_only import ChapterOnlyBrowserTemplate

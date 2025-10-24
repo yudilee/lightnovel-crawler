@@ -7,7 +7,7 @@ from typing import Generator, List, Optional
 from PIL import Image
 
 from ...core.browser import Browser, By
-from ...core.exeptions import FallbackToBrowser, ScraperErrorGroup
+from ...exceptions import FallbackToBrowser, ScraperErrorGroup
 from ...models import Chapter
 from ...models.search_result import SearchResult
 from .._base import CrawlerTemplate

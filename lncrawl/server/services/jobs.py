@@ -6,7 +6,7 @@ from sqlmodel import and_, asc, desc, func, or_, select
 from ...context import ctx
 from ...dao import Artifact, Job, Novel, User
 from ...dao.enums import JobPriority, JobStatus, RunState, UserRole
-from ..exceptions import ServerErrors
+from ...exceptions import ServerErrors
 from ..models.job import JobDetail
 from ..models.pagination import Paginated
 from .tier import JOB_PRIORITY_LEVEL

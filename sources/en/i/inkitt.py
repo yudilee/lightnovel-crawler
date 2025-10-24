@@ -7,7 +7,7 @@ from urllib.parse import quote
 from bs4 import Tag
 
 from lncrawl.core.crawler import Crawler
-from lncrawl.core.exeptions import LNException
+from lncrawl.exceptions import LNException
 from lncrawl.models import SearchResult
 
 logger = logging.getLogger(__name__)

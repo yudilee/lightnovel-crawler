@@ -5,7 +5,7 @@ from questionary import prompt
 
 from ...core import display
 from ...core.arguments import get_args
-from ...core.exeptions import LNException
+from ...exceptions import LNException
 
 
 def get_novel_url(self):

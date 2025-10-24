@@ -86,7 +86,7 @@ def cancel_method():
 
 
 def error_message(ex_type, message, tb):
-    from ..core.exeptions import LNException
+    from ..exceptions import LNException
     print()
     tb_summary = "".join(traceback.format_tb(tb)[-4:]).strip()
     print(Fore.RED, Icons.ERROR, "Error:", message, Fore.RESET)

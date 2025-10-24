@@ -9,7 +9,7 @@ import lxml.html
 from ...assets import emails
 from ...context import ctx
 from ...dao.enums import RunState
-from ..exceptions import ServerErrors
+from ...exceptions import ServerErrors
 from ..models.job import JobDetail
 
 logger = logging.getLogger(__name__)

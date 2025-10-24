@@ -5,7 +5,7 @@ from sqlmodel import and_, desc, func, select, true
 from ...context import ctx
 from ...dao import Artifact, Novel, User
 from ...dao.enums import UserRole
-from ..exceptions import ServerErrors
+from ...exceptions import ServerErrors
 from ..models.pagination import Paginated
 
 

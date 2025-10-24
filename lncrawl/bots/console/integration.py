@@ -8,7 +8,7 @@ from ...context import ctx
 from ...core import display
 from ...core.app import App
 from ...core.arguments import get_args
-from ...core.exeptions import LNException
+from ...exceptions import LNException
 from ...utils.platforms import Platform
 from .open_folder_prompt import display_open_folder
 from .resume_download import resume_session

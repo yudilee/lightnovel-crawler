@@ -5,7 +5,7 @@ import logging
 from bs4 import Tag
 
 from lncrawl.core.crawler import Crawler
-from lncrawl.core.exeptions import LNException
+from lncrawl.exceptions import LNException
 
 logger = logging.getLogger(__name__)
 

@@ -5,7 +5,7 @@ from typing import Dict, Type
 
 from ...context import ctx
 from ...core.crawler import Crawler
-from ...core.exeptions import LNException
+from ...exceptions import LNException
 from ...core.taskman import TaskManager
 from ...utils.fts_store import FTSStore
 from ...utils.text_tools import normalize
@@ -26,12 +26,14 @@ class SourceLoader:
         self.crawlers: Dict[str, Type[Crawler]] = {}  # Map of host/id -> crawler
 
     def close(self):
-        if self._signal:
+        if hasattr(self, '_signal'):
             self._signal.set()
-        if self._store:
+        if hasattr(self, '_store'):
             self._store.close()
-        if self._taskman:
+        if hasattr(self, '_taskman'):
             self._taskman.close()
+        if hasattr(self, '_index'):
+            del self._index
         self.rejected.clear()
         self.crawlers.clear()
 

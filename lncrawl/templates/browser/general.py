@@ -3,7 +3,7 @@ from typing import Generator, Optional, Union
 
 from bs4 import Tag
 
-from ...core.exeptions import FallbackToBrowser
+from ...exceptions import FallbackToBrowser
 from ...models import Chapter, Volume
 from ..soup.general import GeneralSoupTemplate
 from .basic import BasicBrowserTemplate

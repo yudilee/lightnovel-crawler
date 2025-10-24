@@ -8,7 +8,7 @@ from selenium.webdriver import ChromeOptions
 from selenium.webdriver import Remote as WebDriver
 from selenium.webdriver.remote.remote_connection import LOGGER
 
-from ..core.exeptions import LNException
+from ..exceptions import LNException
 from ..core.soup import SoupMaker
 from .elements import WebElement, _add_virtual_authenticator
 from .job_queue import _acquire_queue, _release_queue

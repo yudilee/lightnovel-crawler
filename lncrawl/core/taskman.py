@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from ..context import ctx
 from ..utils.ratelimit import RateLimiter
-from .exeptions import LNException
+from ..exceptions import LNException
 
 logger = logging.getLogger(__name__)
 

@@ -18,7 +18,7 @@ from ...dao import Novel
 from ...models import Chapter, MetaInfo
 from ...utils.algo import binary_search
 from ...utils.url_tools import extract_host
-from ..exceptions import ServerError, ServerErrors
+from ...exceptions import ServerError, ServerErrors
 from ..models.meta import SupportedSource
 from ..models.novel import NovelChapter, NovelChapterContent, NovelVolume
 

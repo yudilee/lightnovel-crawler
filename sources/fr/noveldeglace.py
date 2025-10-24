@@ -1,7 +1,7 @@
 import logging
 
 from lncrawl.core.crawler import Crawler
-from lncrawl.core.exeptions import LNException
+from lncrawl.exceptions import LNException
 from lncrawl.models.chapter import Chapter
 from lncrawl.models.volume import Volume
 

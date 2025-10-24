@@ -9,7 +9,7 @@ from sqlmodel import and_, asc, func, or_, select
 
 from ...context import ctx
 from ...dao.user import User, UserRole, UserTier, VerifiedEmail
-from ..exceptions import ServerErrors
+from ...exceptions import ServerErrors
 from ..models.pagination import Paginated
 from ..models.user import (CreateRequest, LoginRequest, PasswordUpdateRequest,
                            UpdateRequest)

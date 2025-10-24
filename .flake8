@@ -13,7 +13,7 @@ exclude =
     dist,
     res,
     logs,
-    .venv,
+    .venv*,
     venv,
     venv-win,
     venv36,

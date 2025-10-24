@@ -5,7 +5,7 @@ from colorama import Style
 
 from ...assets.icons import Icons
 from ...core.crawler import Crawler
-from ...core.exeptions import LNException
+from ...exceptions import LNException
 
 
 def generate_crawler(

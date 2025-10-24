@@ -7,7 +7,7 @@ from box import Box
 from bs4 import BeautifulSoup
 
 from lncrawl.core.crawler import Chapter, Crawler, Volume
-from lncrawl.core.exeptions import LNException
+from lncrawl.exceptions import LNException
 
 logger = logging.getLogger(__name__)
 

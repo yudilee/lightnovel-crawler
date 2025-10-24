@@ -4,7 +4,7 @@ from questionary import prompt
 
 from ...assets.languages import language_codes
 from ...core.arguments import get_args
-from ...core.exeptions import LNException
+from ...exceptions import LNException
 
 
 def get_novel_url():

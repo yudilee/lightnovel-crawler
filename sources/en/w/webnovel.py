@@ -6,7 +6,7 @@ from urllib.parse import urlencode, urlparse
 
 from bs4 import BeautifulSoup
 
-from lncrawl.core.exeptions import FallbackToBrowser
+from lncrawl.exceptions import FallbackToBrowser
 from lncrawl.models import Chapter, SearchResult
 from lncrawl.models.volume import Volume
 from lncrawl.templates.browser.basic import BasicBrowserTemplate

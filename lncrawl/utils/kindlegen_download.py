@@ -8,7 +8,7 @@ from zipfile import ZipFile
 
 import requests
 
-from ..core.exeptions import LNException
+from ..exceptions import LNException
 
 logger = Logger("KINDLEGEN")
 

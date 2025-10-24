@@ -4,7 +4,7 @@ from typing import Generator, Optional, Union
 
 from bs4 import BeautifulSoup, Tag
 
-from ...core.exeptions import LNException
+from ...exceptions import LNException
 from ...models import Chapter, Volume
 from .._base import CrawlerTemplate
 

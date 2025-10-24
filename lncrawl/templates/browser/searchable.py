@@ -3,7 +3,7 @@ from typing import Generator
 
 from bs4 import Tag
 
-from ...core.exeptions import FallbackToBrowser
+from ...exceptions import FallbackToBrowser
 from ...models import SearchResult
 from ..soup.searchable import SearchableSoupTemplate
 from .general import GeneralBrowserTemplate

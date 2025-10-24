@@ -50,7 +50,7 @@ def _search_process(
 
 # This runs in a thread to execute the processes
 def _run(p: Process, hostname: str, signal: Event):
-    from .exeptions import LNException
+    from ..exceptions import LNException
     try:
         atexit.register(p.kill)
         p.start()

@@ -4,7 +4,7 @@ from typing import Dict
 
 from ..models import Chapter, Volume
 from .crawler import Crawler
-from .exeptions import LNException
+from ..exceptions import LNException
 
 
 def __format_title(text):

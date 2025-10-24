@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from ..assets.version import get_version
 from ..context import ctx
-from .exceptions import ServerError
+from ..exceptions import ServerError
 
 app = FastAPI(
     version=get_version(),

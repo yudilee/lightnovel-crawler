@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional, Tuple
 
-from ...core.exeptions import LNException
+from ...exceptions import LNException
 from ...utils.text_tools import normalize
 from ...utils.url_tools import extract_host
 from .dto import SourceItem
@@ -11,6 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 class Sources(SourceLoader):
+    def __init__(self) -> None:
+        super().__init__()
+
     @property
     def version(self) -> int:
         return self._index.v

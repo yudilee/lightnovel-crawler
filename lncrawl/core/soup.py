@@ -5,7 +5,7 @@ from typing import Optional, Union
 from bs4 import BeautifulSoup, Tag
 from requests import Response
 
-from .exeptions import LNException
+from ..exceptions import LNException
 
 logger = logging.getLogger(__name__)
 

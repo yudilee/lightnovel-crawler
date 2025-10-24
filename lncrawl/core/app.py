@@ -11,14 +11,14 @@ from slugify import slugify
 
 from ..binders import generate_books
 from ..context import ctx
-from ..core.exeptions import LNException
+from ..exceptions import LNException
 from ..dao.enums import OutputFormat
 from ..models import Chapter, CombinedSearchResult
 from .browser import Browser
 from .crawler import Crawler
 from .download_chapters import fetch_chapter_body
 from .download_images import fetch_chapter_images
-from .exeptions import ScraperErrorGroup
+from ..exceptions import ScraperErrorGroup
 from .metadata import save_metadata
 from .novel_info import format_novel
 from .novel_search import search_novels

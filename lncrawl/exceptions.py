@@ -1,7 +1,40 @@
+from urllib.error import URLError
+
 from fastapi import HTTPException
+from PIL import UnidentifiedImageError
+from requests.exceptions import RequestException
+from urllib3.exceptions import HTTPError
+
+from .cloudscraper.exceptions import CloudflareException
 
 
-class ServerError(HTTPException):
+class LNException(Exception):
+    pass
+
+
+class FallbackToBrowser(Exception):
+    pass
+
+
+ScraperErrorGroup = (
+    URLError,
+    HTTPError,
+    CloudflareException,
+    RequestException,
+    FallbackToBrowser,
+    UnidentifiedImageError,
+)
+
+RetryErrorGroup = (
+    URLError,
+    HTTPError,
+    CloudflareException,
+    RequestException,
+    UnidentifiedImageError,
+)
+
+
+class ServerError(HTTPException, LNException):
     def __init__(self, status=400, *args, **kwargs) -> None:
         super().__init__(status, *args, **kwargs)
 

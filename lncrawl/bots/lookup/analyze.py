@@ -8,7 +8,7 @@ from colorama import Fore, Style
 from ...assets.icons import Icons
 from ...core.crawler import Crawler
 from ...core.display import LINE_SIZE
-from ...core.exeptions import LNException
+from ...exceptions import LNException
 from ...core.novel_info import format_novel
 from ...core.sources import crawler_list, rejected_sources, template_list
 

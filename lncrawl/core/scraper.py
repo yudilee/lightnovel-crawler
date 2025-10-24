@@ -15,7 +15,7 @@ from tenacity import (RetryCallState, retry, retry_if_exception_type,
                       stop_after_attempt, wait_random_exponential)
 
 from ..cloudscraper import create_scraper
-from .exeptions import RetryErrorGroup
+from ..exceptions import RetryErrorGroup
 from .proxy import get_a_proxy, remove_faulty_proxies
 from .soup import SoupMaker
 from .taskman import TaskManager

@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 
 from ...context import ctx
 from ...dao.artifact import Artifact
-from ..exceptions import ServerErrors
+from ...exceptions import ServerErrors
 from ..models.pagination import Paginated
 from ..security import ensure_user
 
