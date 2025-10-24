@@ -1,11 +1,11 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 from sqlalchemy import event
 from sqlmodel import JSON, BigInteger, Column, Field
 
 from ..utils.time_utils import current_timestamp
 from ._base import BaseTable
-from .enums import JobPriority, JobStatus, RunState
+from .enums import JobPriority, JobStatus, RunState, OutputFormat
 
 
 class Job(BaseTable, table=True):
@@ -20,6 +20,11 @@ class Job(BaseTable, table=True):
     novel_id: Optional[str] = Field(
         foreign_key="novel.id",
         ondelete='SET NULL'
+    )
+    formats: List[OutputFormat] = Field(
+        default=[],
+        sa_column=Column(JSON),
+        description="The selected output formats"
     )
 
     priority: JobPriority = Field(

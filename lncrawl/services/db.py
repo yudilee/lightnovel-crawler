@@ -1,7 +1,7 @@
 import logging
 from typing import Mapping, Optional, Sequence
 
-from sqlalchemy import inspect
+from sqlalchemy import Inspector, inspect, text
 from sqlmodel import Session, create_engine
 
 from ..context import ctx
@@ -19,6 +19,10 @@ class DB:
         if ctx.logger.is_debug:
             self.engine.logger = logger
         logger.info(f'Database URL: "{self.engine.url}"')
+
+    @property
+    def is_postgres(self):
+        return self.engine.dialect.name == "postgresql"
 
     def close(self):
         self.engine.dispose()
@@ -80,7 +84,8 @@ class DB:
     def bootstrap(self):
         # create tables
         table = str(Migration.__tablename__)
-        if not inspect(self.engine).has_table(table):
+        inspector = inspect(self.engine)
+        if not inspector.has_table(table):
             logger.info(f'Creating {len(tables)} tables')
             self.__create_tables()
             return
@@ -88,14 +93,14 @@ class DB:
         # check for migrations
         latest = DB.latest_version
         with self.session() as sess:
-            entry = sess.get(Migration, 0)
-            current = entry.version if entry else -1
-
-        while current < latest:
-            logger.info(f'Running migrations [{current}/{latest}]')
-            current = self.__run_migration(current)
-            sess.add(Migration(version=current))
-            sess.commit()
+            entry = sess.get_one(Migration, 0)
+            current = entry.version
+            while current < latest:
+                logger.info(f'Running migrations: {current} -> {latest}')
+                current = self.__run_migration(current, inspector)
+                entry.version = current
+                sess.add(entry)
+                sess.commit()
 
         # ensure admin user
         ctx.users.insert_admin()
@@ -111,7 +116,7 @@ class DB:
 
             logger.info('Preparing migration table')
             with self.session() as sess:
-                sess.add(Migration(version=self.latest_version))
+                sess.add(Migration(id=0, version=self.latest_version))
                 sess.commit()
         except Exception as e:
             if retry <= 0:
@@ -123,8 +128,18 @@ class DB:
     #                         Database Migrations                        #
     # ------------------------------------------------------------------ #
 
-    latest_version = 0
+    latest_version = 1
     """Latest migration version"""
 
-    def __run_migration(self, version: int):
+    def __run_migration(self, version: int, inspector: Inspector) -> int:
+        if version == 0:
+            # add `formats` column to `Job` table
+            if self.is_postgres:
+                q = text('ALTER TABLE "job" ADD COLUMN "formats" JSONB DEFAULT \'[]\'::jsonb NOT NULL')
+            else:  # sqlite, and others
+                q = text('ALTER TABLE "job" ADD COLUMN "formats" TEXT DEFAULT \'[]\' NOT NULL')
+            with self.engine.begin() as conn:
+                conn.execute(q)
+            return 1
+
         raise ValueError(f'Unknown version {version}')
