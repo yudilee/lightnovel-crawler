@@ -11,7 +11,7 @@ from ...core.download_chapters import restore_chapter_body
 from ...core.metadata import get_metadata_list, load_metadata, save_metadata
 from ...dao import Artifact, Job, Novel, User
 from ...dao.enums import JobStatus, OutputFormat, RunState
-from ...server.services.tier import ENABLED_FORMATS, SLOT_TIMEOUT_IN_SECOND
+from ...server.tier import ENABLED_FORMATS, SLOT_TIMEOUT_IN_SECOND
 from ...utils.time_utils import current_timestamp
 
 

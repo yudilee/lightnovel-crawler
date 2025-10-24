@@ -32,12 +32,12 @@ class AppContext:
 
     @cached_property
     def users(self):
-        from .server.services.users import UserService
+        from .services.users import UserService
         return UserService()
 
     @cached_property
     def jobs(self):
-        from .server.services.jobs import JobService
+        from .services.jobs import JobService
         return JobService()
 
     @cached_property
@@ -47,27 +47,27 @@ class AppContext:
 
     @cached_property
     def novels(self):
-        from .server.services.novels import NovelService
+        from .services.novels import NovelService
         return NovelService()
 
     @cached_property
     def artifacts(self):
-        from .server.services.artifacts import ArtifactService
+        from .services.artifacts import ArtifactService
         return ArtifactService()
 
     @cached_property
     def fetch(self):
-        from .server.services.fetch import FetchService
+        from .services.fetch import FetchService
         return FetchService()
 
     @cached_property
     def metadata(self):
-        from .server.services.meta import MetadataService
+        from .services.meta import MetadataService
         return MetadataService()
 
     @cached_property
     def mail(self):
-        from .server.services.mail import MailService
+        from .services.mail import MailService
         return MailService()
 
     def __new__(cls):
@@ -101,4 +101,4 @@ class AppContext:
         self.scheduler.start()
 
 
-ctx = AppContext()
+ctx: AppContext = AppContext()

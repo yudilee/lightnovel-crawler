@@ -1,12 +1,13 @@
 from typing import Any, List
 
+from pydantic import HttpUrl
 from sqlmodel import and_, desc, func, select, true
 
-from ...context import ctx
-from ...dao import Artifact, Novel, User
-from ...dao.enums import UserRole
-from ...exceptions import ServerErrors
-from ..models.pagination import Paginated
+from ..context import ctx
+from ..dao import Artifact, Novel, User
+from ..dao.enums import UserRole
+from ..exceptions import ServerErrors
+from ..server.models.pagination import Paginated
 
 
 class NovelService:
@@ -82,3 +83,16 @@ class NovelService:
                 select(Artifact).where(Artifact.novel_id == novel.id)
             ).all()
             return list(artifacts)
+
+    def get_by_url(self, url: HttpUrl) -> Novel:
+        if not url.host:
+            raise ServerErrors.invalid_url
+        with ctx.db.session() as sess:
+            novel_url = url.encoded_string()
+            stmt = select(Novel).where(Novel.url == novel_url)
+            novel = sess.exec(stmt).first()
+            if not novel:
+                novel = Novel(url=novel_url, domain=url.host)
+                sess.add(novel)
+                sess.commit()
+            return novel

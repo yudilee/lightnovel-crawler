@@ -3,13 +3,13 @@ from typing import Any, List, Optional
 from pydantic import HttpUrl
 from sqlmodel import and_, asc, desc, func, or_, select
 
-from ...context import ctx
-from ...dao import Artifact, Job, Novel, User
-from ...dao.enums import JobPriority, JobStatus, RunState, UserRole
-from ...exceptions import ServerErrors
-from ..models.job import JobDetail
-from ..models.pagination import Paginated
-from .tier import JOB_PRIORITY_LEVEL
+from ..context import ctx
+from ..dao import Artifact, Job, Novel, User
+from ..dao.enums import JobPriority, JobStatus, RunState, UserRole
+from ..exceptions import ServerErrors
+from ..server.models.job import JobDetail
+from ..server.models.pagination import Paginated
+from ..server.tier import JOB_PRIORITY_LEVEL
 
 
 class JobService:
@@ -88,17 +88,8 @@ class JobService:
             return list(jobs)
 
     async def create(self, url: HttpUrl, user: User):
-        if not url.host:
-            raise ServerErrors.invalid_url
+        novel = ctx.novels.get_by_url(url)
         with ctx.db.session() as sess:
-            # get or create novel
-            novel_url = url.encoded_string()
-            novel = sess.exec(select(Novel).where(Novel.url == novel_url)).first()
-            if not novel:
-                novel = Novel(url=novel_url, domain=url.host)
-                sess.add(novel)
-                sess.commit()
-
             # create the job
             job = Job(
                 user_id=user.id,

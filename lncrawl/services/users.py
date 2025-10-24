@@ -7,12 +7,12 @@ from jose import jwt
 from passlib.context import CryptContext
 from sqlmodel import and_, asc, func, or_, select
 
-from ...context import ctx
-from ...dao.user import User, UserRole, UserTier, VerifiedEmail
-from ...exceptions import ServerErrors
-from ..models.pagination import Paginated
-from ..models.user import (CreateRequest, LoginRequest, PasswordUpdateRequest,
-                           UpdateRequest)
+from ..context import ctx
+from ..dao.user import User, UserRole, UserTier, VerifiedEmail
+from ..exceptions import ServerErrors
+from ..server.models.pagination import Paginated
+from ..server.models.user import (CreateRequest, LoginRequest, PasswordUpdateRequest,
+                                  UpdateRequest)
 
 logger = logging.getLogger(__name__)
 

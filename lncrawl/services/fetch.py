@@ -1,7 +1,7 @@
 import httpx
 from bs4 import BeautifulSoup
 
-from ...exceptions import ServerErrors
+from ..exceptions import ServerErrors
 
 
 class FetchService:

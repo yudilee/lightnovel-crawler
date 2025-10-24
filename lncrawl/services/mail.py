@@ -6,11 +6,11 @@ from typing import Optional
 import lxml.etree
 import lxml.html
 
-from ...assets import emails
-from ...context import ctx
-from ...dao.enums import RunState
-from ...exceptions import ServerErrors
-from ..models.job import JobDetail
+from ..assets import emails
+from ..context import ctx
+from ..dao.enums import RunState
+from ..exceptions import ServerErrors
+from ..server.models.job import JobDetail
 
 logger = logging.getLogger(__name__)
 

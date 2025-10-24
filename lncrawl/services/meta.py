@@ -10,17 +10,17 @@ from fastapi import APIRouter
 from fastapi.responses import FileResponse
 from PIL import Image
 
-from ...context import ctx
-from ...core.app import App
-from ...core.download_chapters import get_chapter_file
-from ...core.metadata import META_FILE_NAME
-from ...dao import Novel
-from ...models import Chapter, MetaInfo
-from ...utils.algo import binary_search
-from ...utils.url_tools import extract_host
-from ...exceptions import ServerError, ServerErrors
-from ..models.meta import SupportedSource
-from ..models.novel import NovelChapter, NovelChapterContent, NovelVolume
+from ..context import ctx
+from ..core.app import App
+from ..core.download_chapters import get_chapter_file
+from ..core.metadata import META_FILE_NAME
+from ..dao import Novel
+from ..models import Chapter, MetaInfo
+from ..utils.algo import binary_search
+from ..utils.url_tools import extract_host
+from ..exceptions import ServerError, ServerErrors
+from ..server.models.meta import SupportedSource
+from ..server.models.novel import NovelChapter, NovelChapterContent, NovelVolume
 
 logger = logging.getLogger(__name__)
 

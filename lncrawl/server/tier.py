@@ -1,4 +1,4 @@
-from ...dao.enums import JobPriority, OutputFormat, UserTier
+from ..dao.enums import JobPriority, OutputFormat, UserTier
 
 ##
 # For Job creation

@@ -3,11 +3,11 @@ from typing import Optional
 
 from sqlmodel import desc, func, select
 
-from ...context import ctx
-from ...dao import Artifact, User
-from ...dao.enums import UserRole
-from ...exceptions import ServerErrors
-from ..models.pagination import Paginated
+from ..context import ctx
+from ..dao import Artifact, User
+from ..dao.enums import UserRole
+from ..exceptions import ServerErrors
+from ..server.models.pagination import Paginated
 
 
 class ArtifactService:
