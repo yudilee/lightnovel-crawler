@@ -47,15 +47,6 @@ class LNMTLCrawler(Crawler):
             logger.debug("-" * 80)
             logger.error("Failed to login")
 
-    def logout(self):
-        """logout as a good citizen"""
-        logger.debug("Logging out...")
-        soup = self.get_soup(logout_url)
-        if soup.select_one('a[href="%s"]' % logout_url):
-            logger.error("Failed to logout")
-        else:
-            print("Logged out")
-
     def read_novel_info(self):
         """get list of chapters"""
         logger.info("Visiting %s", self.novel_url)

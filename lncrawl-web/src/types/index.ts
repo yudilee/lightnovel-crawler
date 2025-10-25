@@ -105,7 +105,6 @@ export interface SupportedSource {
   disable_reason?: string;
   can_search: boolean;
   can_login: boolean;
-  can_logout: boolean;
 }
 
 export interface Chapter {

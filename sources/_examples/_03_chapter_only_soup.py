@@ -40,10 +40,6 @@ class MyCrawlerName(ChapterOnlySoupTemplate):
     def login(self, username_or_email: str, password_or_token: str) -> None:
         pass
 
-    # TODO: [OPTIONAL] If it is necessary to logout after session is finished, you can implement this.
-    def logout(self):
-        pass
-
     # TODO: [OPTIONAL] Get a BeautifulSoup instance from the self.novel_url
     def get_novel_soup(self) -> BeautifulSoup:
         return super().get_novel_soup()

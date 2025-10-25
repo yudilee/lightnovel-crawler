@@ -43,12 +43,6 @@ class MtledNovelsCrawler(Crawler):
             error = soup.find("div").text.strip()
             raise PermissionError(error)
 
-    def logout(self):
-        """logout as a good citizen"""
-        logger.debug("Logging out...")
-        self.get_response(logout_url)
-        print("Logged out")
-
     def search_novel(self, query):
         query = query.lower().replace(" ", "+")
         soup = self.get_soup(search_url % query)

@@ -28,11 +28,6 @@ const icons = [
     icon: <SearchOutlined />,
     label: 'Can Search',
   },
-  // {
-  //   key: 'can_logout',
-  //   icon: <LogoutOutlined />,
-  //   label: 'Can Logout',
-  // },
 ];
 
 export const SourceFeatureIcons: React.FC<{ source: SupportedSource }> = ({

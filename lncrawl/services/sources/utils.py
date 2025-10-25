@@ -132,7 +132,6 @@ def import_crawlers(file: Path):
         # static values
         setattr(crawler, "base_url", urls)
         setattr(crawler, "can_login", can_do(crawler, 'login'))
-        setattr(crawler, "can_logout", can_do(crawler, 'logout'))
         setattr(crawler, "can_search", can_do(crawler, 'search_novel'))
 
         # other metdata
@@ -156,7 +155,6 @@ def create_crawler_info(crawler: Type[Crawler]):
         has_mtl=getattr(crawler, 'has_mtl'),
         has_manga=getattr(crawler, 'has_manga'),
         can_login=getattr(crawler, 'can_login'),
-        can_logout=getattr(crawler, 'can_logout'),
         can_search=getattr(crawler, 'can_search'),
         url=f"file:///{Path(file).resolve().as_posix()}",
     )

@@ -40,10 +40,6 @@ class MyCrawlerName(SearchableSoupTemplate, ChapterOnlySoupTemplate):
     def login(self, username_or_email: str, password_or_token: str) -> None:
         pass
 
-    # TODO: [OPTIONAL] If it is necessary to logout after session is finished, you can implement this.
-    def logout(self):
-        pass
-
     # TODO: [REQUIRED] Select novel items found in search page from the query
     def select_search_items(self, query: str) -> Generator[Tag, None, None]:
         # The query here is the input from user.

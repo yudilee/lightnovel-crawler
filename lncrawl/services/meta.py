@@ -42,7 +42,6 @@ class MetadataService:
                 has_mtl=item.info.has_mtl,
                 has_manga=item.info.has_manga,
                 can_login=item.info.can_login,
-                can_logout=item.info.can_logout,
                 can_search=item.info.can_search,
                 is_disabled=(domain in ctx.sources.rejected),
                 disable_reason=ctx.sources.rejected.get(domain, ''),

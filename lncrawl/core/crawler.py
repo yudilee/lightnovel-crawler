@@ -91,9 +91,6 @@ class Crawler(Scraper):
     def login(self, username_or_email: str, password_or_token: str) -> None:
         pass
 
-    def logout(self) -> None:
-        pass
-
     def search_novel(self, query: str) -> List[SearchResult]:
         """Gets a list of results matching the given query"""
         raise NotImplementedError()

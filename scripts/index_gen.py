@@ -237,7 +237,6 @@ def process_file(py_file: Path) -> float:
 
     for crawler in __import_crawlers(py_file):
         can_login = Crawler.login != crawler.login
-        can_logout = Crawler.logout != crawler.logout
         can_search = Crawler.search_novel != crawler.search_novel
         has_manga = getattr(crawler, "has_manga", False)
         has_mtl = getattr(crawler, "has_mtl", False)
@@ -263,7 +262,6 @@ def process_file(py_file: Path) -> float:
         info["has_manga"] = has_manga
         info["can_search"] = can_search
         info["can_login"] = can_login
-        info["can_logout"] = can_logout
         info["base_urls"] = getattr(crawler, "base_url")
         info["contributors"] = process_contributors(history)
 

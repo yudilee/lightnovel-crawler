@@ -29,7 +29,6 @@ class Sources(SourceLoader):
         include_rejected: bool = False,
         can_search: Optional[bool] = None,
         can_login: Optional[bool] = None,
-        can_logout: Optional[bool] = None,
         has_mtl: Optional[bool] = None,
         has_manga: Optional[bool] = None,
     ) -> List[Tuple[str, SourceItem]]:
@@ -50,8 +49,6 @@ class Sources(SourceLoader):
             if can_search is not None and info.can_search != can_search:
                 continue
             if can_login is not None and info.can_login != can_login:
-                continue
-            if can_logout is not None and info.can_logout != can_logout:
                 continue
             if has_mtl is not None and info.has_mtl != has_mtl:
                 continue

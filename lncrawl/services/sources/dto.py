@@ -27,7 +27,6 @@ class CrawlerInfo(BaseModel):
     has_manga: bool
     can_search: bool
     can_login: bool
-    can_logout: bool
     total_commits: int = 1
     contributors: List[str] = []
 

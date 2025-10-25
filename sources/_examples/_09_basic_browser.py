@@ -39,10 +39,6 @@ class MyCrawlerName(BasicBrowserTemplate):
     def login(self, username_or_email: str, password_or_token: str) -> None:
         pass
 
-    # TODO: [OPTIONAL] If it is necessary to logout after session is finished, you can implement this.
-    def logout(self):
-        pass
-
     # TODO: [OPTIONAL] Search for novels with `self.scraper` requests
     def search_novel_in_soup(self, query: str) -> Generator[SearchResult, None, None]:
         # `raise ScraperNotSupported()` to use the browser only.

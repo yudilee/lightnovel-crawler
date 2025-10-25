@@ -17,7 +17,6 @@ class Feature(str, Enum):
     has_mtl = "mtl"
     can_search = "search"
     can_login = "login"
-    can_logout = "logout"
 
 
 @app.command("create", help="Create a source.")
@@ -192,13 +191,6 @@ class {name}(SearchableSoupTemplate, ChapterOnlySoupTemplate):
         content += '''
     def login(self, username_or_email: str, password_or_token: str) -> None:
         # Add logic to login. For example: sources/en/l/lnmtl.py
-        pass
-'''
-
-    if (Feature.can_login in features) and (Feature.can_logout in features):
-        content += '''
-    def logout(self) -> None:
-        # Logout is optional, but can be useful when crawling from server
         pass
 '''
 

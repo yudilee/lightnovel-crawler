@@ -13,4 +13,3 @@ class SupportedSource(BaseModel):
     disable_reason: Optional[str] = Field(default=None)
     can_search: bool = Field(default=False)
     can_login: bool = Field(default=False)
-    can_logout: bool = Field(default=False)

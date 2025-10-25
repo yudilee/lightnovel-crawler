@@ -39,10 +39,6 @@ class MyCrawlerName(Crawler):
         # - https://github.com/dipu-bd/lightnovel-crawler/blob/master/sources/multi/ranobes.py
         pass
 
-    # TODO: [OPTIONAL] If it is necessary to logout after session is finished, you can implement this.
-    def logout(self):
-        pass
-
     # TODO: [OPTIONAL] Return a list of search results using the query.
     def search_novel(self, query: str) -> List[SearchResult]:
         # You may raise an Exception or return empty list in case of failure.
