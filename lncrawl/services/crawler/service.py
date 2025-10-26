@@ -7,8 +7,9 @@ from sqlmodel import select
 from ...context import ctx
 from ...dao import Chapter, Novel, Volume
 from ...exceptions import ServerErrors
+from ...models import Chapter as ChapterModel
 from .dto import LoginData
-from .utils import format_novel
+from .utils import download_cover, download_image, format_novel, save_chapter
 
 logger = logging.getLogger(__name__)
 
@@ -18,12 +19,14 @@ class CrawlerService:
         pass
 
     def fetch_novel(self, url: HttpUrl, login: Optional[LoginData]) -> Novel:
+        # get crawler
         if not url.host:
             raise ServerErrors.invalid_url
+        base_url = f"{url.scheme}://{url.host}/"
+        crawler = ctx.sources.create_crawler(base_url)
 
         # fetch novel metadata
-        novel_url = url.encoded_string()
-        crawler = ctx.sources.create_crawler(novel_url)
+        crawler.novel_url = url.encoded_string()
         if login and getattr(crawler, "can_login", False):
             logger.debug(f"Login: {login}")
             crawler.login(login.username, login.password)
@@ -36,12 +39,12 @@ class CrawlerService:
             # get or create novel
             novel = sess.exec(
                 select(Novel)
-                .where(Novel.url == novel_url)
+                .where(Novel.url == crawler.novel_url)
             ).first()
             if not novel:
                 novel = Novel(
-                    url=novel_url,
                     domain=url.host,
+                    url=crawler.novel_url,
                     title=crawler.novel_title,
                 )
                 sess.add(novel)
@@ -50,7 +53,7 @@ class CrawlerService:
             # update novel
             novel.title = crawler.novel_title
             novel.authors = crawler.novel_author
-            novel.cover = crawler.novel_cover
+            novel.cover_url = crawler.novel_cover
             novel.manga = crawler.has_manga
             novel.mtl = crawler.has_mtl
             novel.synopsis = crawler.novel_synopsis
@@ -111,4 +114,64 @@ class CrawlerService:
             sess.add_all(new_chapters)
             sess.commit()
 
+            # download cover
+            novel.cover_file = download_cover(crawler, novel.id)
+            sess.commit()
+
         return novel
+
+    def fetch_chapter(self, chapter: Chapter, login: Optional[LoginData]) -> Chapter:
+        # get crawler
+        url = HttpUrl(chapter.url)
+        if not url.host:
+            raise ServerErrors.invalid_url
+        base_url = f"{url.scheme}://{url.host}/"
+        crawler = ctx.sources.create_crawler(base_url)
+
+        # prepare crawler
+        crawler.novel_url = url.encoded_string()
+        if login and getattr(crawler, "can_login", False):
+            logger.debug(f"Login: {login}")
+            crawler.login(login.username, login.password)
+
+        # get chapter content
+        model = ChapterModel(
+            id=chapter.serial,
+            title=chapter.title,
+            url=url.encoded_string(),
+        )
+        model.body = crawler.download_chapter_body(model)
+        crawler.extract_chapter_images(model)
+
+        # save chapter content
+        content_file = save_chapter(
+            chapter.novel_id,
+            chapter.id,
+            model.body or ''
+        )
+
+        # download images
+        futures = [
+            crawler.executor.submit(
+                download_image, crawler, url, filename
+            )
+            for (filename, url) in model.images.items()
+        ]
+        images = [
+            file_path
+            for file_path in crawler.resolve_futures(
+                futures,
+                disable_bar=True,
+            )
+            if file_path
+        ]
+
+        # update db
+        with ctx.db.session() as sess:
+            sess.refresh(chapter)
+            chapter.images = images
+            chapter.crawled = bool(model.body)
+            chapter.content_file = content_file
+            sess.commit()
+
+        return chapter

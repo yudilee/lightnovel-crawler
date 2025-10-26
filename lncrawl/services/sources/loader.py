@@ -1,4 +1,5 @@
 import logging
+from functools import lru_cache
 from pathlib import Path
 from threading import Event
 from typing import Dict, Type
@@ -151,6 +152,7 @@ class SourceLoader:
             self.load_crawlers(dst_file)
         logger.info('Source synced.')
 
+    @lru_cache
     def create_crawler(self, url: str) -> Crawler:
         if not self._index:
             raise ServerErrors.source_not_loaded
@@ -166,11 +168,9 @@ class SourceLoader:
             raise ServerErrors.no_crawlers.with_detail(host)
 
         logger.info(f"[{host}] Creating crawler instance")
-        home_url = extract_base(url)
         crawler = self.crawlers[host]()
 
         logger.info(f"[{host}] Initializing crawler")
-        crawler.novel_url = url
-        crawler.home_url = home_url
+        crawler.home_url = extract_base(url)
         crawler.initialize()
         return crawler

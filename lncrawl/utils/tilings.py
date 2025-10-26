@@ -7,11 +7,14 @@ http://alexwlchan.net/2016/10/tiling-the-plane-with-pillow/
 
 import math
 import random
-from enum import Enum
-from typing import Generator, List, Tuple
+from typing import Callable, Generator, List, Tuple, Optional
+
+Point = Tuple[float, float]
+PointGenerator = Generator[List[Point], None, None]
+TileGenerator = Callable[[int, int], PointGenerator]
 
 
-def generate_unit_squares(image_width, image_height):
+def generate_unit_squares(image_width: int, image_height: int) -> PointGenerator:
     """Generate coordinates for a tiling of unit squares."""
     # Iterate over the required rows and cells.  The for loops (x, y)
     # give the coordinates of the top left-hand corner of each square:
@@ -27,7 +30,7 @@ def generate_unit_squares(image_width, image_height):
             yield [(x, y), (x + 1, y), (x + 1, y + 1), (x, y + 1)]
 
 
-def generate_unit_triangles(image_width, image_height):
+def generate_unit_triangles(image_width: int, image_height: int) -> PointGenerator:
     """Generate coordinates for a tiling of unit triangles."""
     # Our triangles lie with one side parallel to the x-axis.  Let s be
     # the length of one side, and h the height of the triangle.
@@ -61,7 +64,7 @@ def generate_unit_triangles(image_width, image_height):
             yield [(x_ + 1, y * h), (x_ + 1.5, (y + 1) * h), (x_ + 0.5, (y + 1) * h)]
 
 
-def generate_unit_hexagons(image_width, image_height):
+def generate_unit_hexagons(image_width: int, image_height: int) -> PointGenerator:
     """Generate coordinates for a regular tiling of unit hexagons."""
     # Let s be the length of one side of the hexagon, and h the height
     # of the entire hexagon if one side lies parallel to the x-axis.
@@ -110,45 +113,21 @@ def generate_unit_hexagons(image_width, image_height):
             ]
 
 
-###################################################################################
-#                               EXTRA UTILITIES                                   #
-# https://github.com/dipu-bd/lightnovel-crawler/blob/dev/lncrawl/utils/tilings.py #
-###################################################################################
-
-
-class TileGenerator(Enum):
-    squares = generate_unit_squares
-    hexagons = generate_unit_hexagons
-    triangles = generate_unit_triangles
-
-    def __str__(self):
-        return self.name
-
-    def __call__(
-        self,
-        image_width: int,
-        image_height: int,
-    ) -> Generator[List[Tuple[int, int]], None, None]:
-        self.value(image_width, image_height)
-
-
 def random_generator() -> TileGenerator:
-    return random.choice(
-        [
-            TileGenerator.squares,
-            TileGenerator.hexagons,
-            TileGenerator.triangles,
-        ]
-    )
+    return random.choice([
+        generate_unit_squares,
+        generate_unit_hexagons,
+        generate_unit_triangles,
+    ])
 
 
 def generate_tiles(
-    generator: TileGenerator,
     image_width: int,
     image_height: int,
     side_length: int = 50,
-) -> Generator[List[Tuple[int, int]], None, None]:
-    if not isinstance(generator, TileGenerator):
+    generator: Optional[TileGenerator] = None,
+) -> PointGenerator:
+    if not generator:
         generator = random_generator()
 
     scaled_width = math.ceil(image_width / side_length) + 1

@@ -1,10 +1,20 @@
+import gzip
+import logging
 import math
+import os
 import re
-from typing import Dict
+from pathlib import Path
+from typing import Dict, Optional
 
+from PIL.Image import Image
+
+from ...context import ctx
 from ...core.crawler import Crawler
 from ...exceptions import LNException
 from ...models import Chapter, Volume
+from ...utils.imgen import generate_cover_image
+
+logger = logging.getLogger(__name__)
 
 
 def __format_title(text):
@@ -69,3 +79,93 @@ def format_novel(crawler: Crawler):
     __format_volume(crawler, vol_id_map)
     __format_chapters(crawler, vol_id_map)
     crawler.volumes = [x for x in crawler.volumes if x["chapter_count"] > 0]
+
+
+def save_image(img: Image, file: Path) -> None:
+    if img.mode not in ("L", "RGB", "YCbCr", "RGBX"):
+        if img.mode == "RGBa":
+            img = img.convert("RGBA").convert("RGB")
+        else:
+            img = img.convert("RGB")
+
+    file.parent.mkdir(parents=True, exist_ok=True)
+    img.save(str(file.as_posix()), "JPEG", optimized=True)
+
+
+def download_cover(crawler: Crawler, novel_id: str) -> Optional[str]:
+    url = crawler.novel_cover
+    if not url:
+        return None
+
+    cover_file = ctx.config.app.cover_image_dir / f"{novel_id}.jpg"
+    rel_path = str(cover_file.relative_to(ctx.config.app.output_path).as_posix())
+    if cover_file.is_file():
+        os.utime(cover_file)
+        return rel_path
+
+    try:
+        img = crawler.download_image(url)
+        save_image(img, cover_file)
+        logger.info(f'Cover saved: {url} -> {cover_file}')
+        return rel_path
+    except Exception as e:
+        logger.error(
+            f"Failed to download cover: {repr(e)}",
+            stack_info=ctx.logger.is_debug,
+        )
+
+    try:
+        img = generate_cover_image()
+        save_image(img, cover_file)
+        logger.info(f'Cover generated: {cover_file}')
+        return rel_path
+    except Exception as e:
+        logger.error(
+            f"Failed to generate cover: {repr(e)}",
+            stack_info=ctx.logger.is_debug,
+        )
+
+    return None
+
+
+def download_image(crawler: Crawler, url: str, filename: str) -> Optional[str]:
+    if not (url and filename):
+        return None
+
+    image_file = ctx.config.app.local_image_dir / filename
+    rel_path = str(image_file.relative_to(ctx.config.app.output_path).as_posix())
+    if image_file.is_file():
+        os.utime(image_file)
+        return rel_path
+
+    try:
+        img = crawler.download_image(url)
+        save_image(img, image_file)
+        logger.info(f'Image saved: {url} -> {image_file}')
+        return rel_path
+    except Exception as e:
+        logger.error(
+            f"Failed to download image: {repr(e)}",
+            stack_info=ctx.logger.is_debug,
+        )
+        return None
+
+
+def save_chapter(novel_id: str, chapter_id: str, content: str) -> Optional[str]:
+    content_file = ctx.config.app.chapter_content_dir / novel_id / f"{chapter_id}.json.gz"
+    rel_path = str(content_file.relative_to(ctx.config.app.output_path).as_posix())
+    if content_file.is_file():
+        os.utime(content_file)
+        return rel_path
+
+    try:
+        content_file.parent.mkdir(parents=True, exist_ok=True)
+        with gzip.open(content_file, 'wt', encoding='utf-8') as f:
+            f.write(content)
+        return rel_path
+    except Exception as e:
+        logger.error(
+            f"Failed to save chapter: {repr(e)}",
+            stack_info=ctx.logger.is_debug,
+        )
+        return None

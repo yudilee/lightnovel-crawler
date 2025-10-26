@@ -1,6 +1,6 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
-from sqlmodel import JSON, BigInteger, Column, Field, UniqueConstraint
+from sqlmodel import JSON, Column, Field, UniqueConstraint
 
 from ._base import BaseTable
 
@@ -31,19 +31,20 @@ class Chapter(BaseTable, table=True):
     title: str = Field(
         description="Title of the chapter"
     )
+
     crawled: bool = Field(
         default=False,
         description="Whether the content has been crawled"
     )
-    content: Optional[str] = Field(
+    content_file: Optional[str] = Field(
         default=None,
-        description="Content of the chapter"
+        exclude=True,
+        description="Content file path"
     )
-    size: int = Field(
-        default=0,
-        index=True,
-        sa_type=BigInteger,
-        description="Content size in bytes"
+    images: List[str] = Field(
+        default_factory=list,
+        sa_column=Column(JSON),
+        description="Related image files"
     )
 
     extra: Dict[str, Any] = Field(

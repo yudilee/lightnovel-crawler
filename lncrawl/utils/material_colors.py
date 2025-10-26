@@ -1,6 +1,6 @@
 import random
 from enum import Enum
-from typing import Generator, List, Tuple
+from typing import Generator, Tuple
 
 from ..assets.colors import material_colors
 
@@ -54,55 +54,28 @@ class ColorWeight(str, Enum):
 
 
 def random_color(
-    names: List[ColorName] = [],
-    weights: List[ColorWeight] = [],
+    names=set(ColorName),
+    weights=set(ColorWeight),
 ) -> Tuple[int, int, int]:
-    if not names:
-        names = list(ColorName)
-    if not weights:
-        weights = list(ColorWeight)
-
     available_names = set(material_colors.keys())
-    names = list(available_names.intersection(names))
-    if not names:
-        names = list(available_names)
-    name = random.choice(names)
+    name = random.choice(
+        list(available_names.intersection(names))
+        or list(available_names)
+    )
 
     available_weights = set(material_colors[name].keys())
-    weights = list(available_weights.intersection(weights))
-    if not weights:
-        return material_colors[name][""]
-    weight = random.choice(weights)
+    weight = random.choice(
+        list(available_weights.intersection(weights))
+        or list(available_weights)
+    )
 
-    return tuple(material_colors[name][weight])
+    r, g, b = material_colors[name][weight]
+    return (r, g, b)
 
 
 def generate_colors(
-    names: List[ColorName] = [],
-    weights: List[ColorWeight] = [],
+    names=set(ColorName),
+    weights=set(ColorWeight),
 ) -> Generator[Tuple[int, int, int], None, None]:
-    if not names:
-        names = list(ColorName)
-    if not weights:
-        weights = list(ColorWeight)
-
-    available_names = set(material_colors.keys())
-    names = list(available_names.intersection(names))
-    if not names:
-        names = list(available_names)
-
-    weights_map = {}
-    for name in names:
-        available_weights = set(material_colors[name].keys())
-        weights = list(available_weights.intersection(weights))
-        if not weights:
-            weights = list(available_weights)
-        weights_map[name] = weights
-
     while True:
-        name = random.choice(names)
-        if weights_map[name]:
-            weight = random.choice(list(weights_map[name]))
-        else:
-            weight = ""
-        yield tuple(material_colors[name][weight])
+        yield random_color(names, weights)

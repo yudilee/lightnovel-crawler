@@ -20,11 +20,6 @@ class Novel(BaseTable, table=True):
     title: str = Field(
         description="Title of the novel"
     )
-    cover: Optional[str] = Field(
-        default=None,
-        description="Cover image URL",
-        exclude=True
-    )
     authors: Optional[str] = Field(
         default=None,
         description="Comma-separated list of authors"
@@ -37,6 +32,17 @@ class Novel(BaseTable, table=True):
         default=[],
         sa_column=Column(JSON),
         description="List of genre or thematic tags"
+    )
+
+    cover_url: Optional[str] = Field(
+        default=None,
+        exclude=True,
+        description="Cover image URL",
+    )
+    cover_file: Optional[str] = Field(
+        default=None,
+        exclude=True,
+        description="Cover image file path",
     )
 
     mtl: bool = Field(

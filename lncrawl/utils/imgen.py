@@ -1,45 +1,12 @@
 # https://github.com/alexwlchan/specktre
 
 import random
-from typing import List, Optional
+from typing import Optional, Set
 
 from PIL import Image, ImageDraw
 
 from .material_colors import ColorName, ColorWeight, generate_colors
-from .tilings import TileGenerator, generate_tiles
-
-
-def generate_image(
-    filename: Optional[str] = None,
-    width: int = 512,
-    height: int = 512,
-    color_names: List[ColorName] = [],
-    color_weights: List[ColorWeight] = [],
-    generator: Optional[TileGenerator] = None,
-    side_length: int = 50,
-) -> Image:
-    tiles = generate_tiles(
-        generator,
-        width,
-        height,
-        side_length,
-    )
-    colors = generate_colors(
-        color_names,
-        color_weights,
-    )
-    im = Image.new(
-        mode="RGB",
-        size=(width, height),
-    )
-    for tile, color in zip(tiles, colors):
-        ImageDraw.Draw(im).polygon(tile, fill=color)
-
-    if filename:
-        im.save(filename)
-
-    return im
-
+from .tilings import generate_tiles
 
 good_color_names = set(ColorName).difference(
     [
@@ -63,13 +30,37 @@ good_color_weights = set(ColorWeight).difference(
 )
 
 
+def generate_image(
+    width: int = 512,
+    height: int = 512,
+    side_length: int = 50,
+    color_names: Optional[Set[ColorName]] = None,
+    color_weights: Optional[Set[ColorWeight]] = None,
+):
+    tiles = generate_tiles(
+        width,
+        height,
+        side_length,
+    )
+    colors = generate_colors(
+        color_names,
+        color_weights,
+    )
+    im = Image.new(
+        mode="RGB",
+        size=(width, height),
+    )
+    for tile, color in zip(tiles, colors):
+        ImageDraw.Draw(im).polygon(tile, fill=color)
+
+    return im
+
+
 def generate_cover_image(
-    filename: Optional[str] = None,
     width: int = 800,
     height: int = 1032,
-) -> Image:
-    generate_image(
-        filename=filename,
+):
+    return generate_image(
         width=width,
         height=height,
         color_names=good_color_names,

@@ -1,10 +1,7 @@
 import hashlib
 import logging
 from abc import abstractmethod
-from threading import Event
-from typing import Generator, List, Optional, Union
-
-from bs4 import Tag
+from typing import List, Optional, Union
 
 from ..context import ctx
 from ..models import Chapter, SearchResult, Volume
@@ -118,21 +115,21 @@ class Crawler(Scraper):
         return 0
 
     def extract_chapter_images(self, chapter: Chapter) -> None:
-        if ctx.config.crawler.ignore_images:
-            return
-
-        if not chapter.body:
+        if ctx.config.crawler.ignore_images or not chapter.body:
             return
 
         has_changes = False
         chapter.setdefault("images", {})
         soup = self.make_soup(chapter.body)
         for img in soup.select("img[src]"):
-            src_url = img.get("src")
-            assert isinstance(src_url, str)
+            src_url = img.get('src')
+            if not isinstance(src_url, str):
+                continue
+
             full_url = self.absolute_url(src_url, page_url=chapter["url"])
             if not full_url.startswith("http"):
                 continue
+
             filename = hashlib.md5(full_url.encode()).hexdigest() + ".jpg"
             img.attrs = {"src": "images/" + filename, "alt": filename}
             chapter.images[filename] = full_url
@@ -140,32 +137,5 @@ class Crawler(Scraper):
 
         if has_changes:
             body = soup.find("body")
-            assert isinstance(body, Tag)
+            assert body
             chapter.body = body.decode_contents()
-
-    def download_chapters(
-        self,
-        chapters: List[Chapter],
-        fail_fast=False,
-        signal=Event(),
-    ) -> Generator[Chapter, None, None]:
-        def _downloader(chapter: Chapter):
-            chapter.body = ""
-            chapter.images = {}
-            chapter.body = self.download_chapter_body(chapter)
-            self.extract_chapter_images(chapter)
-            chapter.success = bool(chapter.body)
-            return chapter
-
-        futures = [
-            self.executor.submit(_downloader, chapter)
-            for chapter in chapters
-        ]
-
-        yield from self.resolve_as_generator(
-            futures,
-            desc="Chapters",
-            unit="item",
-            fail_fast=fail_fast,
-            signal=signal,
-        )

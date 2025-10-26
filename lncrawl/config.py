@@ -23,11 +23,10 @@ APP_DIR = Path(
 ).absolute()
 DEFAULT_CONFIG_FILE = APP_DIR / 'config.json'
 
+
 # ------------------------------------------------------------------ #
 #                            Section Base                            #
 # ------------------------------------------------------------------ #
-
-
 class _Section(object):
     section: str
 
@@ -159,18 +158,29 @@ class AppConfig(_Section):
         return str(Path("Lightnovels").absolute())
 
     @property
-    def output_path(self) -> str:
-        return self._get("output_path", self.__output_path)
+    def output_path(self) -> Path:
+        return Path(self._get("output_path", self.__output_path))
 
     @output_path.setter
-    def output_path(self, path: Optional[str]) -> None:
-        self._set("output_path", path)
+    def output_path(self, path: Optional[Path]) -> None:
+        self._set("output_path", str(path) if path else None)
+
+    @cached_property
+    def cover_image_dir(self) -> Path:
+        return self.output_path / 'covers'
+
+    @cached_property
+    def local_image_dir(self) -> Path:
+        return self.output_path / 'images'
+
+    @cached_property
+    def chapter_content_dir(self) -> Path:
+        return self.output_path / 'contents'
+
 
 # ------------------------------------------------------------------ #
 #                          Database Section                          #
 # ------------------------------------------------------------------ #
-
-
 class DatabaseConfig(_Section):
     section = "database"
 
@@ -308,11 +318,10 @@ class ServerConfig(_Section):
     def token_expiry(self, v: Optional[int]) -> None:
         self._set("token_expiry", v)
 
+
 # ------------------------------------------------------------------ #
 #                         Third Party Section                        #
 # ------------------------------------------------------------------ #
-
-
 class CloudConfig(_Section):
     section = "cloud"
 
