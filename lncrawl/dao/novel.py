@@ -1,8 +1,10 @@
 from typing import Any, Dict, List, Optional
 
+from pydantic import computed_field
 from sqlalchemy import CHAR
 from sqlmodel import JSON, Column, Field
 
+from ..context import ctx
 from ._base import BaseTable
 
 
@@ -33,16 +35,9 @@ class Novel(BaseTable, table=True):
         sa_column=Column(JSON),
         description="List of genre or thematic tags"
     )
-
     cover_url: Optional[str] = Field(
         default=None,
-        exclude=True,
         description="Cover image URL",
-    )
-    cover_file: Optional[str] = Field(
-        default=None,
-        exclude=True,
-        description="Cover image file path",
     )
 
     mtl: bool = Field(
@@ -77,3 +72,15 @@ class Novel(BaseTable, table=True):
         sa_column=Column(JSON),
         description="Additional metadata"
     )
+
+    @computed_field  # type:ignore
+    @property
+    def cover_file(self) -> str:
+        '''Cover image file path'''
+        return f"novels/{self.id}/cover.jpg"
+
+    @computed_field  # type:ignore
+    @property
+    def cover_available(self) -> bool:
+        '''Whether the cover image file is available'''
+        return ctx.files.exists(self.cover_file)

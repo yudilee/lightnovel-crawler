@@ -6,7 +6,6 @@ from pathlib import Path
 import httpx
 
 from ..context import ctx
-from ..exceptions import ServerErrors
 from ..utils.platforms import Platform
 
 logger = logging.getLogger(__name__)
@@ -25,13 +24,6 @@ class FetchService:
             follow_redirects=True,
             headers={"User-Agent": user_agent},
         )
-
-    def image(self, image_url: str):
-        with self._client() as client:
-            response = client.get(image_url)
-            if response.status_code >= 400:
-                raise ServerErrors.invalid_image_response
-            return response
 
     def get(self, url: str) -> bytes:
         with self._client() as client:

@@ -118,24 +118,23 @@ class Crawler(Scraper):
         if ctx.config.crawler.ignore_images or not chapter.body:
             return
 
-        has_changes = False
-        chapter.setdefault("images", {})
+        chapter.setdefault('images', {})
         soup = self.make_soup(chapter.body)
         for img in soup.select("img[src]"):
             src_url = img.get('src')
             if not isinstance(src_url, str):
                 continue
 
-            full_url = self.absolute_url(src_url, page_url=chapter["url"])
+            full_url = self.absolute_url(src_url, page_url=chapter.url)
             if not full_url.startswith("http"):
                 continue
 
-            filename = hashlib.md5(full_url.encode()).hexdigest() + ".jpg"
-            img.attrs = {"src": "images/" + filename, "alt": filename}
-            chapter.images[filename] = full_url
-            has_changes = True
+            id_text = str([self.home_url, chapter.url, full_url])
+            image_id = hashlib.md5(id_text.encode()).hexdigest()
+            img.attrs = {"src": f"images/{image_id}.jpg", "alt": image_id}
+            chapter.images[image_id] = full_url
 
-        if has_changes:
+        if chapter.images:
             body = soup.find("body")
             assert body
             chapter.body = body.decode_contents()

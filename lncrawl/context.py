@@ -26,6 +26,16 @@ class AppContext:
         return DB()
 
     @cached_property
+    def http(self):
+        from .services.fetch import FetchService
+        return FetchService()
+
+    @cached_property
+    def files(self):
+        from .services.file import FileService
+        return FileService()
+
+    @cached_property
     def sources(self):
         from .services.sources import Sources
         return Sources()
@@ -51,6 +61,11 @@ class AppContext:
         return NovelService()
 
     @cached_property
+    def tags(self):
+        from .services.tags import TagService
+        return TagService()
+
+    @cached_property
     def volumes(self):
         from .services.volumes import VolumeService
         return VolumeService()
@@ -61,14 +76,14 @@ class AppContext:
         return ChapterService()
 
     @cached_property
+    def chapter_images(self):
+        from .services.chapter_images import ChapterImageService
+        return ChapterImageService()
+
+    @cached_property
     def artifacts(self):
         from .services.artifacts import ArtifactService
         return ArtifactService()
-
-    @cached_property
-    def http(self):
-        from .services.fetch import FetchService
-        return FetchService()
 
     @cached_property
     def crawler(self):

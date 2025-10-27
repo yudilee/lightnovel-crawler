@@ -1,4 +1,5 @@
 # app requirements
+zstd
 typer[all]
 httpx[http2,brotli,zstd]
 ascii
@@ -65,3 +66,4 @@ types-passlib
 types-python-jose
 types-setuptools
 lxml-stubs
+types-zstd

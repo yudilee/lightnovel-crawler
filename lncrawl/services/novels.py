@@ -3,8 +3,7 @@ from typing import Any, List
 from sqlmodel import and_, desc, func, select
 
 from ..context import ctx
-from ..dao import Artifact, Novel, User
-from ..dao.enums import UserRole
+from ..dao import Artifact, Novel
 from ..exceptions import ServerErrors
 from ..server.models.pagination import Paginated
 
@@ -60,9 +59,7 @@ class NovelService:
                 raise ServerErrors.no_such_novel
             return novel
 
-    def delete(self, novel_id: str, user: User) -> bool:
-        if user.role != UserRole.ADMIN:
-            raise ServerErrors.forbidden
+    def delete(self, novel_id: str) -> bool:
         with ctx.db.session() as sess:
             novel = sess.get(Novel, novel_id)
             if not novel:

@@ -1,11 +1,14 @@
 from typing import Any, List
 
+from sqlalchemy import delete as sa_delete
+from sqlalchemy import insert as sa_insert
 from sqlmodel import and_, asc, func, select
 
 from ..context import ctx
 from ..dao import User, Volume
 from ..dao.enums import UserRole
 from ..exceptions import ServerErrors
+from ..models.volume import Volume as ModelVolume
 from ..server.models.pagination import Paginated
 
 
@@ -79,3 +82,52 @@ class VolumeService:
             if not volume:
                 raise ServerErrors.no_such_volume
             return volume
+
+    def sync(self, novel_id: str, volumes: List[ModelVolume]):
+        with ctx.db.session() as sess:
+            wanted = {
+                v.id: v for v in volumes
+            }
+            existing = {
+                v.serial: v
+                for v in sess.exec(
+                    select(Volume).where(Volume.novel_id == novel_id)
+                ).all()
+            }
+
+            wk = set(wanted.keys())
+            ek = set(existing.keys())
+            to_insert = wk - ek
+            to_delete = ek - wk
+            to_update = wk & ek
+
+            if to_insert:
+                sess.exec(
+                    sa_insert(Volume),
+                    params=[
+                        Volume(
+                            novel_id=novel_id,
+                            serial=s,
+                            title=wanted[s].title,
+                            extra=wanted[s].extras,
+                        ).model_dump()
+                        for s in to_insert
+                    ]
+                )
+            if to_update:
+                for serial in to_update:
+                    model = wanted[serial]
+                    volume = existing[serial]
+                    volume.title = model.title
+                    volume.extra = model.extras
+            if to_delete:
+                sess.exec(
+                    sa_delete(Volume)
+                    .where(
+                        and_(
+                            Volume.novel_id == novel_id,
+                            Volume.serial.in_(to_delete),  # type: ignore
+                        )
+                    )
+                )
+            sess.commit()

@@ -61,7 +61,9 @@ class ServerErrors:
     no_such_job = ServerError(404, "No such job")
     duplicate_output_format = ServerError(422, "Duplicate formats are not allowed")
 
+    no_such_file = ServerError(404, "No such file")
     no_such_novel = ServerError(404, "No such novel")
+    no_such_tag = ServerError(404, "No such tag")
     no_such_volume = ServerError(404, "No such volume")
     no_such_chapter = ServerError(404, "No such chapter")
     no_such_artifact = ServerError(404, "No such artifact")

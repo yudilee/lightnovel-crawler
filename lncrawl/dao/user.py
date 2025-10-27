@@ -1,8 +1,7 @@
 from typing import Any, Dict, Optional
 
-from sqlmodel import JSON, BigInteger, Column, Field, SQLModel
+from sqlmodel import JSON, Column, Field
 
-from ..utils.time_utils import current_timestamp
 from ._base import BaseTable
 from .enums import UserRole, UserTier
 
@@ -35,21 +34,13 @@ class User(BaseTable, table=True):
         default=True,
         description="Active status"
     )
+    is_verified: bool = Field(
+        default=True,
+        description="Verification status"
+    )
 
     extra: Dict[str, Any] = Field(
         default={},
         sa_column=Column(JSON),
         description="Extra field"
-    )
-
-
-# TODO: remove this table
-class VerifiedEmail(SQLModel, table=True):
-    email: str = Field(
-        primary_key=True,
-        description="User Email"
-    )
-    created_at: int = Field(
-        sa_type=BigInteger,
-        default_factory=current_timestamp
     )

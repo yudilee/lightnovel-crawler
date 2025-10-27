@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from box import Box
 
@@ -14,6 +14,7 @@ class Chapter(Box):
         body: Optional[str] = None,
         images: Dict[str, str] = dict(),
         success: bool = False,
+        extras: Dict[str, Any] = dict(),
         **kwargs,
     ) -> None:
         self.id = id
@@ -24,10 +25,6 @@ class Chapter(Box):
         self.body = body
         self.images = images
         self.success = success
-        self.update(kwargs)
-
-    @staticmethod
-    def without_body(item: "Chapter") -> "Chapter":
-        result = item.copy()
-        result.body = None
-        return result
+        self.extras = extras
+        extras.update(kwargs)
+        self.update(extras)

@@ -5,6 +5,7 @@ from sqlmodel import SQLModel
 
 from .artifact import Artifact
 from .chapter import Chapter
+from .image import ChapterImage
 from .job import Job
 from .migration import Migration
 from .novel import Novel
@@ -19,6 +20,7 @@ models: List[Type[SQLModel]] = [
     Tag,
     Novel,
     Chapter,
+    ChapterImage,
     Volume,
     Job,
     Artifact,

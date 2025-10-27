@@ -1,15 +1,13 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from sqlmodel import JSON, Column, Field, UniqueConstraint
+from pydantic import computed_field
+from sqlmodel import JSON, Column, Field
 
+from ..context import ctx
 from ._base import BaseTable
 
 
 class Chapter(BaseTable, table=True):
-    __table_args__ = (
-        UniqueConstraint("novel_id", "serial"),
-    )
-
     novel_id: str = Field(
         foreign_key="novel.id",
         ondelete='CASCADE'
@@ -31,20 +29,10 @@ class Chapter(BaseTable, table=True):
     title: str = Field(
         description="Title of the chapter"
     )
-
     crawled: bool = Field(
+        index=True,
         default=False,
         description="Whether the content has been crawled"
-    )
-    content_file: Optional[str] = Field(
-        default=None,
-        exclude=True,
-        description="Content file path"
-    )
-    images: List[str] = Field(
-        default_factory=list,
-        sa_column=Column(JSON),
-        description="Related image files"
     )
 
     extra: Dict[str, Any] = Field(
@@ -52,3 +40,15 @@ class Chapter(BaseTable, table=True):
         sa_column=Column(JSON),
         description="Additional metadata"
     )
+
+    @computed_field  # type:ignore
+    @property
+    def content_file(self) -> str:
+        '''Content file path'''
+        return f"novels/{self.novel_id}/chapters/{self.serial:06}.zst"
+
+    @computed_field  # type:ignore
+    @property
+    def is_available(self) -> bool:
+        '''Content file is available'''
+        return ctx.files.exists(self.content_file)

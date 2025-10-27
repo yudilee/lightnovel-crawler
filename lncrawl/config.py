@@ -165,18 +165,6 @@ class AppConfig(_Section):
     def output_path(self, path: Optional[Path]) -> None:
         self._set("output_path", str(path) if path else None)
 
-    @cached_property
-    def cover_image_dir(self) -> Path:
-        return self.output_path / 'covers'
-
-    @cached_property
-    def local_image_dir(self) -> Path:
-        return self.output_path / 'images'
-
-    @cached_property
-    def chapter_content_dir(self) -> Path:
-        return self.output_path / 'contents'
-
 
 # ------------------------------------------------------------------ #
 #                          Database Section                          #

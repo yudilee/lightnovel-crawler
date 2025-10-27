@@ -172,5 +172,6 @@ class SourceLoader:
 
         logger.info(f"[{host}] Initializing crawler")
         crawler.home_url = extract_base(url)
+        crawler.novel_url = url
         crawler.initialize()
         return crawler

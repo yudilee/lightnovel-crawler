@@ -1,9 +1,9 @@
-import os
 from typing import Any, Dict, Optional
 
 from pydantic import computed_field
 from sqlmodel import JSON, Column, Field
 
+from ..context import ctx
 from ._base import BaseTable
 from .enums import OutputFormat
 
@@ -21,7 +21,6 @@ class Artifact(BaseTable, table=True):
         foreign_key="user.id",
         ondelete='SET NULL'
     )
-
     output_file: str = Field(
         description="Output file path",
         exclude=True
@@ -39,22 +38,16 @@ class Artifact(BaseTable, table=True):
 
     @computed_field  # type:ignore
     @property
-    def file_name(self) -> str:
-        '''Output file name'''
-        return os.path.basename(self.output_file)
-
-    @computed_field  # type:ignore
-    @property
     def is_available(self) -> bool:
-        '''Output file is available'''
-        return os.path.isfile(self.output_file)
+        '''Content file is available'''
+        return ctx.files.exists(self.output_file)
 
     @computed_field  # type:ignore
     @property
     def file_size(self) -> Optional[int]:
         '''Output file size in bytes'''
         try:
-            stat = os.stat(self.output_file)
-            return stat.st_size
+            file = ctx.files.resolve(self.output_file)
+            return file.stat().st_size
         except Exception:
             return None
