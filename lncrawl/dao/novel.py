@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from pydantic import computed_field
 from sqlalchemy import CHAR
@@ -67,19 +67,13 @@ class Novel(BaseTable, table=True):
         description="Number of available chapters",
     )
 
-    extra: Dict[str, Any] = Field(
-        default_factory=dict,
-        sa_column=Column(JSON),
-        description="Additional metadata"
-    )
-
-    @computed_field  # type:ignore
+    @computed_field  # type: ignore[misc]
     @property
     def cover_file(self) -> str:
         '''Cover image file path'''
         return f"novels/{self.id}/cover.jpg"
 
-    @computed_field  # type:ignore
+    @computed_field  # type: ignore[misc]
     @property
     def cover_available(self) -> bool:
         '''Whether the cover image file is available'''

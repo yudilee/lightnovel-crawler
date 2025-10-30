@@ -154,6 +154,7 @@ class SourceLoader:
 
     @lru_cache
     def create_crawler(self, url: str) -> Crawler:
+        self.ensure_load()
         if not self._index:
             raise ServerErrors.source_not_loaded
 

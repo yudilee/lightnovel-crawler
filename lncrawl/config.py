@@ -2,9 +2,11 @@ import json
 import logging
 import os
 import time
+from datetime import datetime
+from decimal import Decimal
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, Optional, Type, TypeVar, Union, cast
 
 import dotenv
 import typer
@@ -41,6 +43,37 @@ class _Section(object):
         self.root.set(self.section, key, value)
 
 
+def _serialize(obj: object) -> Any:
+    if isinstance(obj, (str, int, float, bool, type(None))):
+        return obj
+    if isinstance(obj, (list, tuple, set)):
+        return [_serialize(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _serialize(v) for k, v in obj.items()}
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    if isinstance(obj, Decimal):
+        return float(obj)
+    return str(obj)  # fallback for unknown types
+
+
+def _deserialize(val: Any, typ: Type[T]) -> T:
+    if val is None:
+        return cast(T, None)
+    if typ in (str, int, float, bool):
+        return typ(val)  # type: ignore
+    if typ == Decimal:
+        return cast(T, Decimal(val))
+    if typ == datetime:
+        return cast(T, datetime.fromisoformat(val))
+    if typ in (list, tuple, set):
+        seq = json.loads(val) if isinstance(val, str) else val
+        return cast(T, typ(seq))   # type: ignore
+    if typ == dict:
+        return cast(T, json.loads(val) if isinstance(val, str) else val)
+    return cast(T, val)
+
+
 def _snapshot(obj: object) -> Dict[str, Any]:
     out = {}
     for name in dir(obj):
@@ -48,7 +81,7 @@ def _snapshot(obj: object) -> Dict[str, Any]:
             continue
         attr = getattr(type(obj), name, None)
         if isinstance(attr, property):
-            out[name] = getattr(obj, name)
+            out[name] = _serialize(getattr(obj, name))
         elif isinstance(attr, cached_property):
             value = getattr(obj, name)
             if isinstance(value, _Section):
@@ -132,14 +165,14 @@ class Config(object):
                 sub[key] = default()
             else:
                 sub[key] = default
-        return sub[key]
+        return _deserialize(sub[key], type(sub[key]))
 
     def set(self, section: str, key: str, value: Any) -> None:
         sub: dict = self._data.setdefault(section, {})
         if value is None:
             sub.pop(key, None)
         else:
-            sub[key] = value
+            sub[key] = _serialize(value)
         self.save()
 
 
@@ -165,10 +198,20 @@ class AppConfig(_Section):
     def output_path(self, path: Optional[Path]) -> None:
         self._set("output_path", str(path) if path else None)
 
+    @property
+    def history_limit_per_user(self) -> int:
+        '''Number of items to store per user'''
+        return self._get("history_limit_per_user", 10000)
+
+    @history_limit_per_user.setter
+    def history_limit_per_user(self, v: Optional[int]) -> None:
+        self._set("history_limit_per_user", v)
 
 # ------------------------------------------------------------------ #
 #                          Database Section                          #
 # ------------------------------------------------------------------ #
+
+
 class DatabaseConfig(_Section):
     section = "database"
 

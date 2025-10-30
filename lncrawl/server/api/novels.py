@@ -1,20 +1,19 @@
 from typing import List
 
-from fastapi import APIRouter, Path, Query, Security
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Path, Query
 
 from ...context import ctx
-from ...dao import Artifact, Novel
-from ..models.novel import NovelChapterContent, NovelVolume
+from ...dao import Artifact, Chapter, Novel, Volume
 from ..models.pagination import Paginated
-from ..security import ensure_user
 
 # The root router
 router = APIRouter()
 
 
-@router.get("s", summary='Returns a list of novels',
-            dependencies=[Security(ensure_user)],)
+@router.get(
+    "s",
+    summary='Returns a list of novels',
+)
 def list_novels(
     search: str = Query(default=''),
     offset: int = Query(default=0),
@@ -34,31 +33,25 @@ def get_novel(
     return ctx.novels.get(novel_id)
 
 
-@router.get("/{novel_id}/artifacts", summary='Returns cached artifacts',
-            dependencies=[Security(ensure_user)])
+@router.get("/{novel_id}/volumes", summary='Gets volumes')
+async def get_novel_volumes(
+    novel_id: str = Path(),
+) -> List[Volume]:
+    return ctx.volumes.list(novel_id)
+
+
+@router.get("/{novel_id}/chapters", summary='Gets all chapters')
+async def get_novel_chapters(
+    novel_id: str = Path(),
+) -> List[Chapter]:
+    return ctx.chapters.list(novel_id=novel_id)
+
+
+@router.get(
+    "/{novel_id}/artifacts",
+    summary='Returns cached artifacts',
+)
 def get_novel_artifacts(
     novel_id: str = Path(),
 ) -> List[Artifact]:
     return ctx.novels.get_artifacts(novel_id)
-
-
-@router.get("/{novel_id}/cover", summary='Returns a novel cover')
-async def get_novel_cover(
-    novel_id: str = Path(),
-) -> FileResponse:
-    return await ctx.metadata.get_novel_cover(novel_id)
-
-
-@router.get("/{novel_id}/toc", summary='Gets table of contents')
-async def get_novel_toc(
-    novel_id: str = Path(),
-) -> List[NovelVolume]:
-    return ctx.metadata.get_novel_toc(novel_id)
-
-
-@router.get("/{novel_id}/chapter/{hash}", summary='Gets chapter content')
-async def get_chapter_json(
-    novel_id: str = Path(),
-    hash: str = Path(),
-) -> NovelChapterContent:
-    return ctx.metadata.get_novel_chapter_content(novel_id, hash)

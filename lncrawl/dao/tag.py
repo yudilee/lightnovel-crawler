@@ -5,7 +5,7 @@ from sqlmodel import Field, SQLModel
 
 class Tag(SQLModel, table=True):
     name: str = Field(
-        index=True,
+        nullable=False,
         primary_key=True,
         description="Unique tag name"
     )

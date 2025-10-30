@@ -52,8 +52,6 @@ class CrawlerService:
                     domain=url.host,
                     title=crawler.novel_title,
                 )
-                sess.add(novel)
-                sess.refresh(novel)
 
             # update novel
             novel.title = crawler.novel_title
@@ -67,10 +65,11 @@ class CrawlerService:
             novel.language = crawler.language
             novel.volume_count = len(crawler.volumes)
             novel.chapter_count = len(crawler.chapters)
+            sess.add(novel)
             sess.commit()
 
         # add or update tags
-        ctx.tags.batch_insert(novel.tags)
+        ctx.tags.insert(novel.tags)
 
         # add or update volumes
         ctx.volumes.sync(novel.id, crawler.volumes)

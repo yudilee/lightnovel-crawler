@@ -5,10 +5,11 @@ from sqlmodel import SQLModel
 
 from .artifact import Artifact
 from .chapter import Chapter
-from .image import ChapterImage
+from .chapter_image import ChapterImage
 from .job import Job
 from .migration import Migration
 from .novel import Novel
+from .read_history import ReadHistory
 from .tag import Tag
 from .user import User, VerifiedEmail
 from .volume import Volume
@@ -19,11 +20,12 @@ models: List[Type[SQLModel]] = [
     VerifiedEmail,
     Tag,
     Novel,
+    Volume,
     Chapter,
     ChapterImage,
-    Volume,
-    Job,
+    ReadHistory,
     Artifact,
+    Job,
 ]
 
 tables: List[Table] = [

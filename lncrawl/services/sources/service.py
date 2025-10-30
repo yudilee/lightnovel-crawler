@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional, Tuple
 
-from ...exceptions import LNException
+from ...exceptions import ServerErrors
 from ...utils.text_tools import normalize
 from ...utils.url_tools import extract_host
 from .dto import SourceItem
@@ -33,7 +33,7 @@ class Sources(SourceLoader):
         has_manga: Optional[bool] = None,
     ) -> List[Tuple[str, SourceItem]]:
         if not self._index:
-            raise LNException('Sources are not loaded')
+            raise ServerErrors.source_not_loaded
 
         if query:
             ids = self._store.search(normalize(query))

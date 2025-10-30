@@ -50,7 +50,7 @@ class ChereadsCrawler(Crawler):
             self.volumes.append(
                 Volume(
                     id=vol_id,
-                    title=vol.volumeName,
+                    title=str(vol.volumeName),
                 )
             )
             for chap in vol.chapterItems:
@@ -60,7 +60,7 @@ class ChereadsCrawler(Crawler):
                     Chapter(
                         volume=vol_id,
                         id=len(self.chapters) + 1,
-                        title=f'#{chap.chapterIndex} {chap.chapterName}',
+                        title=str(chap.chapterName),
                         url=f"{self.novel_url.strip('/')}/{chap.chapterId}",
                     )
                 )

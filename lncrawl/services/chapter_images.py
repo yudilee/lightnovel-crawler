@@ -1,69 +1,36 @@
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import insert as sa_insert
-from sqlmodel import and_, func, select
+from sqlmodel import col, select
 
 from ..context import ctx
 from ..dao import ChapterImage
 from ..exceptions import ServerErrors
-from ..server.models.pagination import Paginated
-from ..utils.url_tools import normalize_url
 
 
 class ChapterImageService:
     def __init__(self) -> None:
         pass
 
-    def count(self, novel_id: str) -> int:
-        with ctx.db.session() as sess:
-            stmt = select(func.count()).select_from(ChapterImage)
-            stmt = stmt.where(ChapterImage.novel_id == novel_id)
-            return sess.exec(stmt).one()
-
     def list(
         self,
-        offset: int = 0,
-        limit: int = 20,
-        search: str = '',
         novel_id: Optional[str] = None,
         chapter_id: Optional[str] = None,
         is_crawled: Optional[bool] = None,
-    ) -> Paginated[ChapterImage]:
+    ) -> List[ChapterImage]:
         with ctx.db.session() as sess:
             stmt = select(ChapterImage)
-            cnt = select(func.count()).select_from(ChapterImage)
 
-            # Apply filters
-            conditions: List[Any] = []
-
-            if search:
-                q = f"%{normalize_url(search)}%"
-                conditions.append(ChapterImage.url.like(q))  # type: ignore
             if novel_id:
-                conditions.append(ChapterImage.novel_id == novel_id)
+                stmt = stmt.where(ChapterImage.novel_id == novel_id)
             if chapter_id:
-                conditions.append(ChapterImage.chapter_id == chapter_id)
+                stmt = stmt.where(ChapterImage.chapter_id == chapter_id)
             if is_crawled:
-                conditions.append(ChapterImage.crawled.is_(True))  # type: ignore
+                stmt = stmt.where(col(ChapterImage.crawled).is_(True))
 
-            if conditions:
-                cnd = and_(*conditions)
-                stmt = stmt.where(cnd)
-                cnt = cnt.where(cnd)
-
-            # Apply pagination
-            stmt = stmt.offset(offset).limit(limit)
-
-            total = sess.exec(cnt).one()
             items = sess.exec(stmt).all()
-
-            return Paginated(
-                total=total,
-                offset=offset,
-                limit=limit,
-                items=list(items),
-            )
+            return list(items)
 
     def get(self, image_id: str) -> ChapterImage:
         with ctx.db.session() as sess:
@@ -71,6 +38,12 @@ class ChapterImageService:
             if not image:
                 raise ServerErrors.no_such_file
             return image
+
+    def get_many(self, image_ids: List[str]) -> List[ChapterImage]:
+        with ctx.db.session() as sess:
+            stmt = select(ChapterImage).where(col(ChapterImage.id).in_(image_ids))
+            items = sess.exec(stmt).all()
+            return list(items)
 
     def delete(self, image_id: str) -> bool:
         with ctx.db.session() as sess:
@@ -113,9 +86,7 @@ class ChapterImageService:
             if to_delete:
                 sess.exec(
                     sa_delete(ChapterImage)
-                    .where(
-                        ChapterImage.id.in_(to_delete),  # type: ignore
-                    )
+                    .where(col(ChapterImage.id).in_(to_delete))
                 )
                 for id in to_delete:
                     file = existing[id].image_file

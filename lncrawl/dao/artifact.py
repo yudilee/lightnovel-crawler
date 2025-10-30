@@ -1,7 +1,7 @@
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from pydantic import computed_field
-from sqlmodel import JSON, Column, Field
+from sqlmodel import Field
 
 from ..context import ctx
 from ._base import BaseTable
@@ -30,19 +30,13 @@ class Artifact(BaseTable, table=True):
         description="The output format of the artifact"
     )
 
-    extra: Dict[str, Any] = Field(
-        default={},
-        sa_column=Column(JSON),
-        description="Extra field"
-    )
-
-    @computed_field  # type:ignore
+    @computed_field  # type: ignore[misc]
     @property
     def is_available(self) -> bool:
         '''Content file is available'''
         return ctx.files.exists(self.output_file)
 
-    @computed_field  # type:ignore
+    @computed_field  # type: ignore[misc]
     @property
     def file_size(self) -> Optional[int]:
         '''Output file size in bytes'''

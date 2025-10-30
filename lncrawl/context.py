@@ -26,6 +26,11 @@ class AppContext:
         return DB()
 
     @cached_property
+    def mail(self):
+        from .services.mail import MailService
+        return MailService()
+
+    @cached_property
     def http(self):
         from .services.fetch import FetchService
         return FetchService()
@@ -44,16 +49,6 @@ class AppContext:
     def users(self):
         from .services.users import UserService
         return UserService()
-
-    @cached_property
-    def jobs(self):
-        from .services.jobs import JobService
-        return JobService()
-
-    @cached_property
-    def scheduler(self):
-        from .services.scheduler import JobScheduler
-        return JobScheduler()
 
     @cached_property
     def novels(self):
@@ -86,19 +81,24 @@ class AppContext:
         return ArtifactService()
 
     @cached_property
+    def jobs(self):
+        from .services.jobs import JobService
+        return JobService()
+
+    @cached_property
+    def history(self):
+        from .services.history import ReadHistoryService
+        return ReadHistoryService()
+
+    @cached_property
     def crawler(self):
         from .services.crawler import CrawlerService
         return CrawlerService()
 
     @cached_property
-    def metadata(self):
-        from .services.meta import MetadataService
-        return MetadataService()
-
-    @cached_property
-    def mail(self):
-        from .services.mail import MailService
-        return MailService()
+    def scheduler(self):
+        from .services.scheduler import JobScheduler
+        return JobScheduler()
 
     def __new__(cls):
         global _cache

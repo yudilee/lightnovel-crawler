@@ -6,7 +6,7 @@ __all__ = [
     'UserTier',
     'JobStatus',
     'JobPriority',
-    'RunState',
+    'JobType',
 ]
 
 
@@ -21,25 +21,31 @@ class UserTier(IntEnum):
     VIP = 2
 
 
+class JobType(IntEnum):
+    NOVEL = 0
+    FULL_NOVEL = 1
+    CHAPTER = 10
+    BATCH_CHAPTERS = 11
+    VOLUME = 20
+    BATCH_VOLUMES = 21
+    IMAGE = 30
+    BATCH_IMAGES = 31
+    ARTIFACT = 40
+    BATCH_ARTIFACTS = 41
+
+
 class JobStatus(str, Enum):
-    PENDING = "pending"
-    RUNNING = "running"
-    COMPLETED = "done"
+    PENDING = 0
+    RUNNING = 1
+    SUCCESS = 2
+    FAILED = 3
+    CANCELED = 4
 
 
 class JobPriority(IntEnum):
     LOW = 0
     NORMAL = 1
     HIGH = 2
-
-
-class RunState(IntEnum):
-    FAILED = 0
-    SUCCESS = 1
-    CANCELED = 2
-    FETCHING_NOVEL = 3
-    FETCHING_CONTENT = 4
-    CREATING_ARTIFACTS = 5
 
 
 class OutputFormat(str, Enum):

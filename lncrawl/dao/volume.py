@@ -1,24 +1,22 @@
-from typing import Any, Dict
-
-from sqlmodel import JSON, Column, Field
+from sqlmodel import Field, Index, UniqueConstraint
 
 from ._base import BaseTable
 
 
 class Volume(BaseTable, table=True):
+    __table_args__ = (
+        UniqueConstraint("novel_id", "serial"),
+        Index("ix_volume_novel_id", 'novel_id'),
+        Index("ix_volume_novel_serial", 'novel_id', 'serial'),
+    )
+
     novel_id: str = Field(
         foreign_key="novel.id",
         ondelete='CASCADE',
     )
     serial: int = Field(
-        index=True,
         description="Serial number of the volume",
     )
     title: str = Field(
         description="Name of the volume",
-    )
-    extra: Dict[str, Any] = Field(
-        default_factory=dict,
-        sa_column=Column(JSON),
-        description="Additional metadata"
     )

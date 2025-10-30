@@ -3,7 +3,6 @@ from sqlmodel import Field, SQLModel
 
 class Migration(SQLModel, table=True):
     id: int = Field(
-        default=0,
         primary_key=True
     )
     version: int = Field(

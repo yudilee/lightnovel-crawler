@@ -1,7 +1,8 @@
 import uuid
+from typing import Any, Dict
 
 from sqlalchemy import event
-from sqlmodel import BigInteger, Field, SQLModel
+from sqlmodel import JSON, BigInteger, Field, SQLModel
 
 from ..utils.time_utils import current_timestamp
 
@@ -23,6 +24,11 @@ class BaseTable(SQLModel):
     updated_at: int = Field(
         default_factory=current_timestamp,
         sa_type=BigInteger
+    )
+    extra: Dict[str, Any] = Field(
+        default_factory=dict,
+        sa_type=JSON,
+        description="Additional metadata",
     )
 
 

@@ -10,7 +10,6 @@ class Chapter(Box):
         url: str = "",
         title: str = "",
         volume: Optional[int] = None,
-        volume_title: Optional[str] = None,
         body: Optional[str] = None,
         images: Dict[str, str] = dict(),
         success: bool = False,
@@ -21,10 +20,9 @@ class Chapter(Box):
         self.url = url
         self.title = title
         self.volume = volume
-        self.volume_title = volume_title
         self.body = body
         self.images = images
         self.success = success
-        self.extras = extras
+        self.extra = extras
         extras.update(kwargs)
         self.update(extras)

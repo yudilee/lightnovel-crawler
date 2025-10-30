@@ -39,11 +39,20 @@ try:
 except ImportError:
     traceback.print_exc()
 
-# Add frontend
+
+# Mount output directory
+try:
+    from .static import app as static_app
+    app.mount("/static", static_app)
+except ImportError:
+    traceback.print_exc()
+
+
+# Mount frontend
 web_dir = (Path(__file__).parent / 'web').absolute()
 if web_dir.is_dir():
     @app.get("/{fallback:path}", include_in_schema=False)
-    async def serve_static(fallback: str):
+    async def serve_web(fallback: str):
         target_file = web_dir.joinpath(fallback)
         if target_file.is_file():
             return FileResponse(target_file)

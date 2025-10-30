@@ -1,19 +1,25 @@
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from pydantic import computed_field
-from sqlmodel import JSON, Column, Field
+from sqlmodel import Field, Index, UniqueConstraint
 
 from ..context import ctx
 from ._base import BaseTable
 
 
 class Chapter(BaseTable, table=True):
+    __table_args__ = (
+        UniqueConstraint("novel_id", "serial"),
+        Index("ix_chapter_novel_id", 'novel_id'),
+        Index("ix_chapter_novel_serial", 'novel_id', 'serial'),
+        Index("ix_chapter_novel_volume", 'novel_id', 'volume_id'),
+    )
+
     novel_id: str = Field(
         foreign_key="novel.id",
         ondelete='CASCADE'
     )
     serial: int = Field(
-        index=True,
         description="Serial number of the volume",
     )
     volume_id: Optional[str] = Field(
@@ -23,31 +29,23 @@ class Chapter(BaseTable, table=True):
     )
 
     url: str = Field(
-        index=True,
         description="Full URL of the chapter content page"
     )
     title: str = Field(
         description="Title of the chapter"
     )
     crawled: bool = Field(
-        index=True,
         default=False,
         description="Whether the content has been crawled"
     )
 
-    extra: Dict[str, Any] = Field(
-        default_factory=dict,
-        sa_column=Column(JSON),
-        description="Additional metadata"
-    )
-
-    @computed_field  # type:ignore
+    @computed_field  # type: ignore[misc]
     @property
     def content_file(self) -> str:
         '''Content file path'''
         return f"novels/{self.novel_id}/chapters/{self.serial:06}.zst"
 
-    @computed_field  # type:ignore
+    @computed_field  # type: ignore[misc]
     @property
     def is_available(self) -> bool:
         '''Content file is available'''

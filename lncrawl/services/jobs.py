@@ -4,10 +4,9 @@ from pydantic import HttpUrl
 from sqlmodel import and_, asc, desc, func, or_, select
 
 from ..context import ctx
-from ..dao import Artifact, Job, Novel, User
-from ..dao.enums import JobPriority, JobStatus, RunState, UserRole
+from ..dao import Job, User
+from ..dao.enums import JobPriority, JobStatus, JobType, OutputFormat, UserRole
 from ..exceptions import ServerErrors
-from ..server.models.job import JobDetail
 from ..server.models.pagination import Paginated
 from ..server.tier import JOB_PRIORITY_LEVEL
 
@@ -20,13 +19,13 @@ class JobService:
         self,
         offset: int = 0,
         limit: int = 20,
+        *,
         sort_by: str = "created_at",
         order: str = "desc",
         user_id: Optional[str] = None,
-        novel_id: Optional[str] = None,
+        job_type: Optional[JobType] = None,
         priority: Optional[JobPriority] = None,
         status: Optional[JobStatus] = None,
-        run_state: Optional[RunState] = None,
     ) -> Paginated[Job]:
         with ctx.db.session() as sess:
             stmt = select(Job)
@@ -36,12 +35,10 @@ class JobService:
             conditions: List[Any] = []
             if user_id is not None:
                 conditions.append(Job.user_id == user_id)
-            if novel_id is not None:
-                conditions.append(Job.novel_id == novel_id)
+            if job_type is not None:
+                conditions.append(Job.type == job_type)
             if status is not None:
                 conditions.append(Job.status == status)
-            if run_state is not None:
-                conditions.append(Job.run_state == run_state)
             if priority is not None:
                 conditions.append(Job.priority == priority)
 
@@ -70,7 +67,7 @@ class JobService:
                 items=list(items),
             )
 
-    def pending_jobs(self, limit: int = 5) -> List[Job]:
+    def list_pending(self, limit: int = 5) -> List[Job]:
         with ctx.db.session() as sess:
             stmt = select(Job)
             stmt = stmt.where(
@@ -87,19 +84,11 @@ class JobService:
             jobs = sess.exec(stmt).all()
             return list(jobs)
 
-    async def create(self, url: HttpUrl, user: User):
-        novel = ctx.novels.get_by_url(url)
+    def get(self, job_id: str) -> Job:
         with ctx.db.session() as sess:
-            # create the job
-            job = Job(
-                user_id=user.id,
-                novel_id=novel.id,
-                url=novel.url,
-                priority=JOB_PRIORITY_LEVEL[user.tier],
-            )
-            sess.add(job)
-            sess.commit()
-            sess.refresh(job)
+            job = sess.get(Job, job_id)
+            if not job:
+                raise ServerErrors.no_such_job
             return job
 
     def delete(self, job_id: str, user: User) -> bool:
@@ -116,46 +105,74 @@ class JobService:
     def cancel(self, job_id: str, user: User) -> bool:
         with ctx.db.session() as sess:
             job = sess.get(Job, job_id)
-            if not job or job.status == JobStatus.COMPLETED:
+            if not job or job.is_completed:
                 return True
             if job.user_id != user.id and user.role != UserRole.ADMIN:
                 raise ServerErrors.forbidden
             who = 'user' if job.user_id == user.id else 'admin'
             job.error = f'Canceled by {who}'
-            job.status = JobStatus.COMPLETED
-            job.run_state = RunState.CANCELED
-            sess.add(job)
+            job.status = JobStatus.CANCELED
             sess.commit()
             return True
 
-    def get(self, job_id: str) -> JobDetail:
+    def fetch_novel(self, user: User, url: HttpUrl, full: bool = False) -> Job:
         with ctx.db.session() as sess:
-            job = sess.get(Job, job_id)
-            if not job:
-                raise ServerErrors.no_such_job
-            user = sess.get_one(User, job.user_id)
-            novel = sess.get(Novel, job.novel_id)
-            artifacts = sess.exec(
-                select(Artifact).where(Artifact.job_id == job.id)
-            ).all()
-            return JobDetail(
-                job=job,
-                user=user,
-                novel=novel,
-                artifacts=list(artifacts),
+            job = Job(
+                user_id=user.id,
+                priority=JOB_PRIORITY_LEVEL[user.tier],
+                type=JobType.FULL_NOVEL if full else JobType.NOVEL,
+                extra={'url': url.encoded_string()},
             )
+            sess.add(job)
+            sess.commit()
+            sess.refresh(job)
+            return job
 
-    def get_artifacts(self, job_id: str) -> List[Artifact]:
+    def fetch_chapters(self, user: User, *chapter_ids: str) -> Job:
+        if not chapter_ids:
+            raise ServerErrors.no_chapters
         with ctx.db.session() as sess:
-            q = select(Artifact).where(Artifact.job_id == job_id)
-            return list(sess.exec(q).all())
+            if len(chapter_ids) == 1:
+                job = Job(
+                    user_id=user.id,
+                    priority=JOB_PRIORITY_LEVEL[user.tier],
+                    type=JobType.CHAPTER,
+                    extra={'chapter_id': chapter_ids[0]},
+                )
+            else:
+                job = Job(
+                    user_id=user.id,
+                    priority=JOB_PRIORITY_LEVEL[user.tier],
+                    type=JobType.BATCH_CHAPTERS,
+                    extra={'chapter_ids': chapter_ids},
+                )
+            sess.add(job)
+            sess.commit()
+            sess.refresh(job)
+            return job
 
-    def get_novel(self, job_id: str) -> Novel:
+    def fetch_image(self, user: User, image_id: str) -> Job:
         with ctx.db.session() as sess:
-            job = sess.get(Job, job_id)
-            if not job:
-                raise ServerErrors.no_such_job
-            novel = sess.get(Novel, job.novel_id)
-            if not novel:
-                raise ServerErrors.no_such_novel
-            return novel
+            job = Job(
+                user_id=user.id,
+                priority=JOB_PRIORITY_LEVEL[user.tier],
+                type=JobType.CHAPTER,
+                extra={'image_id': image_id},
+            )
+            sess.add(job)
+            sess.commit()
+            sess.refresh(job)
+            return job
+
+    def make_artifact(self, user: User, novel_id: str, format: OutputFormat) -> Job:
+        with ctx.db.session() as sess:
+            job = Job(
+                user_id=user.id,
+                priority=JOB_PRIORITY_LEVEL[user.tier],
+                type=JobType.ARTIFACT,
+                extra={'novel_id': novel_id, 'format': format},
+            )
+            sess.add(job)
+            sess.commit()
+            sess.refresh(job)
+            return job

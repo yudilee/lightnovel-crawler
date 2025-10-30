@@ -11,6 +11,11 @@ logger = logging.getLogger(__name__)
 
 
 class DB:
+    # ------------------------------------------------------------------ #
+    migration_id = 1       # Migration row id
+    latest_version = 1     # Latest migration version
+    # ------------------------------------------------------------------ #
+
     def __init__(self) -> None:
         self.engine = create_engine(
             ctx.config.db.url,
@@ -32,7 +37,7 @@ class DB:
         future: bool = True,
         autoflush: bool = True,
         autocommit: bool = False,
-        expire_on_commit: bool = True,
+        expire_on_commit: bool = False,
         enable_baked_queries: bool = True,
     ):
         return Session(
@@ -93,7 +98,7 @@ class DB:
         # check for migrations
         latest = DB.latest_version
         with self.session() as sess:
-            entry = sess.get_one(Migration, 0)
+            entry = sess.get_one(Migration, DB.migration_id)
             current = entry.version
             while current < latest:
                 logger.info(f'Running migrations: {current} -> {latest}')
@@ -116,7 +121,11 @@ class DB:
 
             logger.info('Preparing migration table')
             with self.session() as sess:
-                sess.add(Migration(id=0, version=self.latest_version))
+                entry = Migration(
+                    id=DB.migration_id,
+                    version=DB.latest_version,
+                )
+                sess.add(entry)
                 sess.commit()
         except Exception as e:
             if retry <= 0:
@@ -127,9 +136,6 @@ class DB:
     # ------------------------------------------------------------------ #
     #                         Database Migrations                        #
     # ------------------------------------------------------------------ #
-
-    latest_version = 0
-    """Latest migration version"""
 
     def __run_migration(self, version: int, inspector: Inspector) -> int:
         raise ValueError(f'Unknown version {version}')

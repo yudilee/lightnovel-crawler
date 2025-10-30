@@ -74,6 +74,7 @@ class NovelService:
             if not novel:
                 raise ServerErrors.no_such_novel
             artifacts = sess.exec(
-                select(Artifact).where(Artifact.novel_id == novel.id)
+                select(Artifact)
+                .where(Artifact.novel_id == novel.id)
             ).all()
             return list(artifacts)

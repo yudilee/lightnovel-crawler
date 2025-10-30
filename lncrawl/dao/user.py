@@ -1,7 +1,8 @@
-from typing import Any, Dict, Optional
+from typing import Optional
 
-from sqlmodel import JSON, Column, Field
+from sqlmodel import BigInteger, Field, SQLModel
 
+from ..utils.time_utils import current_timestamp
 from ._base import BaseTable
 from .enums import UserRole, UserTier
 
@@ -39,8 +40,13 @@ class User(BaseTable, table=True):
         description="Verification status"
     )
 
-    extra: Dict[str, Any] = Field(
-        default={},
-        sa_column=Column(JSON),
-        description="Extra field"
+
+class VerifiedEmail(SQLModel, table=True):
+    email: str = Field(
+        primary_key=True,
+        description="User Email"
+    )
+    created_at: int = Field(
+        sa_type=BigInteger,
+        default_factory=current_timestamp
     )

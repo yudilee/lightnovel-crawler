@@ -1,6 +1,7 @@
 from typing import Any, List, Optional
 
-from sqlmodel import and_, asc, func, select
+from sqlmodel import insert as sa_insert
+from sqlmodel import and_, asc, col, func, select
 
 from ..context import ctx
 from ..dao import Tag
@@ -76,11 +77,19 @@ class TagService:
             sess.commit()
             return True
 
-    def batch_insert(self, names: List[str]) -> None:
+    def insert(self, names: List[str]) -> None:
         with ctx.db.session() as sess:
-            existing = set(sess.exec(
-                select(Tag.name).where(Tag.name.in_(names))  # type: ignore
-            ).all())
-            missing = [name for name in names if name not in existing]
-            sess.add_all(Tag(name=name) for name in missing)
-            sess.commit()
+            existing = sess.exec(
+                select(Tag.name)
+                .where(col(Tag.name).in_(names))
+            ).all()
+            missing = set(names) - set(existing)
+            if missing:
+                sess.exec(
+                    sa_insert(Tag),
+                    params=[
+                        Tag(name=name).model_dump()
+                        for name in missing
+                    ]
+                )
+                sess.commit()
