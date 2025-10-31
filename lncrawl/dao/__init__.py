@@ -10,6 +10,7 @@ from .job import Job
 from .migration import Migration
 from .novel import Novel
 from .read_history import ReadHistory
+from .secrets import Secret
 from .tag import Tag
 from .user import User, VerifiedEmail
 from .volume import Volume
@@ -26,6 +27,7 @@ models: List[Type[SQLModel]] = [
     ReadHistory,
     Artifact,
     Job,
+    Secret,
 ]
 
 tables: List[Table] = [

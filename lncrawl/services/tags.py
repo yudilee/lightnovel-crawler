@@ -27,8 +27,7 @@ class TagService:
             conditions: List[Any] = []
 
             if search:
-                q = f"%{search.lower()}%"
-                conditions.append(func.lower(Tag.name).like(q))
+                conditions.append(col(Tag.name).ilike(f"%{search}%"))
 
             if conditions:
                 cnd = and_(*conditions)

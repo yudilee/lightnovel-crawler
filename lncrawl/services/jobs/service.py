@@ -10,11 +10,10 @@ from ...dao import Job, User
 from ...dao.enums import (JobPriority, JobStatus, JobType, OutputFormat,
                           UserRole)
 from ...exceptions import ServerErrors
-from ...server.models.job import JobProgress
 from ...server.models.pagination import Paginated
 from ...server.tier import JOB_PRIORITY_LEVEL
 from ...utils.time_utils import current_timestamp
-from .helper import sa_select_children, sa_update_parents
+from .utils import sa_select_children, sa_select_parents
 
 
 class JobService:
@@ -94,46 +93,6 @@ class JobService:
                 raise ServerErrors.no_such_job
             return job
 
-    def calculate_progress(
-        self,
-        job_id: str,
-        skip_cache: bool = False
-    ) -> JobProgress:
-        with ctx.db.session() as sess:
-            job = sess.get(Job, job_id)
-            if not job:
-                raise ServerErrors.no_such_job
-            deps = (
-                select(Job.id, Job.is_done)
-                .where(Job.id == job_id)
-                .cte("deps", recursive=True)
-            )
-            deps = deps.union_all(
-                select(Job.id, Job.is_done)
-                .where(Job.parent_job_id == deps.c.id)
-            )
-            stmt = select(
-                func.count().label("total"),
-                func.sum(
-                    case(
-                        (deps.c.is_done.is_(true()), 1),
-                        else_=0
-                    )
-                ).label("done"),
-            )
-            total, done = sess.exec(stmt).one()
-            job.extra['total'] = total
-            job.extra['done'] = done
-            sess.commit()
-
-        progress = JobProgress(
-            job_id=job_id,
-            done=done,
-            total=total,
-            percent=(100 * done) // total,
-        )
-        return progress
-
     def cancel(self, user: User, job_id: str) -> None:
         with ctx.db.session() as sess:
             # verify job exists
@@ -146,10 +105,12 @@ class JobService:
                 raise ServerErrors.forbidden
             who = 'user' if job.user_id == user.id else 'admin'
 
+            sa_pars = sa_select_parents(job_id)
+            sa_deps = sa_select_children(job_id)
+
             # cancel job and all children
             now = current_timestamp()
             error = f'Canceled by {who}'
-            sa_deps = sa_select_children(job_id)
             sa_started_at = func.coalesce(Job.started_at, now)
             sa_finished_at = func.coalesce(Job.finished_at, now)
             update_result = sess.exec(
@@ -170,12 +131,13 @@ class JobService:
             total_updated = update_result.rowcount
 
             # recursively update parents
-            sa_total = Job.total - total_updated
-            sa_is_done = Job.done == sa_total
+            sa_done = Job.done + total_updated
+            sa_is_done = sa_done >= Job.total
             sess.exec(
-                sa_update_parents(job_id)
+                sa_update(Job)
+                .where(col(Job.id).in_(sa_pars))
                 .values(
-                    total=sa_total,
+                    done=sa_done,
                     is_done=case((sa_is_done, True), else_=False),
                     error=case((sa_is_done, error), else_=Job.error),
                     status=case((sa_is_done, JobStatus.CANCELED), else_=Job.status),
@@ -197,29 +159,37 @@ class JobService:
             if job.user_id != user.id and user.role != UserRole.ADMIN:
                 raise ServerErrors.forbidden
 
-            # delete job with the subtree
-            deps = sa_select_children(job_id)
-            delete_result = sess.exec(
-                sa_delete(Job)
-                .where(col(Job.id).in_(deps))
-            )
-            total_removed = delete_result.rowcount
+            # parent and child selectors
+            sa_pars = sa_select_parents(job_id)
+            sa_deps = sa_select_children(job_id)
+
+            # total to be deleted including current job
+            tbd = sess.exec(
+                select(func.count()).select_from(sa_deps.subquery())
+            ).one()
 
             # recursively update parents
             now = current_timestamp()
-            sa_total = Job.total - total_removed
-            sa_is_done = Job.done == sa_total
+            sa_total = Job.total - tbd
+            sa_is_done = Job.done >= sa_total
             sa_started_at = func.coalesce(Job.started_at, now)
             sa_finished_at = func.coalesce(Job.finished_at, now)
             sess.exec(
-                sa_update_parents(job_id)
+                sa_update(Job)
+                .where(col(Job.id).in_(sa_pars))
                 .values(
-                    total=Job.total - total_removed,
+                    total=sa_total,
                     is_done=case((sa_is_done, True), else_=False),
                     status=case((sa_is_done, JobStatus.SUCCESS), else_=Job.status),
                     started_at=case((sa_is_done, sa_started_at), else_=Job.started_at),
                     finished_at=case((sa_is_done, sa_finished_at), else_=Job.finished_at),
                 )
+            )
+
+            # delete job with the subtree
+            sess.exec(
+                sa_delete(Job)
+                .where(col(Job.id).in_(sa_deps))
             )
 
             sess.commit()
@@ -240,6 +210,21 @@ class JobService:
                 priority=JOB_PRIORITY_LEVEL[user.tier],
             )
             sess.add(job)
+
+            # recursively update parents
+            sa_pars = sa_select_parents(job.id)
+            sess.exec(
+                sa_update(Job)
+                .where(col(Job.id).in_(sa_pars))
+                .values(
+                    total=Job.total + 1,
+                    # error=None,
+                    # is_done=False,
+                    # finished_at=None,
+                    # status=JobStatus.PENDING,
+                )
+            )
+
             sess.commit()
             sess.refresh(job)
             return job
@@ -252,6 +237,9 @@ class JobService:
         full: bool = False,
         parent_id: Optional[str] = None,
     ) -> Job:
+        if not url.host:
+            raise ServerErrors.invalid_url
+        ctx.sources.get_crawler(url.encoded_string())
         return self.create_job(
             user=user,
             parent_id=parent_id,

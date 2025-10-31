@@ -152,8 +152,7 @@ class SourceLoader:
             self.load_crawlers(dst_file)
         logger.info('Source synced.')
 
-    @lru_cache
-    def create_crawler(self, url: str) -> Crawler:
+    def get_crawler(self, url: str) -> Type[Crawler]:
         self.ensure_load()
         if not self._index:
             raise ServerErrors.source_not_loaded
@@ -161,17 +160,17 @@ class SourceLoader:
         host = extract_host(url)
         if not host:
             raise ServerErrors.invalid_url
-
         if host in self.rejected:
             raise ServerErrors.host_rejected.with_detail(self.rejected[host])
-
         if host not in self.crawlers:
-            raise ServerErrors.no_crawlers.with_detail(host)
+            raise ServerErrors.no_crawler.with_detail(host)
 
-        logger.info(f"[{host}] Creating crawler instance")
-        crawler = self.crawlers[host]()
+        return self.crawlers[host]
 
-        logger.info(f"[{host}] Initializing crawler")
+    @lru_cache
+    def create_crawler(self, url: str) -> Crawler:
+        logger.info(f"Creating crawler instance for {url}")
+        crawler = self.get_crawler(url)()
         crawler.home_url = extract_base(url)
         crawler.novel_url = url
         crawler.initialize()

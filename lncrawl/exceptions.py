@@ -50,6 +50,10 @@ class ServerErrors:
     server_error = ServerError(500, 'Internal Server Error')
 
     invalid_url = ServerError(422, "Invalid URL")
+    no_chapters_to_download = ServerError(422, 'No chapters to download')
+    no_volumes_to_download = ServerError(422, 'No volumes to download')
+    no_images_to_download = ServerError(422, 'No images to download')
+    no_artifacts_to_create = ServerError(422, 'No artifacts to create')
     sort_column_is_none = ServerError(422, "No such field to sort by")
 
     no_such_user = ServerError(404, "No such user")
@@ -64,6 +68,7 @@ class ServerErrors:
     no_such_file = ServerError(404, "No such file")
     no_such_novel = ServerError(404, "No such novel")
     no_such_tag = ServerError(404, "No such tag")
+    no_such_secret = ServerError(404, "No such secret")
     no_such_volume = ServerError(404, "No such volume")
     no_such_chapter = ServerError(404, "No such chapter")
     no_such_artifact = ServerError(404, "No such artifact")
@@ -73,6 +78,7 @@ class ServerErrors:
     no_novel_title = ServerError(500, "Novel has no title")
     no_chapters = ServerError(500, 'No chapters found')
     no_volumes = ServerError(500, 'No volumes found')
+    no_images = ServerError(500, 'No images found')
     unable_to_resume_job = ServerError(500, "Unable to resume Job")
     no_novel_cover = ServerError(500, "Novel cover is not available")
     invalid_image_response = ServerError(500, "Invalid image response")
@@ -86,4 +92,4 @@ class ServerErrors:
 
     source_not_loaded = ServerError(500, 'Sources are not loaded')
     host_rejected = ServerError(500, 'The requested domain is rejected')
-    no_crawlers = ServerError(500, "No crawler found for the domain")
+    no_crawler = ServerError(500, "No crawler found for the domain")

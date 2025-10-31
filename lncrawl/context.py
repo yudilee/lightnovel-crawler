@@ -61,6 +61,11 @@ class AppContext:
         return TagService()
 
     @cached_property
+    def secrets(self):
+        from .services.secrets import SecretService
+        return SecretService()
+
+    @cached_property
     def volumes(self):
         from .services.volumes import VolumeService
         return VolumeService()

@@ -62,12 +62,10 @@ class Job(BaseTable, table=True):
 
     done: int = Field(
         default=0,
-        sa_type=Boolean,
         description="Currently completed items"
     )
     total: int = Field(
         default=1,
-        sa_type=Boolean,
         description="Total items to complete"
     )
 

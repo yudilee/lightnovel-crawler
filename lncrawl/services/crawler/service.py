@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Optional, Union
 
@@ -6,8 +7,10 @@ from sqlmodel import select
 
 from ...context import ctx
 from ...dao import Chapter, ChapterImage, Novel
+from ...dao.enums import SecretType
 from ...exceptions import ServerErrors
 from ...models import Chapter as ChapterModel
+from ...utils.url_tools import extract_host
 from .dto import LoginData
 from .utils import download_cover, download_image, format_novel
 
@@ -18,17 +21,35 @@ class CrawlerService:
     def __init__(self) -> None:
         pass
 
-    def get_crawler(self, novel_url: str, login: Optional[LoginData] = None):
+    def save_login(self, url: str, login: LoginData) -> None:
+        host = extract_host(url)
+        if not host:
+            raise ServerErrors.invalid_url
+        value = json.dumps([login.username, login.password], ensure_ascii=False)
+        ctx.secrets.add(SecretType.LOGIN, host, value)
+
+    def get_login(self, url: str) -> Optional[LoginData]:
+        host = extract_host(url)
+        if not host:
+            raise ServerErrors.invalid_url
+        value = ctx.secrets.get_random_value(host)
+        if not value:
+            return None
+        [username, password] = json.loads(value)
+        return LoginData(username=username, password=password)
+
+    def get_crawler(self, novel_url: str):
         crawler = ctx.sources.create_crawler(novel_url)
         can_login = getattr(crawler, "can_login", False)
         logged_in = getattr(crawler, "__logged_in__", False)
-        if login and can_login and not logged_in:
-            logger.debug(f"Login: {login}")
-            crawler.login(login.username, login.password)
-            setattr(crawler, "__logged_in__", True)
+        if can_login and not logged_in:
+            login = self.get_login(novel_url)
+            if login:
+                crawler.login(login.username, login.password)
+                setattr(crawler, "__logged_in__", True)
         return crawler
 
-    def fetch_novel(self, url: Union[str, HttpUrl], login: Optional[LoginData] = None) -> Novel:
+    def fetch_novel(self, url: Union[str, HttpUrl]) -> Novel:
         if isinstance(url, str):
             url = HttpUrl(url)
 
@@ -36,7 +57,7 @@ class CrawlerService:
         if not url.host:
             raise ServerErrors.invalid_url
         novel_url = url.encoded_string()
-        crawler = self.get_crawler(novel_url, login)
+        crawler = self.get_crawler(novel_url)
 
         # fetch novel metadata
         crawler.read_novel_info()
@@ -85,7 +106,7 @@ class CrawlerService:
 
         return novel
 
-    def fetch_chapter(self, chapter_id: str, login: Optional[LoginData] = None) -> Chapter:
+    def fetch_chapter(self, chapter_id: str) -> Chapter:
         chapter = ctx.chapters.get(chapter_id)
 
         # get crawler
@@ -93,7 +114,7 @@ class CrawlerService:
         if not url.host:
             raise ServerErrors.invalid_url
         novel_url = ctx.novels.get(chapter.novel_id).url
-        crawler = self.get_crawler(novel_url, login)
+        crawler = self.get_crawler(novel_url)
 
         # get chapter content
         model = ChapterModel(
@@ -118,7 +139,7 @@ class CrawlerService:
 
         return chapter
 
-    def fetch_image(self, image_id: str, login: Optional[LoginData] = None) -> ChapterImage:
+    def fetch_image(self, image_id: str) -> ChapterImage:
         image = ctx.chapter_images.get(image_id)
 
         # get crawler
@@ -126,7 +147,7 @@ class CrawlerService:
         if not url.host:
             raise ServerErrors.invalid_url
         novel_url = ctx.novels.get(image.novel_id).url
-        crawler = self.get_crawler(novel_url, login)
+        crawler = self.get_crawler(novel_url)
 
         # download image
         file = ctx.files.resolve(image.image_file)

@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+import uuid
 from datetime import datetime
 from decimal import Decimal
 from functools import cached_property
@@ -182,6 +183,7 @@ class Config(object):
 class AppConfig(_Section):
     section = "app"
     name = "Lightnovel Crawler"
+    _secret = str(uuid.uuid4())
 
     @cached_property
     def version(self) -> str:
@@ -206,6 +208,14 @@ class AppConfig(_Section):
     @history_limit_per_user.setter
     def history_limit_per_user(self, v: Optional[int]) -> None:
         self._set("history_limit_per_user", v)
+
+    @property
+    def secret_key(self) -> str:
+        return self._get("secret_key", self._secret)
+
+    @secret_key.setter
+    def secret_key(self, v: Optional[str]) -> None:
+        self._set("secret_key", v)
 
 # ------------------------------------------------------------------ #
 #                          Database Section                          #

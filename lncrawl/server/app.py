@@ -10,6 +10,8 @@ from ..assets.version import get_version
 from ..context import ctx
 from ..exceptions import ServerError
 
+web_dir = (Path(__file__).parent / 'web').absolute()
+
 app = FastAPI(
     version=get_version(),
     title="Lightnovel Crawler",
@@ -49,14 +51,12 @@ except ImportError:
 
 
 # Mount frontend
-web_dir = (Path(__file__).parent / 'web').absolute()
-if web_dir.is_dir():
-    @app.get("/{fallback:path}", include_in_schema=False)
-    async def serve_web(fallback: str):
-        target_file = web_dir.joinpath(fallback)
-        if target_file.is_file():
-            return FileResponse(target_file)
-        return FileResponse(web_dir / "index.html")
+@app.get("/{fallback:path}", include_in_schema=False)
+async def serve_web(fallback: str):
+    target_file = web_dir.joinpath(fallback)
+    if target_file.is_file():
+        return FileResponse(target_file)
+    return FileResponse(web_dir / "index.html")
 
 
 # Add exception handlers
