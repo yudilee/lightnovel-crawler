@@ -3,16 +3,13 @@ import os
 from pathlib import Path
 from typing import Union
 
-import zstd
-
 from ..context import ctx
 from ..exceptions import ServerErrors
+from ..utils.text_tools import is_compressed, text_compress, text_decompress
 
 logger = logging.getLogger(__name__)
 
 StrPath = Union[str, Path]
-
-ZSTD_HEAD = b'\x28\xB5\x2F\xFD'
 
 
 class FileService:
@@ -56,8 +53,8 @@ class FileService:
         encoding: str = 'utf-8',
     ) -> str:
         data = self.load(file_path)
-        if data.startswith(ZSTD_HEAD):
-            data = zstd.decompress(data)
+        if is_compressed(data):
+            data = text_decompress(data)
         return data.decode(encoding)
 
     def save_text(
@@ -68,6 +65,6 @@ class FileService:
         encoding: str = 'utf-8',
     ) -> Path:
         data = content.encode(encoding)
-        if compress or data.startswith(ZSTD_HEAD):
-            data = zstd.compress(data)
+        if compress or is_compressed(data):
+            data = text_compress(data)
         return self.save(file_path, data)

@@ -8,6 +8,8 @@ from .enums import UserRole, UserTier
 
 
 class User(BaseTable, table=True):
+    __tablename__ = 'users'  # type: ignore
+
     password: str = Field(
         description="Hashed password",
         exclude=True
@@ -21,7 +23,6 @@ class User(BaseTable, table=True):
         default=None,
         description="Full name"
     )
-
     role: UserRole = Field(
         default=UserRole.USER,
         description="User role"
@@ -30,14 +31,9 @@ class User(BaseTable, table=True):
         default=UserTier.BASIC,
         description="User tier"
     )
-
     is_active: bool = Field(
         default=True,
         description="Active status"
-    )
-    is_verified: bool = Field(
-        default=True,
-        description="Verification status"
     )
 
 

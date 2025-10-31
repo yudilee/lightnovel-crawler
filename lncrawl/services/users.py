@@ -35,8 +35,9 @@ class UserService:
         with ctx.db.session() as sess:
             email = ctx.config.db.admin_email
             password = ctx.config.db.admin_password
-            q = select(User).where(User.email == email)
-            user = sess.exec(q).first()
+            user = sess.exec(
+                select(User).where(User.email == email)
+            ).first()
             if not user:
                 logger.info('Adding admin user')
                 user = User(
@@ -46,13 +47,13 @@ class UserService:
                     role=UserRole.ADMIN,
                     tier=UserTier.VIP,
                 )
+                sess.add(user)
             else:
                 logger.info('Updating admin user')
                 user.is_active = True
                 user.role = UserRole.ADMIN
                 user.tier = UserTier.VIP
                 user.password = self._hash(password)
-            sess.add(user)
             sess.commit()
 
     def encode_token(
@@ -140,6 +141,12 @@ class UserService:
                 items=list(items),
             )
 
+    def get_admin(self) -> User:
+        with ctx.db.session() as sess:
+            email = ctx.config.db.admin_email
+            stmt = select(User).where(User.email == email)
+            return sess.exec(stmt).one()
+
     def get(self, user_id: str) -> User:
         with ctx.db.session() as sess:
             user = sess.get(User, user_id)
@@ -176,65 +183,52 @@ class UserService:
             sess.refresh(user)
             return user
 
-    def update(self, user_id: str, body: UpdateRequest) -> bool:
+    def update(self, user_id: str, body: UpdateRequest) -> None:
         with ctx.db.session() as sess:
             user = sess.get(User, user_id)
             if not user:
                 raise ServerErrors.no_such_user
 
-            updated = False
             if body.name is not None:
                 user.name = body.name
-                updated = True
             if body.password is not None:
                 user.password = self._hash(body.password)
-                updated = True
             if body.role is not None:
                 user.role = body.role
-                updated = True
             if body.tier is not None:
                 user.tier = body.tier
-                updated = True
             if body.is_active is not None:
                 user.is_active = body.is_active
-                updated = True
 
-            if updated:
-                sess.add(user)
-                sess.commit()
-            return updated
+            sess.commit()
 
-    def change_password(self, user: User, body: PasswordUpdateRequest) -> bool:
+    def change_password(self, user: User, body: PasswordUpdateRequest) -> None:
         if not self._check(body.old_password, user.password):
             raise ServerErrors.wrong_password
         request = UpdateRequest(password=body.new_password)
-        return self.update(user.id, request)
+        self.update(user.id, request)
 
-    def remove(self, user_id: str) -> bool:
+    def remove(self, user_id: str) -> None:
         with ctx.db.session() as sess:
             user = sess.get(User, user_id)
-            if not user:
-                raise ServerErrors.no_such_user
-            sess.delete(user)
-            sess.commit()
-            return True
+            if user:
+                sess.delete(user)
+                sess.commit()
 
     def is_verified(self, email: str) -> bool:
         with ctx.db.session() as sess:
             verified = sess.get(VerifiedEmail, email)
             return bool(verified)
 
-    def set_verified(self, email: str) -> bool:
+    def set_verified(self, email: str) -> None:
         with ctx.db.session() as sess:
             verified = sess.get(VerifiedEmail, email)
-            if verified:
-                return True
-            entry = VerifiedEmail(email=email)
-            sess.add(entry)
-            sess.commit()
-            return True
+            if not verified:
+                row = VerifiedEmail(email=email)
+                sess.add(row)
+                sess.commit()
 
-    def send_otp(self, email: str):
+    def send_otp(self, email: str) -> str:
         with ctx.db.session() as sess:
             verified = sess.get(VerifiedEmail, email)
             if verified:
@@ -247,7 +241,7 @@ class UserService:
             'email': email,
         }, 5)
 
-    def verify_otp(self, token: str, input_otp: str) -> bool:
+    def verify_otp(self, token: str, input_otp: str) -> None:
         payload = self.decode_token(token)
         email = payload.get('email')
         if not email:
@@ -258,12 +252,11 @@ class UserService:
             raise ServerErrors.unauthorized
 
         with ctx.db.session() as sess:
-            entry = VerifiedEmail(email=email)
-            sess.add(entry)
+            row = VerifiedEmail(email=email)
+            sess.add(row)
             sess.commit()
-            return True
 
-    def send_password_reset_link(self, email: str) -> bool:
+    def send_password_reset_link(self, email: str) -> None:
         with ctx.db.session() as sess:
             q = select(User).where(User.email == email)
             user = sess.exec(q).first()
@@ -277,4 +270,3 @@ class UserService:
         link = f'{base_url}/reset-password?token={token}&email={user.email}'
 
         ctx.mail.send_reset_password_link(email, link)
-        return True

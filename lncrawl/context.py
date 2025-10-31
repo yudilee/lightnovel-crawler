@@ -82,7 +82,7 @@ class AppContext:
 
     @cached_property
     def jobs(self):
-        from .services.jobs import JobService
+        from .services.jobs.service import JobService
         return JobService()
 
     @cached_property

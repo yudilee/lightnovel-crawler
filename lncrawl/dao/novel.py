@@ -9,6 +9,8 @@ from ._base import BaseTable
 
 
 class Novel(BaseTable, table=True):
+    __tablename__ = 'novels'  # type: ignore
+
     domain: str = Field(
         index=True,
         description="Domain name of the source website"

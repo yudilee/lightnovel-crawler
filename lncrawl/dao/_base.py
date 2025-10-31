@@ -1,14 +1,10 @@
-import uuid
 from typing import Any, Dict
 
 from sqlalchemy import event
 from sqlmodel import JSON, BigInteger, Field, SQLModel
 
+from ..utils.text_tools import generate_uuid
 from ..utils.time_utils import current_timestamp
-
-
-def generate_uuid():
-    return uuid.uuid4().hex
 
 
 class BaseTable(SQLModel):

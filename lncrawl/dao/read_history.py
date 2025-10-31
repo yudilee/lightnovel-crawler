@@ -6,6 +6,7 @@ from ..utils.time_utils import current_timestamp
 
 
 class ReadHistory(SQLModel, table=True):
+    __tablename__ = 'read_history'  # type: ignore
     __table_args__ = (
         UniqueConstraint("user_id", "chapter_id"),
         Index("ix_read_history_user_created", 'user_id', 'created_at'),
@@ -20,19 +21,19 @@ class ReadHistory(SQLModel, table=True):
         sa_type=BigInteger
     )
     user_id: str = Field(
-        foreign_key="user.id",
+        foreign_key="users.id",
         ondelete='CASCADE'
     )
     chapter_id: str = Field(
-        foreign_key="chapter.id",
+        foreign_key="chapters.id",
         ondelete='CASCADE'
     )
     novel_id: str = Field(
-        foreign_key="novel.id",
+        foreign_key="novels.id",
         ondelete='CASCADE'
     )
     volume_id: Optional[str] = Field(
         default=None,
-        foreign_key="volume.id",
+        foreign_key="volumes.id",
         ondelete='SET NULL',
     )

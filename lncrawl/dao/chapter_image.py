@@ -6,17 +6,18 @@ from ._base import BaseTable
 
 
 class ChapterImage(BaseTable, table=True):
+    __tablename__ = 'chapter_images'  # type: ignore
     __table_args__ = (
         Index("ix_chapter_image_chapter", 'chapter_id'),
         Index("ix_chapter_image_novel_chapter_crawled", 'novel_id', 'chapter_id', 'crawled'),
     )
 
     novel_id: str = Field(
-        foreign_key="novel.id",
+        foreign_key="novels.id",
         ondelete='CASCADE'
     )
     chapter_id: str = Field(
-        foreign_key="chapter.id",
+        foreign_key="chapters.id",
         ondelete='CASCADE'
     )
 

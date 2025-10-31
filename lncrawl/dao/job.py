@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import computed_field
 from sqlalchemy import event
-from sqlmodel import BigInteger, Field
+from sqlmodel import BigInteger, Boolean, Field, Index, asc, desc
 
 from ..utils.time_utils import current_timestamp
 from ._base import BaseTable
@@ -10,34 +10,40 @@ from .enums import JobPriority, JobStatus, JobType
 
 
 class Job(BaseTable, table=True):
+    __tablename__ = 'jobs'  # type: ignore
+    __table_args__ = (
+        Index("ix_job_is_done", 'id', 'is_done'),
+        Index("ix_job_parent_job_id", 'parent_job_id'),
+        Index("ix_job_user_parent_id", 'user_id', 'parent_job_id'),
+        Index("ix_job_pending_order", 'is_done', desc('priority'), asc('created_at')),
+    )
+
     user_id: str = Field(
-        foreign_key="user.id",
+        foreign_key="users.id",
         ondelete='CASCADE'
     )
     parent_job_id: Optional[str] = Field(
         default=None,
-        foreign_key="job.id",
+        foreign_key="jobs.id",
         ondelete='CASCADE',
         nullable=True,
     )
 
     type: JobType = Field(
-        index=True,
         description="The job type"
     )
     priority: JobPriority = Field(
         default=JobPriority.LOW,
-        index=True,
         description="The job priority"
     )
     status: JobStatus = Field(
-        index=True,
         default=JobStatus.PENDING,
         description="Current status"
     )
-    progress: int = Field(
-        default=0,
-        description="Download progress percentage"
+    is_done: bool = Field(
+        default=False,
+        sa_type=Boolean,
+        description="Whether the job has completed"
     )
     error: Optional[str] = Field(
         default=None,
@@ -54,24 +60,42 @@ class Job(BaseTable, table=True):
         description="Job finish time (UNIX ms)"
     )
 
+    done: int = Field(
+        default=0,
+        sa_type=Boolean,
+        description="Currently completed items"
+    )
+    total: int = Field(
+        default=1,
+        sa_type=Boolean,
+        description="Total items to complete"
+    )
+
     @computed_field  # type: ignore[misc]
     @property
-    def is_completed(self) -> bool:
-        return self.status in [
+    def percent(self) -> int:
+        '''Progress percetage (value is between 0 to 100)'''
+        return (100 * self.done) // self.total
+
+
+@event.listens_for(Job, "before_update", propagate=True)
+def update_status_and_timestamps(mapper, connection, job: Job):
+    if not job.is_done:
+        job.is_done = job.status in [
             JobStatus.FAILED,
             JobStatus.SUCCESS,
             JobStatus.CANCELED,
         ]
 
-
-@event.listens_for(Job, "before_update", propagate=True)
-def auto_update_timestamp(mapper, connection, target: Job):
-    if target.error and not target.is_completed:
-        if target.error.startswith('Canceled'):
-            target.status = JobStatus.CANCELED
+    if not job.is_done and job.error:
+        if job.error.startswith('Canceled'):
+            job.status = JobStatus.CANCELED
         else:
-            target.status = JobStatus.FAILED
-    if not target.started_at and target.status != JobStatus.PENDING:
-        target.started_at = current_timestamp()
-    if not target.finished_at and target.is_completed:
-        target.finished_at = current_timestamp()
+            job.status = JobStatus.FAILED
+        job.is_done = True
+
+    if not job.started_at and job.status != JobStatus.PENDING:
+        job.started_at = current_timestamp()
+
+    if not job.finished_at and job.is_done:
+        job.finished_at = current_timestamp()

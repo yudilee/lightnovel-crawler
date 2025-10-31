@@ -23,15 +23,17 @@ class UserTier(IntEnum):
 
 class JobType(IntEnum):
     NOVEL = 0
-    FULL_NOVEL = 1
+    NOVEL_BATCH = 1
+    FULL_NOVEL = 5
+    FULL_NOVEL_BATCH = 6
     CHAPTER = 10
-    BATCH_CHAPTERS = 11
+    CHAPTER_BATCH = 11
     VOLUME = 20
-    BATCH_VOLUMES = 21
+    VOLUME_BATCH = 21
     IMAGE = 30
-    BATCH_IMAGES = 31
+    IMAGE_BATCH = 31
     ARTIFACT = 40
-    BATCH_ARTIFACTS = 41
+    ARTIFACT_BATCH = 41
 
 
 class JobStatus(str, Enum):

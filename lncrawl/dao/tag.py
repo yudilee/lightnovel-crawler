@@ -4,6 +4,8 @@ from sqlmodel import Field, SQLModel
 
 
 class Tag(SQLModel, table=True):
+    __tablename__ = 'tags'  # type: ignore
+
     name: str = Field(
         nullable=False,
         primary_key=True,

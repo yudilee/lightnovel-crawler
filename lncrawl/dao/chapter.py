@@ -8,6 +8,7 @@ from ._base import BaseTable
 
 
 class Chapter(BaseTable, table=True):
+    __tablename__ = 'chapters'  # type: ignore
     __table_args__ = (
         UniqueConstraint("novel_id", "serial"),
         Index("ix_chapter_novel_id", 'novel_id'),
@@ -16,7 +17,7 @@ class Chapter(BaseTable, table=True):
     )
 
     novel_id: str = Field(
-        foreign_key="novel.id",
+        foreign_key="novels.id",
         ondelete='CASCADE'
     )
     serial: int = Field(
@@ -24,7 +25,7 @@ class Chapter(BaseTable, table=True):
     )
     volume_id: Optional[str] = Field(
         default=None,
-        foreign_key="volume.id",
+        foreign_key="volumes.id",
         ondelete='SET NULL',
     )
 

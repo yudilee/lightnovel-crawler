@@ -9,16 +9,18 @@ from .enums import OutputFormat
 
 
 class Artifact(BaseTable, table=True):
+    __tablename__ = 'artifacts'  # type: ignore
+
     novel_id: str = Field(
-        foreign_key="novel.id",
+        foreign_key="novels.id",
         ondelete='CASCADE'
     )
     job_id: Optional[str] = Field(
-        foreign_key="job.id",
+        foreign_key="jobs.id",
         ondelete='SET NULL'
     )
     user_id: Optional[str] = Field(
-        foreign_key="user.id",
+        foreign_key="users.id",
         ondelete='SET NULL'
     )
     output_file: str = Field(

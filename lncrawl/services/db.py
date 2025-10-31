@@ -1,7 +1,7 @@
 import logging
 from typing import Mapping, Optional, Sequence
 
-from sqlalchemy import Inspector, inspect
+from sqlalchemy import inspect
 from sqlmodel import Session, create_engine
 
 from ..context import ctx
@@ -34,17 +34,13 @@ class DB:
 
     def session(
         self, *,
-        future: bool = True,
         autoflush: bool = True,
-        autocommit: bool = False,
         expire_on_commit: bool = False,
         enable_baked_queries: bool = True,
     ):
         return Session(
             self.engine,
-            future=future,  # type:ignore
             autoflush=autoflush,
-            autocommit=autocommit,  # type:ignore
             expire_on_commit=expire_on_commit,
             enable_baked_queries=enable_baked_queries,
         )
@@ -87,25 +83,14 @@ class DB:
     # ------------------------------------------------------------------ #
 
     def bootstrap(self):
-        # create tables
+        # ensure tables
         table = str(Migration.__tablename__)
         inspector = inspect(self.engine)
         if not inspector.has_table(table):
             logger.info(f'Creating {len(tables)} tables')
             self.__create_tables()
-            return
-
-        # check for migrations
-        latest = DB.latest_version
-        with self.session() as sess:
-            entry = sess.get_one(Migration, DB.migration_id)
-            current = entry.version
-            while current < latest:
-                logger.info(f'Running migrations: {current} -> {latest}')
-                current = self.__run_migration(current, inspector)
-                entry.version = current
-                sess.add(entry)
-                sess.commit()
+        else:
+            self.__run_migrations()
 
         # ensure admin user
         ctx.users.insert_admin()
@@ -137,5 +122,17 @@ class DB:
     #                         Database Migrations                        #
     # ------------------------------------------------------------------ #
 
-    def __run_migration(self, version: int, inspector: Inspector) -> int:
+    def __run_migrations(self):
+        latest = DB.latest_version
+        with self.session() as sess:
+            entry = sess.get_one(Migration, DB.migration_id)
+            current = entry.version
+            while current < latest:
+                logger.info(f'Running migrations: {current} -> {latest}')
+                self.__migrate_next(current)
+                current += 1
+                entry.version = current
+                sess.commit()
+
+    def __migrate_next(self, version: int) -> None:
         raise ValueError(f'Unknown version {version}')

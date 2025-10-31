@@ -45,14 +45,13 @@ class ReadHistoryService:
         with ctx.db.session() as sess:
             chapter = ctx.chapters.get(chapter_id)
             try:
-                sess.add(
-                    ReadHistory(
-                        user_id=user_id,
-                        chapter_id=chapter_id,
-                        novel_id=chapter.novel_id,
-                        volume_id=chapter.volume_id,
-                    )
+                history = ReadHistory(
+                    user_id=user_id,
+                    chapter_id=chapter_id,
+                    novel_id=chapter.novel_id,
+                    volume_id=chapter.volume_id,
                 )
+                sess.add(history)
                 sess.commit()
                 self.taskman.submit_task(self.prune, user_id)
             except IntegrityError:

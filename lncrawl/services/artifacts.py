@@ -76,8 +76,6 @@ class ArtifactService:
                 old_file = artifact.output_file
                 artifact.job_id = item.job_id
                 artifact.output_file = item.output_file
-                sess.add(artifact)
-
             sess.commit()
 
         # remove old file

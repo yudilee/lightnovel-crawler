@@ -4,6 +4,7 @@ from ._base import BaseTable
 
 
 class Volume(BaseTable, table=True):
+    __tablename__ = 'volumes'  # type: ignore
     __table_args__ = (
         UniqueConstraint("novel_id", "serial"),
         Index("ix_volume_novel_id", 'novel_id'),
@@ -11,7 +12,7 @@ class Volume(BaseTable, table=True):
     )
 
     novel_id: str = Field(
-        foreign_key="novel.id",
+        foreign_key="novels.id",
         ondelete='CASCADE',
     )
     serial: int = Field(

@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import HttpUrl
 from sqlmodel import select
@@ -28,7 +28,10 @@ class CrawlerService:
             setattr(crawler, "__logged_in__", True)
         return crawler
 
-    def fetch_novel(self, url: HttpUrl, login: Optional[LoginData] = None) -> Novel:
+    def fetch_novel(self, url: Union[str, HttpUrl], login: Optional[LoginData] = None) -> Novel:
+        if isinstance(url, str):
+            url = HttpUrl(url)
+
         # get crawler
         if not url.host:
             raise ServerErrors.invalid_url
@@ -82,7 +85,9 @@ class CrawlerService:
 
         return novel
 
-    def fetch_chapter(self, chapter: Chapter, login: Optional[LoginData] = None) -> Chapter:
+    def fetch_chapter(self, chapter_id: str, login: Optional[LoginData] = None) -> Chapter:
+        chapter = ctx.chapters.get(chapter_id)
+
         # get crawler
         url = HttpUrl(chapter.url)
         if not url.host:
@@ -108,13 +113,14 @@ class CrawlerService:
 
         # update db
         with ctx.db.session() as sess:
-            sess.refresh(chapter)
             chapter.crawled = bool(model.body)
             sess.commit()
 
         return chapter
 
-    def fetch_image(self, image: ChapterImage, login: Optional[LoginData] = None) -> ChapterImage:
+    def fetch_image(self, image_id: str, login: Optional[LoginData] = None) -> ChapterImage:
+        image = ctx.chapter_images.get(image_id)
+
         # get crawler
         url = HttpUrl(image.url)
         if not url.host:

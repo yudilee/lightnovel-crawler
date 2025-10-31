@@ -1,9 +1,10 @@
 import base64
 import hashlib
-import lzma
 import unicodedata
+import uuid
 from typing import Union
 
+import zstd
 from cryptography.fernet import Fernet
 
 __key_cache = {}
@@ -13,16 +14,17 @@ def normalize(text: str) -> str:
     return unicodedata.normalize("NFKD", text).casefold()
 
 
+def is_compressed(data: bytes) -> bool:
+    # checks if the data is compressed with zstd
+    return data.startswith(b'\x28\xB5\x2F\xFD')
+
+
 def text_compress(plain: bytes) -> bytes:
-    lzc = lzma.LZMACompressor()
-    output = lzc.compress(plain)
-    output += lzc.flush()
-    return output
+    return zstd.compress(plain, 10)
 
 
 def text_decompress(compressed: bytes) -> bytes:
-    lzd = lzma.LZMADecompressor()
-    return lzd.decompress(compressed)
+    return zstd.decompress(compressed)
 
 
 def text_encrypt(plain: bytes, secret: Union[str, bytes]) -> bytes:
@@ -60,3 +62,7 @@ def generate_key(secret: Union[str, bytes]) -> bytes:
         key = base64.urlsafe_b64encode(hash)
         __key_cache[secret] = key
     return __key_cache[secret]
+
+
+def generate_uuid() -> str:
+    return str(uuid.uuid4())
