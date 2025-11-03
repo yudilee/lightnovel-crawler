@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import insert as sa_insert
 from sqlalchemy import update as sa_update
-from sqlmodel import case, col, func, select
+from sqlmodel import case, col, func, select, true
 
 from ..context import ctx
 from ..dao import Chapter, Volume
@@ -32,6 +32,7 @@ class ChapterService:
         self, *,
         novel_id: Optional[str] = None,
         volume_id: Optional[str] = None,
+        is_crawled: Optional[bool] = None,
     ) -> List[Chapter]:
         with ctx.db.session() as sess:
             stmt = select(Chapter)
@@ -39,6 +40,11 @@ class ChapterService:
                 stmt = stmt.where(Chapter.novel_id == novel_id)
             if volume_id:
                 stmt = stmt.where(Chapter.volume_id == volume_id)
+            if is_crawled is not None:
+                stmt = stmt.where(
+                    col(Chapter.crawled).is_(true()) if is_crawled
+                    else col(Chapter.crawled).is_not(true())
+                )
             stmt = stmt.order_by(col(Chapter.serial).asc())
             items = sess.exec(stmt).all()
             return list(items)

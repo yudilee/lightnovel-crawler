@@ -6,8 +6,8 @@ from pydantic import HttpUrl
 from sqlmodel import select
 
 from ...context import ctx
-from ...dao import Chapter, ChapterImage, Novel
-from ...dao.enums import SecretType
+from ...dao import Artifact, Chapter, ChapterImage, Novel
+from ...dao.enums import OutputFormat, SecretType
 from ...exceptions import ServerErrors
 from ...models import Chapter as ChapterModel
 from ...utils.url_tools import extract_host
@@ -108,6 +108,8 @@ class CrawlerService:
 
     def fetch_chapter(self, chapter_id: str) -> Chapter:
         chapter = ctx.chapters.get(chapter_id)
+        if chapter.is_available:
+            return chapter
 
         # get crawler
         url = HttpUrl(chapter.url)
@@ -160,3 +162,6 @@ class CrawlerService:
             sess.commit()
 
         return image
+
+    def make_artifact(self, novel_id: str, format: OutputFormat) -> Artifact:
+        raise NotImplementedError()

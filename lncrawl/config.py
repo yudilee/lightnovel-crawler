@@ -294,7 +294,7 @@ class CrawlerConfig(_Section):
     @property
     def runner_cooldown(self) -> int:
         '''Crawler job cooldown in seconds'''
-        return self._get("runner_cooldown", 5)
+        return self._get("runner_cooldown", 1)
 
     @runner_cooldown.setter
     def runner_cooldown(self, v: Optional[int]) -> None:

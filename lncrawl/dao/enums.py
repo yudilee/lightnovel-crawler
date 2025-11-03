@@ -34,6 +34,7 @@ class JobType(IntEnum):
     IMAGE_BATCH = 31
     ARTIFACT = 40
     ARTIFACT_BATCH = 41
+    NOVEL_ARTIFACTS = 42
 
 
 class JobStatus(str, Enum):

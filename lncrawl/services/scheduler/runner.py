@@ -1,249 +1,251 @@
 import logging
-import shutil
-import time
-from pathlib import Path
 from threading import Event
 
-from ...cloudscraper import AbortedException
 from ...context import ctx
-from ...core.app import App
-from ...core.download_chapters import restore_chapter_body
-from ...core.metadata import get_metadata_list, load_metadata, save_metadata
-from ...dao import Artifact, Job, Novel, User
-from ...dao.enums import JobStatus, OutputFormat, RunState
-from ...server.tier import ENABLED_FORMATS, SLOT_TIMEOUT_IN_SECOND
+from ...dao import Job
+from ...dao.enums import JobStatus, JobType, OutputFormat
 from ...utils.time_utils import current_timestamp
 
+logger = logging.getLogger(__name__)
 
-def run_crawler(job_id: str, signal=Event()) -> None:
-    app = App()
-    sess = ctx.db.session()
-    job = sess.get_one(Job, job_id)
-    logger = logging.getLogger(f'Job:{job_id}')
 
-    def save(refresh=False):
-        sess.add(job)
-        sess.commit()
-        if refresh:
-            sess.refresh(job)
+class JobRunner:
+    def __init__(self, job: Job, signal=Event()) -> None:
+        self.job = job
+        self.signal = signal
+        self.user = ctx.users.get(self.job.user_id)
 
-    logger.info('=== Task begin ===')
-    try:
-        #
-        # Status: COMPLETED
-        #
-        if job.status == JobStatus.COMPLETED:
-            logger.error('Job is already done')
-            return save()
+    def process(self):
+        if self.job.is_done:
+            return
+        if self.job.done == self.job.total:
+            return self.__set_done()
+        if self.job.is_running:
+            return
+        if self.job.type == JobType.FULL_NOVEL_BATCH:
+            return self._novel_batch()
+        if self.job.type == JobType.NOVEL_BATCH:
+            return self._novel_batch()
+        if self.job.type == JobType.FULL_NOVEL:
+            return self._novel()
+        if self.job.type == JobType.NOVEL:
+            return self._novel()
+        if self.job.type == JobType.VOLUME_BATCH:
+            return self._volume_batch()
+        if self.job.type == JobType.VOLUME:
+            return self._volume()
+        if self.job.type == JobType.CHAPTER_BATCH:
+            return self._chapter_batch()
+        if self.job.type == JobType.CHAPTER:
+            return self._chapter()
+        if self.job.type == JobType.IMAGE_BATCH:
+            return self._image_batch()
+        if self.job.type == JobType.IMAGE:
+            return self._image()
+        if self.job.type == JobType.ARTIFACT_BATCH:
+            return self._artifact_batch()
+        if self.job.type == JobType.ARTIFACT:
+            return self._artifact()
+        return self.__set_failed(f'Job type is not supported: {self.job.type}')
 
-        #
-        # State: SUCCESS, FAILED, CANCELED
-        #
-        if job.run_state in [
-            RunState.FAILED,
-            RunState.SUCCESS,
-            RunState.CANCELED
-        ]:
-            job.status = JobStatus.COMPLETED
-            return save()
+    def __set_running(self) -> None:
+        if self.job.is_running:
+            return
+        ctx.jobs._update(
+            self.job.id,
+            status=JobStatus.RUNNING,
+            started_at=current_timestamp(),
+        )
 
-        # State: PENDING
-        #
-        if job.status == JobStatus.PENDING:
-            job.run_state = RunState.FETCHING_NOVEL
-            job.status = JobStatus.RUNNING
-            logger.info('Job started')
-            return save()
+    def __set_done(self) -> None:
+        # cancel child jobs
+        ctx.jobs.cancel(
+            self.user,
+            self.job.id,
+            'Canceled as the parent job is done'
+        )
+        # update current
+        ctx.jobs._update(
+            self.job.id,
+            status=JobStatus.SUCCESS,
+            finished_at=current_timestamp(),
+        )
 
-        #
-        # Prepare user, novel, app, crawler
-        #
-        logger.info('Prepare required data')
-        user = sess.get(User, job.user_id)
-        if not user:
-            job.error = 'User is not available'
-            job.status = JobStatus.COMPLETED
-            job.run_state = RunState.FAILED
-            return save()
+    def __set_failed(self, reason: str) -> None:
+        # cancel child jobs
+        ctx.jobs.cancel(
+            self.user,
+            self.job.id,
+            f'Canceled by parent job. Cause: {reason}'
+        )
+        # update current
+        ctx.jobs._update(
+            self.job.id,
+            status=JobStatus.FAILED,
+            finished_at=current_timestamp(),
+        )
 
-        novel = sess.get(Novel, job.novel_id)
-        if not novel:
-            job.error = 'Novel is not available'
-            job.status = JobStatus.COMPLETED
-            job.run_state = RunState.FAILED
-            return save()
+    def __increment(self) -> None:
+        ctx.jobs._update(
+            self.job.id,
+            done=Job.done + 1,
+        )
 
-        logger.info('Initializing crawler')
-        app.user_input = job.url
-        app.output_formats = {x: True for x in ENABLED_FORMATS[user.tier]}
-        app.output_formats[OutputFormat.json] = True
-        app.prepare_search()
+    def _novel_batch(self):
+        try:
+            urls = self.job.extra.get('urls', [])
+            if not urls:
+                return self.__set_done()
 
-        crawler = app.crawler
-        if not crawler:
-            job.error = 'No crawler available for this novel'
-            job.status = JobStatus.COMPLETED
-            job.run_state = RunState.FAILED
-            return save()
+            self.__set_running()
+            full = self.job.type == JobType.FULL_NOVEL_BATCH
+            for url in urls:
+                ctx.jobs.fetch_novel(self.user, url, full=full, parent_id=self.job.id)
 
-        crawler.scraper.signal = signal  # type:ignore
+            self.__increment()
+        except Exception as e:
+            self.__set_failed(f'Failed to create jobs. {repr(e)}')
 
-        #
-        # State: FETCHING_NOVEL
-        #
-        if job.run_state == RunState.FETCHING_NOVEL:
-            logger.info('Fetching novel info')
+    def _novel(self):
+        try:
+            url = self.job.extra.get('url')
+            if not url:
+                return self.__set_done()
 
-            if job.started_at and current_timestamp() - job.started_at > 3600 * 1000:
-                raise Exception('Timeout fetching novel info')
+            self.__set_running()
+            novel = ctx.crawler.fetch_novel(url)
+            ctx.jobs._update(
+                self.job.id,
+                extra=dict(**self.job.extra, novel_id=novel.id),
+            )
+            if self.job.type != JobType.FULL_NOVEL:
+                return self.__set_done()
 
-            app.get_novel_info()
+            volumes = ctx.volumes.list(novel_id=novel.id)
+            if not volumes:
+                return self.__set_done()
 
-            job.progress = round(app.progress)
-            job.run_state = RunState.FETCHING_CONTENT
+            for volume in volumes:
+                ctx.jobs.fetch_many_volumes(self.user, volume.id, parent_id=self.job.id)
 
-            novel.crawled = True
-            novel.title = crawler.novel_title
-            novel.cover = crawler.novel_cover
-            novel.authors = crawler.novel_author
-            novel.synopsis = crawler.novel_synopsis
-            novel.tags = crawler.novel_tags or []
-            # novel.volume_count = len(crawler.volumes)
-            # novel.chapter_count = len(crawler.chapters)
-            sess.add(novel)
+            self.__increment()
+        except Exception as e:
+            self.__set_failed(f'Failed to fetch novel. {repr(e)}')
 
-            logger.info(f'Novel: {novel}')
-            return save()
+    def _volume_batch(self):
+        try:
+            volume_ids = self.job.extra.get('volume_ids', [])
+            if not volume_ids:
+                return self.__set_done()
 
-        #
-        # Restore session
-        #
-        logger.info('Restoring session')
-        if not novel.crawled or not novel.title:
-            job.error = 'Failed to fetch novel'
-            job.status = JobStatus.COMPLETED
-            job.run_state = RunState.FAILED
-            return save()
+            self.__set_running()
+            for volume_id in volume_ids:
+                ctx.jobs.fetch_volume(self.user, volume_id, parent_id=self.job.id)
 
-        crawler.novel_url = novel.url
-        crawler.novel_title = novel.title
-        app.prepare_novel_output_path()
+            self.__increment()
+        except Exception as e:
+            self.__set_failed(f'Failed to create jobs. {repr(e)}')
 
-        logger.info(f'Checking metadata file: {app.output_path}')
-        for meta in get_metadata_list(app.output_path):
-            if meta.novel and meta.session and meta.novel.url == novel.url:
-                logger.info('Loading session from metadata')
-                load_metadata(app, meta)
-                break  # found matching metadata
-        else:
-            # did not find any matching metadata
-            job.error = 'Failed to restore metadata'
-            job.status = JobStatus.COMPLETED
-            job.run_state = RunState.FAILED
-            return save()
+    def _volume(self):
+        try:
+            volume_id = self.job.extra.get('volume_id')
+            if not volume_id:
+                return self.__set_done()
 
-        sess.refresh(novel)
-        novel.extra = dict(novel.extra)
-        novel.extra['output_path'] = app.output_path
-        sess.add(novel)
-        sess.commit()
+            self.__set_running()
+            chapters = ctx.chapters.list(volume_id=volume_id, is_crawled=False)
+            for chapter in chapters:
+                ctx.jobs.fetch_chapter(self.user, chapter.id, parent_id=self.job.id)
 
-        #
-        # State: FETCHING_CONTENT
-        #
-        if job.run_state == RunState.FETCHING_CONTENT:
-            app.chapters = crawler.chapters
-            logger.info(f'Fetching ({len(app.chapters)} chapters)')
+            self.__increment()
+        except Exception as e:
+            self.__set_failed(f'Failed to create jobs. {repr(e)}')
 
-            done = False
-            last_report = 0.0
-            start_time = time.time()
-            timeout = SLOT_TIMEOUT_IN_SECOND[user.tier]
-            for _ in app.start_download(signal):
-                cur_time = time.time()
-                if cur_time - start_time > timeout:
-                    break
-                if job.progress > round(app.progress):
-                    logger.info('Failed to fetch some content')
-                    done = True
-                    break
-                if cur_time - last_report > 5:
-                    job.progress = round(app.progress)
-                    last_report = cur_time
-                    save(refresh=True)
-            else:
-                done = True
+    def _chapter_batch(self):
+        try:
+            chapter_ids = self.job.extra.get('chapter_ids')
+            if not chapter_ids:
+                return self.__set_done()
 
-            if done:
-                app.fetch_chapter_progress = 100
-                app.fetch_images_progress = 100
-                save_metadata(app)
-                if not signal.is_set():
-                    logger.info('Fetch content completed')
-                    job.run_state = RunState.CREATING_ARTIFACTS
+            self.__set_running()
+            for chapter_id in chapter_ids:
+                ctx.jobs.fetch_chapter(self.user, chapter_id, parent_id=self.job.id)
 
-            job.progress = round(app.progress)
-            return save()
+            self.__increment()
+        except Exception as e:
+            self.__set_failed(f'Failed to create jobs. {repr(e)}')
 
-        logger.info('Restoring chapter contents')
-        app.chapters = crawler.chapters
-        restore_chapter_body(app)
+    def _chapter(self):
+        try:
+            chapter_id = self.job.extra.get('chapter_id')
+            if not chapter_id:
+                return self.__set_done()
 
-        logger.info('Restoring job artifacts')
-        for artifact in ctx.jobs.get_artifacts(job_id):
-            app.generated_archives[artifact.format] = artifact.output_file
-            logger.info(f'Artifact [{artifact.format}]: {artifact.output_file}')
+            self.__set_running()
+            chapter = ctx.crawler.fetch_chapter(chapter_id)
+            images = ctx.chapter_images.list(chapter_id=chapter.id, is_crawled=False)
+            if not images:
+                return self.__set_done()
 
-        #
-        # State: CREATING_ARTIFACTS
-        #
-        if job.run_state == RunState.CREATING_ARTIFACTS:
-            logger.info('Creating artifacts')
-            for fmt, archive_file in app.bind_books(signal):
-                job.progress = round(app.progress)
-                save(refresh=True)
-                artifact = Artifact(
-                    format=fmt,
-                    job_id=job.id,
-                    user_id=user.id,
-                    novel_id=novel.id,
-                    output_file=archive_file,
-                )
-                ctx.artifacts.upsert(artifact)
-                logger.info(f'Artifact [{fmt}]: {archive_file}')
-                return  # bind one at a time
+            for image in images:
+                ctx.jobs.fetch_image(self.user, image.id, parent_id=self.job.id)
 
-            # remove output folders (except json)
-            for fmt in OutputFormat:
-                if str(fmt) != str(OutputFormat.json):
-                    output = Path(app.output_path) / fmt
-                    shutil.rmtree(output, ignore_errors=True)
+            self.__increment()
+        except Exception as e:
+            self.__set_failed(f'Failed to create jobs. {repr(e)}')
 
-            logger.info('Success!')
-            job.progress = 100
-            job.status = JobStatus.COMPLETED
-            job.run_state = RunState.SUCCESS
-            save()
+    def _image_batch(self):
+        try:
+            image_ids = self.job.extra.get('image_ids')
+            if not image_ids:
+                return self.__set_done()
 
-            if ctx.users.is_verified(user.email):
-                try:
-                    detail = ctx.jobs.get(job_id)
-                    ctx.mail.send_job_success(user.email, detail)
-                    logger.error(f'Success report was sent to <{user.email}>')
-                except Exception:
-                    logger.error('Failed to email success report', exc_info=True)
+            self.__set_running()
+            for image_id in image_ids:
+                ctx.jobs.fetch_image(self.user, image_id, parent_id=self.job.id)
 
-    except AbortedException:
-        pass
+            self.__increment()
+        except Exception as e:
+            self.__set_failed(f'Failed to create jobs. {repr(e)}')
 
-    except Exception as e:
-        logger.exception('Job failed', exc_info=True)
-        if not job.error:
-            job.status = JobStatus.COMPLETED
-            job.run_state = RunState.FAILED
-            job.error = str(e)
-            return save()
+    def _image(self):
+        try:
+            image_id = self.job.extra.get('image_id')
+            if not image_id:
+                return self.__set_done()
 
-    finally:
-        sess.close()
-        logger.info('=== Task end ===')
+            self.__set_running()
+            ctx.crawler.fetch_image(image_id)
+            self.__set_done()
+        except Exception as e:
+            self.__set_failed(f'Failed to create jobs. {repr(e)}')
+
+    def _artifact_batch(self):
+        try:
+            formats = self.job.extra.get('formats')
+            novel_id = self.job.extra.get('novel_id')
+            if not (novel_id and formats):
+                return self.__set_done()
+
+            self.__set_running()
+            for fmt in formats:
+                ctx.jobs.make_artifact(self.user, novel_id, fmt, parent_id=self.job.id)
+
+            self.__increment()
+        except Exception as e:
+            self.__set_failed(f'Failed to create jobs. {repr(e)}')
+
+    def _artifact(self):
+        try:
+            format = self.job.extra.get('format')
+            novel_id = self.job.extra.get('novel_id')
+            if not (novel_id and format):
+                return self.__set_done()
+            if format not in set(OutputFormat):
+                return self.__set_failed(f'Invalid format: {format}')
+
+            self.__set_running()
+            ctx.crawler.make_artifact(novel_id, OutputFormat[format])
+            self.__set_done()
+        except Exception as e:
+            self.__set_failed(f'Failed to create jobs. {repr(e)}')

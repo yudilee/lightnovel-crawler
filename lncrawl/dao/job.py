@@ -1,10 +1,8 @@
 from typing import Optional
 
 from pydantic import computed_field
-from sqlalchemy import event
 from sqlmodel import BigInteger, Boolean, Field, Index, asc, desc
 
-from ..utils.time_utils import current_timestamp
 from ._base import BaseTable
 from .enums import JobPriority, JobStatus, JobType
 
@@ -75,25 +73,37 @@ class Job(BaseTable, table=True):
         '''Progress percetage (value is between 0 to 100)'''
         return (100 * self.done) // self.total
 
+    @computed_field  # type: ignore[misc]
+    @property
+    def is_running(self) -> int:
+        '''Whether the job is currently running'''
+        return self.status == JobStatus.RUNNING
 
-@event.listens_for(Job, "before_update", propagate=True)
-def update_status_and_timestamps(mapper, connection, job: Job):
-    if not job.is_done:
-        job.is_done = job.status in [
-            JobStatus.FAILED,
-            JobStatus.SUCCESS,
-            JobStatus.CANCELED,
-        ]
+    @computed_field  # type: ignore[misc]
+    @property
+    def is_pending(self) -> int:
+        '''Whether the job is currently pending'''
+        return self.status == JobStatus.PENDING
 
-    if not job.is_done and job.error:
-        if job.error.startswith('Canceled'):
-            job.status = JobStatus.CANCELED
-        else:
-            job.status = JobStatus.FAILED
-        job.is_done = True
 
-    if not job.started_at and job.status != JobStatus.PENDING:
-        job.started_at = current_timestamp()
+# @event.listens_for(Job, "before_update", propagate=True)
+# def update_status_and_timestamps(mapper, connection, job: Job):
+#     if not job.is_done:
+#         job.is_done = job.status in [
+#             JobStatus.FAILED,
+#             JobStatus.SUCCESS,
+#             JobStatus.CANCELED,
+#         ]
 
-    if not job.finished_at and job.is_done:
-        job.finished_at = current_timestamp()
+#     if not job.is_done and job.error:
+#         if job.error.startswith('Canceled'):
+#             job.status = JobStatus.CANCELED
+#         else:
+#             job.status = JobStatus.FAILED
+#         job.is_done = True
+
+#     if not job.started_at and job.status != JobStatus.PENDING:
+#         job.started_at = current_timestamp()
+
+#     if not job.finished_at and job.is_done:
+#         job.finished_at = current_timestamp()
