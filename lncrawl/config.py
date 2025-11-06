@@ -189,12 +189,9 @@ class AppConfig(_Section):
     def version(self) -> str:
         return (ROOT_DIR / "VERSION").read_text(encoding="utf8").strip()
 
-    def __output_path(self) -> str:
-        return str(Path("Lightnovels").absolute())
-
     @property
     def output_path(self) -> Path:
-        return Path(self._get("output_path", self.__output_path))
+        return Path(self._get("output_path", str(APP_DIR)))
 
     @output_path.setter
     def output_path(self, path: Optional[Path]) -> None:

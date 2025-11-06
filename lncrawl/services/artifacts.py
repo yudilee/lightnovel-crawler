@@ -1,11 +1,10 @@
-import os
 from typing import Optional
 
 from sqlmodel import desc, func, select
 
 from ..context import ctx
 from ..dao import Artifact, User
-from ..dao.enums import UserRole
+from ..dao.enums import OutputFormat, UserRole
 from ..exceptions import ServerErrors
 from ..server.models.pagination import Paginated
 
@@ -18,14 +17,23 @@ class ArtifactService:
         self,
         offset: int = 0,
         limit: int = 20,
+        job_id: Optional[str] = None,
+        user_id: Optional[str] = None,
         novel_id: Optional[str] = None,
+        format: Optional[OutputFormat] = None,
     ) -> Paginated[Artifact]:
         with ctx.db.session() as sess:
             stmt = select(Artifact)
 
             # Apply filters
-            if not novel_id:
+            if novel_id:
                 stmt = stmt.where(Artifact.novel_id == novel_id)
+            if user_id:
+                stmt = stmt.where(Artifact.user_id == user_id)
+            if job_id:
+                stmt = stmt.where(Artifact.job_id == job_id)
+            if format:
+                stmt = stmt.where(Artifact.format == format)
 
             # Apply sorting
             stmt = stmt.order_by(desc(Artifact.updated_at))
@@ -54,30 +62,18 @@ class ArtifactService:
             artifact = sess.get(Artifact, artifact_id)
             if not artifact:
                 raise ServerErrors.no_such_artifact
+            ctx.files.resolve(artifact.output_file).unlink(True)
             sess.delete(artifact)
             sess.commit()
             return True
 
-    def upsert(self, item: Artifact):
-        old_file = None
-        new_file = item.output_file
-
+    def get_latest(self, novel_id: str, format: str) -> Optional[Artifact]:
         with ctx.db.session() as sess:
             artifact = sess.exec(
                 select(Artifact)
-                .where(Artifact.novel_id == item.novel_id)
-                .where(Artifact.format == item.format)
+                .where(Artifact.novel_id == novel_id)
+                .where(Artifact.format == format)
+                .order_by(desc(Artifact.updated_at))
+                .limit(1)
             ).first()
-
-            if not artifact:
-                sess.add(item)
-            else:
-                # update values
-                old_file = artifact.output_file
-                artifact.job_id = item.job_id
-                artifact.output_file = item.output_file
-            sess.commit()
-
-        # remove old file
-        if old_file and old_file != new_file and os.path.isfile(old_file):
-            os.remove(old_file)
+            return artifact

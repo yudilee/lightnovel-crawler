@@ -75,7 +75,8 @@ class JobScheduler:
         if now - self.last_cleanup_ts < timeout:
             return
         self.last_cleanup_ts = now
-        logger.info('cleaner triggered')
+        # TODO
 
     def __job(self):
-        logger.info('job triggered')
+        # TODO
+        pass

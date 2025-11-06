@@ -6,8 +6,8 @@ from pydantic import HttpUrl
 from sqlmodel import select
 
 from ...context import ctx
-from ...dao import Artifact, Chapter, ChapterImage, Novel
-from ...dao.enums import OutputFormat, SecretType
+from ...dao import Chapter, ChapterImage, Novel
+from ...dao.enums import SecretType
 from ...exceptions import ServerErrors
 from ...models import Chapter as ChapterModel
 from ...utils.url_tools import extract_host
@@ -162,6 +162,3 @@ class CrawlerService:
             sess.commit()
 
         return image
-
-    def make_artifact(self, novel_id: str, format: OutputFormat) -> Artifact:
-        raise NotImplementedError()

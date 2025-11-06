@@ -101,6 +101,11 @@ class AppContext:
         return CrawlerService()
 
     @cached_property
+    def binder(self):
+        from .services.binder import BinderService
+        return BinderService()
+
+    @cached_property
     def scheduler(self):
         from .services.scheduler import JobScheduler
         return JobScheduler()

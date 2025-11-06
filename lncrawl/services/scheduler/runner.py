@@ -2,7 +2,7 @@ import logging
 from threading import Event
 
 from ...context import ctx
-from ...dao import Job
+from ...dao import Job, Artifact
 from ...dao.enums import JobStatus, JobType, OutputFormat
 from ...utils.time_utils import current_timestamp
 
@@ -19,7 +19,7 @@ class JobRunner:
         if self.job.is_done:
             return
         if self.job.done == self.job.total:
-            return self.__set_done()
+            return self.__set_success()
         if self.job.is_running:
             return
         if self.job.type == JobType.FULL_NOVEL_BATCH:
@@ -57,7 +57,7 @@ class JobRunner:
             started_at=current_timestamp(),
         )
 
-    def __set_done(self) -> None:
+    def __set_success(self) -> None:
         # cancel child jobs
         ctx.jobs.cancel(
             self.user,
@@ -95,7 +95,7 @@ class JobRunner:
         try:
             urls = self.job.extra.get('urls', [])
             if not urls:
-                return self.__set_done()
+                return self.__set_success()
 
             self.__set_running()
             full = self.job.type == JobType.FULL_NOVEL_BATCH
@@ -110,7 +110,7 @@ class JobRunner:
         try:
             url = self.job.extra.get('url')
             if not url:
-                return self.__set_done()
+                return self.__set_success()
 
             self.__set_running()
             novel = ctx.crawler.fetch_novel(url)
@@ -119,11 +119,11 @@ class JobRunner:
                 extra=dict(**self.job.extra, novel_id=novel.id),
             )
             if self.job.type != JobType.FULL_NOVEL:
-                return self.__set_done()
+                return self.__set_success()
 
             volumes = ctx.volumes.list(novel_id=novel.id)
             if not volumes:
-                return self.__set_done()
+                return self.__set_success()
 
             for volume in volumes:
                 ctx.jobs.fetch_many_volumes(self.user, volume.id, parent_id=self.job.id)
@@ -136,7 +136,7 @@ class JobRunner:
         try:
             volume_ids = self.job.extra.get('volume_ids', [])
             if not volume_ids:
-                return self.__set_done()
+                return self.__set_success()
 
             self.__set_running()
             for volume_id in volume_ids:
@@ -150,7 +150,7 @@ class JobRunner:
         try:
             volume_id = self.job.extra.get('volume_id')
             if not volume_id:
-                return self.__set_done()
+                return self.__set_success()
 
             self.__set_running()
             chapters = ctx.chapters.list(volume_id=volume_id, is_crawled=False)
@@ -165,7 +165,7 @@ class JobRunner:
         try:
             chapter_ids = self.job.extra.get('chapter_ids')
             if not chapter_ids:
-                return self.__set_done()
+                return self.__set_success()
 
             self.__set_running()
             for chapter_id in chapter_ids:
@@ -179,13 +179,13 @@ class JobRunner:
         try:
             chapter_id = self.job.extra.get('chapter_id')
             if not chapter_id:
-                return self.__set_done()
+                return self.__set_success()
 
             self.__set_running()
             chapter = ctx.crawler.fetch_chapter(chapter_id)
             images = ctx.chapter_images.list(chapter_id=chapter.id, is_crawled=False)
             if not images:
-                return self.__set_done()
+                return self.__set_success()
 
             for image in images:
                 ctx.jobs.fetch_image(self.user, image.id, parent_id=self.job.id)
@@ -198,7 +198,7 @@ class JobRunner:
         try:
             image_ids = self.job.extra.get('image_ids')
             if not image_ids:
-                return self.__set_done()
+                return self.__set_success()
 
             self.__set_running()
             for image_id in image_ids:
@@ -212,11 +212,11 @@ class JobRunner:
         try:
             image_id = self.job.extra.get('image_id')
             if not image_id:
-                return self.__set_done()
+                return self.__set_success()
 
             self.__set_running()
             ctx.crawler.fetch_image(image_id)
-            self.__set_done()
+            self.__set_success()
         except Exception as e:
             self.__set_failed(f'Failed to create jobs. {repr(e)}')
 
@@ -225,7 +225,7 @@ class JobRunner:
             formats = self.job.extra.get('formats')
             novel_id = self.job.extra.get('novel_id')
             if not (novel_id and formats):
-                return self.__set_done()
+                return self.__set_success()
 
             self.__set_running()
             for fmt in formats:
@@ -240,12 +240,21 @@ class JobRunner:
             format = self.job.extra.get('format')
             novel_id = self.job.extra.get('novel_id')
             if not (novel_id and format):
-                return self.__set_done()
+                return self.__set_success()
             if format not in set(OutputFormat):
                 return self.__set_failed(f'Invalid format: {format}')
 
             self.__set_running()
-            ctx.crawler.make_artifact(novel_id, OutputFormat[format])
-            self.__set_done()
+            with ctx.db.session() as sess:
+                artifact = Artifact(
+                    novel_id=novel_id,
+                    job_id=self.job.id,
+                    user_id=self.job.user_id,
+                    format=OutputFormat[format],
+                )
+                sess.add(artifact)
+                sess.commit()
+            ctx.binder.make_artifact(artifact)
+            self.__set_success()
         except Exception as e:
             self.__set_failed(f'Failed to create jobs. {repr(e)}')

@@ -59,8 +59,7 @@ class SecretType(IntEnum):
 class OutputFormat(str, Enum):
     json = "json"
     epub = "epub"
-    web = "web"
-    text = "text"
+    text = "txt"
     pdf = "pdf"
     mobi = "mobi"
     docx = "docx"
