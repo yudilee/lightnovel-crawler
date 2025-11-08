@@ -9,7 +9,6 @@ class ChapterImage(BaseTable, table=True):
     __tablename__ = 'chapter_images'  # type: ignore
     __table_args__ = (
         Index("ix_chapter_image_chapter", 'chapter_id'),
-        Index("ix_chapter_image_novel_chapter_crawled", 'novel_id', 'chapter_id', 'crawled'),
     )
 
     novel_id: str = Field(
@@ -24,7 +23,7 @@ class ChapterImage(BaseTable, table=True):
     url: str = Field(
         description="Image URL"
     )
-    crawled: bool = Field(
+    is_done: bool = Field(
         default=False,
         description="Whether the image has been downloaded"
     )

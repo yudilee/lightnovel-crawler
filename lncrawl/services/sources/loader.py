@@ -75,7 +75,6 @@ class SourceLoader:
         futures = [
             self._taskman.submit_task(utils.import_crawlers, file)
             for file in files
-            if file.is_file()
         ]
         for crawlers in self._taskman.resolve_as_generator(
             futures,
@@ -83,8 +82,8 @@ class SourceLoader:
             signal=self._signal,
         ):
             for crawler in crawlers:
-                assert issubclass(crawler, Crawler)
-                self.add_crawler(crawler)
+                if issubclass(crawler, Crawler):
+                    yield self.add_crawler(crawler)
 
     def add_crawler(self, crawler: Type[Crawler]):
         sid = getattr(crawler, '__id__')        # crawler id
@@ -115,6 +114,7 @@ class SourceLoader:
         self._store.insert(normalize(file), sid)
         self._store.insert(normalize(crawler.__name__), sid)
         self._store.insert(' '.join(map(normalize_url, urls)), sid)
+        return info
 
     def update(self) -> None:
         assert self._index

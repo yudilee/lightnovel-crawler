@@ -35,7 +35,7 @@ class Chapter(BaseTable, table=True):
     title: str = Field(
         description="Title of the chapter"
     )
-    crawled: bool = Field(
+    is_done: bool = Field(
         default=False,
         description="Whether the content has been crawled"
     )

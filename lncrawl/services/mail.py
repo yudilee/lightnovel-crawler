@@ -8,9 +8,9 @@ import lxml.html
 
 from ..assets import emails
 from ..context import ctx
-from ..dao.enums import RunState
+from ..dao import Novel, Job
+from ..dao.enums import JobStatus
 from ..exceptions import ServerErrors
-from ..server.models.job import JobDetail
 
 logger = logging.getLogger(__name__)
 
@@ -79,10 +79,11 @@ class MailService:
         body = emails.repass_template().render(link=link)
         self.send(email, subject, body)
 
-    def send_job_success(self, email: str, detail: JobDetail):
+    def send_job_success(self, email: str, job: Job):
+        ctx.novels.get(job.)
         if not (
-            detail
-            and detail.novel
+            job
+            and job.novel
             and detail.job.run_state == RunState.SUCCESS
         ):
             raise ServerErrors.server_error

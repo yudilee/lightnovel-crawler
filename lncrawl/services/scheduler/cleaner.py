@@ -3,11 +3,12 @@ import os
 import shutil
 from threading import Event
 
+from sqlalchemy import delete as sa_delete
 from sqlmodel import and_, asc, false, select
 
 from ...context import ctx
 from ...dao import Artifact, Job, Novel
-from ...dao.enums import RunState
+from ...dao.enums import JobStatus
 from ...utils.file_tools import folder_size, format_size
 from ...utils.time_utils import current_timestamp
 
@@ -23,55 +24,17 @@ def run_cleaner(signal=Event()) -> None:
     logger.info("=== Cleanup begin ===")
     try:
         # Delete canceled jobs
-        logger.info('Cleaning up canceled jobs...')
-        for job in sess.exec(
-            select(Job)
-            .where(
-                and_(
-                    Job.created_at < cutoff,
-                    Job.run_state == RunState.CANCELED,
-                )
-            )
-        ).all():
-            sess.delete(job)
+        logger.info('Delete canceled jobs...')
+        sess.exec(
+            sa_delete(Job)
+            .where(Job.status == JobStatus.CANCELED)
+            .where(Job.created_at < cutoff)
+        )
         sess.commit()
         if signal.is_set():
             return
 
-        # Delete all orphan novels
-        logger.info('Cleaning up orphan novels...')
-        for novel in sess.exec(
-            select(Novel)
-            .where(
-                and_(
-                    Novel.crawled == false(),
-                    Novel.created_at < cutoff,
-                )
-            )
-        ).all():
-            output = novel.extra.get('output_path')
-            if output:
-                shutil.rmtree(output, ignore_errors=True)
-            sess.delete(novel)
-        sess.commit()
-        if signal.is_set():
-            return
-
-        # Delete all unavailable artifacts
-        logger.info('Cleaning up unavailable artifacts...')
-        for artifact in sess.exec(
-            select(Artifact)
-            .where(
-                Artifact.created_at < cutoff,
-            )
-        ).all():
-            if not artifact.is_available:
-                sess.delete(artifact)
-        sess.commit()
-        if signal.is_set():
-            return
-
-        # check if cleaner is enabled
+        # Free up disk space
         if size_limit <= 0:
             return
 
@@ -81,20 +44,25 @@ def run_cleaner(signal=Event()) -> None:
             return
 
         # Keep deleting novels to reach target disk size limit
-        logger.info('Deleting folders to free up space...')
-        for novel in sess.exec(
-            select(Novel)
-            .where(Novel.updated_at < cutoff)
-            .order_by(asc(Novel.updated_at))
-        ).all():
+        logger.info('Deleting novels to free up space...')
+        for folder in sorted(
+            ctx.files.resolve('novels').iterdir(),
+            key=lambda p: p.stat().st_mtime,
+        ):
             if signal.is_set():
                 return
-            output = novel.extra.get('output_path')
-            if output and os.path.isdir(output):
-                current_size -= folder_size(output)
-                shutil.rmtree(output, ignore_errors=True)
-                if current_size < size_limit:
-                    break
+            if not folder.is_dir():
+                continue
+            try:
+                current_size -= folder_size(folder)
+                shutil.rmtree(folder, ignore_errors=True)
+                with ctx.db.session() as sess:
+                    sess.exec(sa_delete(Novel).where(Novel.id == folder.name))
+                    sess.commit()
+            except Exception:
+                logger.debug(f'Could not remove novel: {folder.name}', exc_info=True)
+            if current_size < size_limit:
+                break
 
         current_size = folder_size(output_folder)
         logger.info(f"Final folder size: {format_size(current_size)}")

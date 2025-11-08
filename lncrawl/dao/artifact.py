@@ -34,6 +34,10 @@ class Artifact(BaseTable, table=True):
         default=False,
         description='Whether the artifact is a ZIP archive'
     )
+    is_done: bool = Field(
+        default=False,
+        description='Whether the artifact was created once'
+    )
 
     @computed_field  # type: ignore[misc]
     @property

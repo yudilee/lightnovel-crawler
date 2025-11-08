@@ -86,7 +86,7 @@ class TaskManager(ABC):
             del self._limiter
 
         self._executor = ThreadPoolExecutor(
-            max_workers=workers,
+            max_workers=workers or 1,
             thread_name_prefix="lncrawl_scraper",
         )
 

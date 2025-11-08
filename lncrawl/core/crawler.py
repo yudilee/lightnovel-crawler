@@ -38,6 +38,13 @@ class Crawler(Scraper):
         - parser (Optional[str], optional): Desirable features of the parser. This can be the name of a specific parser
             ("lxml", "lxml-xml", "html.parser", or "html5lib") or it may be the type of markup to be used ("html", "html5", "xml").
         """
+        # Initialize superclass
+        super().__init__(
+            workers=workers,
+            parser=parser,
+        )
+
+        self.home_url = self.base_url[0]
         self.cleaner = TextCleaner()
 
         # Available in `search_novel` or `read_novel_info`
@@ -63,13 +70,6 @@ class Crawler(Scraper):
         # `volume_title` - the volume title (can be ignored)
         # `url` - the link where to download the chapter
         self.chapters: List[Chapter] = []
-
-        # Initialize superclass
-        super().__init__(
-            origin=self.base_url[0],
-            workers=workers,
-            parser=parser,
-        )
 
     def close(self) -> None:
         # if hasattr(self, "volumes"):

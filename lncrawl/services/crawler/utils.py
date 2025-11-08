@@ -37,6 +37,7 @@ def __format_volume(crawler: Crawler, vol_id_map: Dict[int, int]):
         vol_id_map[item.id] = index
         item.id = index + 1
         item.chapter_count = 0
+        item.extra['crawler_version'] = getattr(crawler, 'version')
 
         item.title = __format_title(item.title)
         if str(item.id) not in item.title:
@@ -50,6 +51,7 @@ def __format_chapters(crawler: Crawler, vol_id_map: Dict[int, int]):
     ]
     for index, item in enumerate(crawler.chapters):
         item.id = index + 1
+        item.extra['crawler_version'] = getattr(crawler, 'version')
 
         if item.volume:
             vol_index = vol_id_map.get(item.volume)

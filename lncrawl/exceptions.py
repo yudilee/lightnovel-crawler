@@ -84,6 +84,7 @@ class ServerErrors:
     smtp_server_unavailable = ServerError(500, "SMTP server is not available")
     smtp_server_login_fail = ServerError(500, "Failed to login to SMTP server")
     email_send_failure = ServerError(500, "Failed to send email")
+    canceled_by_signal = ServerError(500, "Canceled by signal")
     calibre_exe_not_found = ServerError(500, "No calibre executables")
     failed_creating_artifact = ServerError(500, "Failed to create artifact")
     format_not_available = ServerError(500, "The output format is not available")

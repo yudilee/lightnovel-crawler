@@ -3,15 +3,15 @@ from typing import Any, List, Optional
 from pydantic import HttpUrl
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import update as sa_update
-from sqlmodel import and_, asc, case, col, desc, func, select, true
+from sqlmodel import and_, asc, case, col, func, select, true
 
 from ...context import ctx
 from ...dao import Job, User
 from ...dao.enums import (JobPriority, JobStatus, JobType, OutputFormat,
                           UserRole)
+from ...dao.tier import JOB_PRIORITY_LEVEL
 from ...exceptions import ServerErrors
 from ...server.models.pagination import Paginated
-from ...server.tier import JOB_PRIORITY_LEVEL
 from ...utils.time_utils import current_timestamp
 from .utils import sa_select_children, sa_select_parents
 
@@ -341,19 +341,6 @@ class JobService:
     # -------------------------------------------------------------------------
     #                            Internal Methods
     # -------------------------------------------------------------------------
-    def _pending(self, limit: int = 5) -> List[Job]:
-        with ctx.db.session() as sess:
-            jobs = sess.exec(
-                select(Job)
-                .where(col(Job.is_done).is_not(true()))
-                .order_by(
-                    desc(Job.priority),
-                    asc(Job.created_at),
-                )
-                .limit(limit)
-            ).all()
-            return list(jobs)
-
     def _create(
         self,
         user: User,

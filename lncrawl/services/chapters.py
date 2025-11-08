@@ -42,8 +42,8 @@ class ChapterService:
                 stmt = stmt.where(Chapter.volume_id == volume_id)
             if is_crawled is not None:
                 stmt = stmt.where(
-                    col(Chapter.crawled).is_(true()) if is_crawled
-                    else col(Chapter.crawled).is_not(true())
+                    col(Chapter.is_done).is_(true()) if is_crawled
+                    else col(Chapter.is_done).is_not(true())
                 )
             stmt = stmt.order_by(col(Chapter.serial).asc())
             items = sess.exec(stmt).all()

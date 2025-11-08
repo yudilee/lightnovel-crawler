@@ -29,7 +29,6 @@ class Scraper(TaskManager, SoupMaker):
     # ------------------------------------------------------------------------- #
     def __init__(
         self,
-        origin: str,
         workers: Optional[int] = None,
         parser: Optional[str] = None,
     ) -> None:
@@ -52,13 +51,14 @@ class Scraper(TaskManager, SoupMaker):
             - Sets up internal state, including proxy usage, user agent, parser, and executor
               for concurrent tasks.
         """
-        self.home_url = origin
+        super().__init__(workers)
+
+        self.home_url = ""
         self.last_soup_url = ""
         self.use_proxy = os.getenv("use_proxy")
 
-        self.init_scraper()
         self.init_parser(parser)
-        super().__init__(workers)
+        self.init_scraper()
 
     def close(self) -> None:
         if hasattr(self, "scraper"):

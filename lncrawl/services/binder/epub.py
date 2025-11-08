@@ -1,11 +1,14 @@
 import logging
+import re
 from pathlib import Path
+from threading import Event
 
 from ebooklib import epub
 
 from ...assets.epub import epub_chapter_xhtml, epub_cover_xhtml, epub_style_css
 from ...context import ctx
 from ...dao import Artifact, Chapter, Novel, Volume
+from ...exceptions import ServerErrors
 
 logger = logging.getLogger(__name__)
 
@@ -13,13 +16,15 @@ STYLE_FILE_NAME = "style.css"
 COVER_IMAGE_NAME = "cover.jpg"
 PROJECT_URL = "https://github.com/dipu-bd/lightnovel-crawler"
 
+RE_WHITESPACE = re.compile(r'^\s+|\n', re.MULTILINE)
+
 
 def build_cover() -> epub.EpubHtml:
-    content = f"""
+    content = RE_WHITESPACE.sub('', f"""
         <div id="cover">
             <img src="{COVER_IMAGE_NAME}" alt="cover" />
         </div>
-    """
+    """)
     item = epub.EpubHtml(
         file_name="front.xhtml",
         title="Front Page",
@@ -34,7 +39,7 @@ def build_cover() -> epub.EpubHtml:
 
 
 def build_intro(novel: Novel) -> epub.EpubHtml:
-    content = f"""
+    content = RE_WHITESPACE.sub('', f"""
     <div id="intro">
         <h1>{novel.title}</h1>
         <h3>{novel.authors}</h3>
@@ -48,7 +53,7 @@ def build_intro(novel: Novel) -> epub.EpubHtml:
             <a href="{PROJECT_URL}">Lightnovel Crawler</a></b></i>
         </div>
     </div>
-    """
+    """)
     item = epub.EpubHtml(
         file_name="intro.xhtml",
         title="Intro Page",
@@ -63,11 +68,11 @@ def build_intro(novel: Novel) -> epub.EpubHtml:
 
 
 def build_volume(volume: Volume) -> epub.EpubHtml:
-    content = f"""
+    content = RE_WHITESPACE.sub('', f"""
     <div id="volume">
         <h1>{volume.title}</h1>
     </div>
-    """
+    """)
     item = epub.EpubHtml(
         file_name=f"volume_{volume.serial:03}.xhtml",
         title=volume.title,
@@ -82,12 +87,12 @@ def build_volume(volume: Volume) -> epub.EpubHtml:
 
 
 def build_chapter(chapter: Chapter) -> epub.EpubHtml:
-    content = f"""
+    content = RE_WHITESPACE.sub('', f"""
     <div id="chapter">
         <h1>{chapter.title}</h1>
         {ctx.files.load_text(chapter.content_file)}
     </div>
-    """
+    """)
     item = epub.EpubHtml(
         file_name=f"chapter_{chapter.serial:05}.xhtml",
         title=chapter.title,
@@ -101,7 +106,7 @@ def build_chapter(chapter: Chapter) -> epub.EpubHtml:
     return item
 
 
-def make_epub(working_dir: Path, artifact: Artifact) -> None:
+def make_epub(working_dir: Path, artifact: Artifact, signal=Event()) -> None:
     out_file = ctx.files.resolve(artifact.output_file)
     tmp_file = working_dir / out_file.name
     if out_file.exists():
@@ -166,8 +171,12 @@ def make_epub(working_dir: Path, artifact: Artifact) -> None:
     spine.append("nav")
 
     # add volumes and chapters pages
+    if signal.is_set():
+        raise ServerErrors.canceled_by_signal
     for volume in ctx.volumes.list(novel_id=artifact.novel_id):
         volume_contents = []
+        if signal.is_set():
+            raise ServerErrors.canceled_by_signal
         for chapter in ctx.chapters.list(volume_id=volume.id):
             if not chapter.is_available:
                 continue
@@ -197,6 +206,8 @@ def make_epub(working_dir: Path, artifact: Artifact) -> None:
     book.add_item(epub.EpubNav())
 
     # add images
+    if signal.is_set():
+        raise ServerErrors.canceled_by_signal
     for image in ctx.chapter_images.list(novel_id=artifact.novel_id):
         if not image.is_available:
             continue

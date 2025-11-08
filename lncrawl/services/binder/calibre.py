@@ -1,8 +1,8 @@
 import logging
-import os
 import subprocess
 from functools import lru_cache
 from pathlib import Path
+from threading import Event
 
 from ...context import ctx
 from ...dao import Artifact
@@ -13,36 +13,36 @@ from .epub import make_epub
 logger = logging.getLogger(__name__)
 
 
-def __ebook_convert(*args) -> bool:
+def __ebook_convert(*args, signal=Event()) -> bool:
     """
     Calls `ebook-convert` with given args
     Visit https://manual.calibre-ebook.com/generated/en/ebook-convert.html for argument list.
     """
     try:
-        isdebug = os.getenv("debug_mode")
-        with open(os.devnull, "w", encoding="utf8") as dumper:
-            subprocess.run(
-                args=['ebook-convert'] + [str(a) for a in args],
-                stdout=None if isdebug else dumper,
-                stderr=dumper,
-                check=True
-            )
-
-        return True
-    except subprocess.CalledProcessError:
-        logger.exception("Failed to convert ebook with args: %s", list(args))
-        return False
-    except Exception as e:
-        logger.exception("An unexpected error occurred: %s", str(e))
+        with subprocess.Popen(
+            args=['ebook-convert'] + [str(a) for a in args],
+            stdout=subprocess.STDOUT if ctx.logger.is_debug else subprocess.DEVNULL,
+            stderr=subprocess.STDOUT if ctx.logger.is_warn else subprocess.DEVNULL,
+        ) as p:
+            while p.poll() is None and not signal.is_set():
+                signal.wait(0.1)
+            if p.poll() is not None:
+                return p.poll() == 0
+            p.terminate()
+            if p.poll() is None:
+                p.kill()
+            return False
+    except Exception:
+        logger.error("Failed to convert ebook.", exc_info=True)
         return False
 
 
 @lru_cache
 def is_calibre_available() -> bool:
-    return bool(__ebook_convert("--version"))
+    return __ebook_convert("--version")
 
 
-def convert_epub(working_dir: Path, artifact: Artifact) -> None:
+def convert_epub(working_dir: Path, artifact: Artifact, signal=Event()) -> None:
     out_file = ctx.files.resolve(artifact.output_file)
     if out_file.exists():
         return
@@ -108,7 +108,7 @@ def convert_epub(working_dir: Path, artifact: Artifact) -> None:
             '<p style="text-align:center; color:#555; font-size:0.9em">⦗ _TITLE_ &mdash; _SECTION_ ⦘</p>',
         ]
 
-    __ebook_convert(*args)
+    __ebook_convert(*args, signal=signal)
 
     if not tmp_file.exists():
         raise ServerErrors.failed_creating_artifact

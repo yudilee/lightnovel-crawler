@@ -5,7 +5,7 @@ from sqlalchemy import insert as sa_insert
 from sqlmodel import col, select
 
 from ..context import ctx
-from ..dao import ChapterImage
+from ..dao import Chapter, ChapterImage
 from ..exceptions import ServerErrors
 
 
@@ -27,7 +27,7 @@ class ChapterImageService:
             if chapter_id:
                 stmt = stmt.where(ChapterImage.chapter_id == chapter_id)
             if is_crawled:
-                stmt = stmt.where(col(ChapterImage.crawled).is_(True))
+                stmt = stmt.where(col(ChapterImage.is_done).is_(True))
 
             items = sess.exec(stmt).all()
             return list(items)
@@ -55,13 +55,13 @@ class ChapterImageService:
             sess.commit()
             return True
 
-    def sync(self, novel_id: str, chapter_id: str, images: Dict[str, str]):
+    def sync(self, chapter: Chapter, images: Dict[str, str]):
         with ctx.db.session() as sess:
             existing = {
                 img.id: img
                 for img in sess.exec(
                     select(ChapterImage)
-                    .where(ChapterImage.chapter_id == chapter_id)
+                    .where(ChapterImage.chapter_id == chapter.id)
                 ).all()
             }
 
@@ -71,14 +71,16 @@ class ChapterImageService:
             to_delete = ek - wk
 
             if to_insert:
+                crawler_version = chapter.extra.get('crawler_version')
                 sess.exec(
                     sa_insert(ChapterImage),
                     params=[
                         ChapterImage(
                             id=id,
                             url=images[id],
-                            novel_id=novel_id,
-                            chapter_id=chapter_id,
+                            chapter_id=chapter.id,
+                            novel_id=chapter.novel_id,
+                            extra={'crawler_version': crawler_version},
                         ).model_dump()
                         for id in to_insert
                     ]

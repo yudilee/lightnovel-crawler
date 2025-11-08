@@ -81,9 +81,9 @@ def import_crawlers(file: Path):
     # validate the file
     if not file.is_file():
         return
-    file = file.absolute()
-    if file.name.startswith('_'):
+    if file.name.startswith("_") or not file.name[0].isalnum():
         return
+    file = file.absolute()
 
     # import modules from the file
     try:
@@ -139,7 +139,7 @@ def import_crawlers(file: Path):
         id = hashlib.md5(str(crawler).encode()).hexdigest()
         setattr(crawler, "__id__", id)
         setattr(crawler, "__file__", str(file))
-        setattr(crawler, "version", max(stat.st_mtime, stat.st_ctime))
+        setattr(crawler, "version", int(max(stat.st_mtime, stat.st_ctime)))
 
         yield crawler
 

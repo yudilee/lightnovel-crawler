@@ -1,8 +1,8 @@
 import logging
 import shutil
-import threading
 from pathlib import Path
-from typing import Callable, Dict
+from threading import Event, Lock
+from typing import Callable, Dict, Optional
 
 from ...context import ctx
 from ...dao import Artifact
@@ -19,7 +19,7 @@ requires_zip = set([
     OutputFormat.json,
     OutputFormat.text,
 ])
-archive_maker: Dict[OutputFormat, Callable[[Path, Artifact], None]] = {
+archive_maker: Dict[OutputFormat, Callable[[Path, Artifact, Event], None]] = {
     OutputFormat.json: make_json,
     OutputFormat.text: make_text,
     OutputFormat.epub: make_epub,
@@ -41,24 +41,42 @@ archive_maker: Dict[OutputFormat, Callable[[Path, Artifact], None]] = {
 
 class BinderService:
     def __init__(self):
-        self.lock = threading.Lock()
+        self.lock = Lock()
         pass
 
-    def make_artifact(self, artifact: Artifact) -> Artifact:
-        make = archive_maker[artifact.format]
+    def make_artifact(
+        self,
+        novel_id: str,
+        format: OutputFormat,
+        job_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        signal=Event(),
+    ) -> Artifact:
+        make = archive_maker[format]
+        is_zip = format in requires_zip
         if not callable(make):
             raise ServerErrors.format_not_available
 
-        with self.lock:
-            artifact.is_zip = artifact.format in requires_zip
-            working_dir = ctx.config.app.output_path / 'tmp' / artifact.id
-            try:
-                shutil.rmtree(working_dir, ignore_errors=True)
-                working_dir.mkdir(parents=True)
-                make(working_dir, artifact)
-            except ServerError as e:
-                raise e.with_detail(artifact.format)
-            except Exception as e:
-                raise ServerErrors.failed_creating_artifact.with_detail(artifact.format) from e
-            finally:
-                shutil.rmtree(working_dir, ignore_errors=True)
+        artifact = Artifact(
+            novel_id=novel_id,
+            user_id=user_id,
+            job_id=job_id,
+            format=format,
+            is_zip=is_zip,
+        )
+        working_dir = ctx.config.app.output_path / 'tmp' / artifact.id
+        try:
+            shutil.rmtree(working_dir, ignore_errors=True)
+            working_dir.mkdir(parents=True)
+            make(working_dir, artifact, signal)
+            with self.lock, ctx.db.session() as sess:
+                artifact.is_done = True
+                sess.add(artifact)
+                sess.commit()
+                return artifact
+        except ServerError as e:
+            raise e.with_detail(artifact.format)
+        except Exception as e:
+            raise ServerErrors.failed_creating_artifact.with_detail(artifact.format) from e
+        finally:
+            shutil.rmtree(working_dir, ignore_errors=True)
