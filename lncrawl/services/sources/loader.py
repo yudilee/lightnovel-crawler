@@ -2,7 +2,7 @@ import logging
 from functools import lru_cache
 from pathlib import Path
 from threading import Event
-from typing import Dict, Type
+from typing import Dict, List, Type
 
 from ...context import ctx
 from ...core.crawler import Crawler
@@ -12,7 +12,7 @@ from ...utils.fts_store import FTSStore
 from ...utils.text_tools import normalize
 from ...utils.url_tools import extract_base, extract_host, normalize_url
 from . import utils
-from .dto import CrawlerIndex
+from .dto import CrawlerIndex, CrawlerInfo
 
 logger = logging.getLogger(__name__)
 
@@ -71,21 +71,23 @@ class SourceLoader:
             host = extract_host(url)
             self.rejected[host] = reason
 
-    def load_crawlers(self, *files: Path):
+    def load_crawlers(self, *files: Path) -> List[CrawlerInfo]:
         futures = [
             self._taskman.submit_task(utils.import_crawlers, file)
             for file in files
         ]
-        for crawlers in self._taskman.resolve_as_generator(
-            futures,
-            disable_bar=True,
-            signal=self._signal,
-        ):
-            for crawler in crawlers:
-                if issubclass(crawler, Crawler):
-                    yield self.add_crawler(crawler)
+        return [
+            self.add_crawler(crawler)
+            for crawlers in self._taskman.resolve_as_generator(
+                futures,
+                disable_bar=True,
+                signal=self._signal,
+            )
+            for crawler in crawlers
+            if issubclass(crawler, Crawler)
+        ]
 
-    def add_crawler(self, crawler: Type[Crawler]):
+    def add_crawler(self, crawler: Type[Crawler]) -> CrawlerInfo:
         sid = getattr(crawler, '__id__')        # crawler id
         file = getattr(crawler, '__file__')     # file path
         urls = getattr(crawler, 'base_url')     # always a list

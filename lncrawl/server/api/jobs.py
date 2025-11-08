@@ -69,7 +69,7 @@ def fetch_novel(
     url: HttpUrl = Form(description='The novel page url'),
     full: bool = Form(default=False, description='To fetch all contents')
 ) -> Job:
-    return ctx.jobs.fetch_novel(user, url, full=full)
+    return ctx.jobs.fetch_novel(user, url.encoded_string(), full=full)
 
 
 @router.post("/create/fetch-volumes", summary='Create a job to fetch all chapter contents for the volumes')

@@ -28,7 +28,7 @@ class Job(BaseTable, table=True):
     )
 
     type: JobType = Field(
-        description="The job type"
+        description="The job type",
     )
     priority: JobPriority = Field(
         default=JobPriority.LOW,
@@ -69,7 +69,7 @@ class Job(BaseTable, table=True):
 
     @computed_field  # type: ignore[misc]
     @property
-    def percent(self) -> int:
+    def progress(self) -> int:
         '''Progress percetage (value is between 0 to 100)'''
         return (100 * self.done) // self.total
 
@@ -84,26 +84,3 @@ class Job(BaseTable, table=True):
     def is_pending(self) -> int:
         '''Whether the job is currently pending'''
         return self.status == JobStatus.PENDING
-
-
-# @event.listens_for(Job, "before_update", propagate=True)
-# def update_status_and_timestamps(mapper, connection, job: Job):
-#     if not job.is_done:
-#         job.is_done = job.status in [
-#             JobStatus.FAILED,
-#             JobStatus.SUCCESS,
-#             JobStatus.CANCELED,
-#         ]
-
-#     if not job.is_done and job.error:
-#         if job.error.startswith('Canceled'):
-#             job.status = JobStatus.CANCELED
-#         else:
-#             job.status = JobStatus.FAILED
-#         job.is_done = True
-
-#     if not job.started_at and job.status != JobStatus.PENDING:
-#         job.started_at = current_timestamp()
-
-#     if not job.finished_at and job.is_done:
-#         job.finished_at = current_timestamp()

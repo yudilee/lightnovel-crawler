@@ -1,9 +1,8 @@
 from typing import Any, List, Optional
 
-from pydantic import HttpUrl
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import update as sa_update
-from sqlmodel import and_, asc, case, col, func, select, true
+from sqlmodel import and_, asc, case, literal, col, func, select, true
 
 from ...context import ctx
 from ...dao import Job, User
@@ -14,6 +13,8 @@ from ...exceptions import ServerErrors
 from ...server.models.pagination import Paginated
 from ...utils.time_utils import current_timestamp
 from .utils import sa_select_children, sa_select_parents
+
+job_status_type = Job.__table__.c.status.type  # type: ignore
 
 
 class JobService:
@@ -120,9 +121,12 @@ class JobService:
                     done=sa_done,
                     is_done=sa_is_done,
                     error=case((sa_is_done, reason), else_=Job.error),
-                    status=case((sa_is_done, JobStatus.CANCELED), else_=Job.status),
                     started_at=case((sa_is_done, sa_started_at), else_=Job.started_at),
                     finished_at=case((sa_is_done, sa_finished_at), else_=Job.finished_at),
+                    status=case(
+                        (sa_is_done, literal(JobStatus.CANCELED, type_=job_status_type)),
+                        else_=Job.status
+                    ),
                 )
             )
 
@@ -179,9 +183,12 @@ class JobService:
                     done=sa_done,
                     total=sa_total,
                     is_done=sa_is_done,
-                    status=case((sa_is_done, JobStatus.SUCCESS), else_=Job.status),
                     started_at=case((sa_is_done, sa_started_at), else_=Job.started_at),
                     finished_at=case((sa_is_done, sa_finished_at), else_=Job.finished_at),
+                    status=case(
+                        (sa_is_done, literal(JobStatus.SUCCESS, type_=job_status_type)),
+                        else_=Job.status
+                    ),
                 )
             )
 
@@ -199,32 +206,30 @@ class JobService:
     def fetch_novel(
         self,
         user: User,
-        url: HttpUrl,
+        url: str,
         *,
         full: bool = False,
         parent_id: Optional[str] = None,
     ) -> Job:
-        if not url.host:
-            raise ServerErrors.invalid_url
-        ctx.sources.get_crawler(url.encoded_string())
+        ctx.sources.get_crawler(url)
         return self._create(
             user=user,
             parent_id=parent_id,
-            data={'url': url.encoded_string()},
+            data={'url': url},
             type=JobType.FULL_NOVEL if full else JobType.NOVEL,
         )
 
     def fetch_many_novels(
         self,
         user: User,
-        *urls: HttpUrl,
+        *urls: str,
         full: bool = False,
         parent_id: Optional[str] = None,
     ) -> Job:
         return self._create(
             user=user,
             parent_id=parent_id,
-            data={'url': [url.encoded_string() for url in urls]},
+            data={'urls': urls},
             type=JobType.FULL_NOVEL_BATCH if full else JobType.NOVEL_BATCH,
         )
 
@@ -376,11 +381,61 @@ class JobService:
             sess.refresh(job)
             return job
 
+    def _next_pending(self, job_id: str) -> Optional[Job]:
+        with ctx.db.session() as sess:
+            return sess.exec(
+                select(Job)
+                .where(Job.parent_job_id == job_id)
+                .where(col(Job.is_done).is_not(true()))
+                .order_by(asc(Job.created_at))
+                .limit(1)
+            ).first()
+
     def _update(self, job_id: str, **values) -> None:
         with ctx.db.session() as sess:
             sess.exec(
                 sa_update(Job)
                 .where(col(Job.id) == job_id)
                 .values(**values)
+            )
+            sess.commit()
+
+    def _increment(self, job_id: str) -> None:
+        with ctx.db.session() as sess:
+            now = current_timestamp()
+            sa_done = Job.done + 1
+            sa_is_done = Job.total == sa_done
+            sa_started_at = func.coalesce(Job.started_at, now)
+            sa_finished_at = func.coalesce(Job.finished_at, now)
+            sess.exec(
+                sa_update(Job)
+                .where(col(Job.id) == job_id)
+                .values(
+                    done=sa_done,
+                    is_done=sa_is_done,
+                    started_at=case((sa_is_done, sa_started_at), else_=Job.started_at),
+                    finished_at=case((sa_is_done, sa_finished_at), else_=Job.finished_at),
+                    status=case(
+                        (sa_is_done, literal(JobStatus.SUCCESS, type_=job_status_type)),
+                        else_=Job.status
+                    )
+                )
+            )
+            sess.commit()
+
+    def _set_done(self, job_id: str, error: Optional[str] = None) -> bool:
+        with ctx.db.session() as sess:
+            now = current_timestamp()
+            sess.exec(
+                sa_update(Job)
+                .where(col(Job.id) == job_id)
+                .values(
+                    error=error,
+                    is_done=True,
+                    done=Job.total,
+                    finished_at=now,
+                    started_at=func.coalesce(Job.started_at, now),
+                    status=JobStatus.FAILED if error else JobStatus.SUCCESS,
+                )
             )
             sess.commit()

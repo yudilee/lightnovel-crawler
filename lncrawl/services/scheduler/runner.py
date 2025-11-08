@@ -16,14 +16,16 @@ class JobRunner:
         self.signal = signal
         self.user = ctx.users.get(self.job.user_id)
 
-    def process(self):
-        logger.info(f'Processing job: {self.job.id}, type: {self.job.type}')
-        if self.job.is_done:
-            return
-        if self.job.done == self.job.total:
-            return self.__set_success()
+    def process(self) -> bool:
         if self.job.is_running:
-            return
+            child = ctx.jobs._next_pending(self.job.id)
+            if not child:
+                return self.__set_success()
+            JobRunner(child).process()
+            self.job = ctx.jobs.get(self.job.id)
+            return self.__increment()
+
+        logger.info(f'Processing: {self.job.id}, type: {self.job.type.name} (parent: {self.job.parent_job_id})')
         if self.job.type == JobType.FULL_NOVEL_BATCH:
             return self._novel_batch()
         if self.job.type == JobType.NOVEL_BATCH:
@@ -48,6 +50,7 @@ class JobRunner:
             return self._artifact_batch()
         if self.job.type == JobType.ARTIFACT:
             return self._artifact()
+
         return self.__set_failed(f'Job type is not supported: {self.job.type}')
 
     def __set_running(self) -> None:
@@ -57,44 +60,31 @@ class JobRunner:
             started_at=current_timestamp(),
         )
 
-    def __increment(self) -> None:
-        ctx.jobs._update(
-            self.job.id,
-            done=Job.done + 1,
-        )
+    def __increment(self) -> bool:
+        ctx.jobs._increment(self.job.id)
+        self.__send_mail()
         return True
 
     def __set_success(self) -> bool:
-        # cancel child jobs
-        ctx.jobs.cancel(
-            self.user,
-            self.job.id,
-            'Canceled as the parent job is done'
-        )
-        # update current
-        ctx.jobs._update(
-            self.job.id,
-            status=JobStatus.SUCCESS,
-            finished_at=current_timestamp(),
-        )
+        ctx.jobs._set_done(self.job.id)
+        self.__send_mail()
         return True
 
     def __set_failed(self, reason: str) -> bool:
-        # cancel child jobs
-        ctx.jobs.cancel(
-            self.user,
-            self.job.id,
-            f'Canceled by parent job. Cause: {reason}'
-        )
-        # update current
-        ctx.jobs._update(
-            self.job.id,
-            status=JobStatus.FAILED,
-            finished_at=current_timestamp(),
-        )
+        ctx.jobs._set_done(self.job.id, reason)
+        self.__send_mail()
         return False
 
-    def _novel_batch(self):
+    def __send_mail(self):
+        if self.job.parent_job_id:
+            return
+        job = ctx.jobs.get(self.job.id)
+        if job.status != JobStatus.SUCCESS:
+            return
+        if job.type == JobType.FULL_NOVEL:
+            ctx.mail.send_full_novel_job_success(self.user, job)
+
+    def _novel_batch(self) -> bool:
         try:
             urls = self.job.extra.get('urls', [])
             if not urls:
@@ -108,15 +98,16 @@ class JobRunner:
 
             return self.__increment()
         except Exception as e:
-            self.__set_failed(f'Failed to create jobs. {repr(e)}')
+            return self.__set_failed(f'Failed to create jobs. {repr(e)}')
 
-    def _novel(self):
+    def _novel(self) -> bool:
         try:
             url = self.job.extra.get('url')
             if not url:
-                return self.__set_success()
+                return self.__set_failed('No novel url')
 
             self.__set_running()
+
             novel = ctx.crawler.fetch_novel(url, self.signal)
             ctx.jobs._update(
                 self.job.id,
@@ -131,65 +122,69 @@ class JobRunner:
                 return self.__set_success()
 
             for volume in volumes:
-                ctx.jobs.fetch_many_volumes(self.user, volume.id, parent_id=self.job.id)
+                ctx.jobs.fetch_volume(self.user, volume.id, parent_id=self.job.id)
 
             for format in ENABLED_FORMATS[self.user.tier]:
                 ctx.jobs.make_artifact(self.user, novel.id, format, parent_id=self.job.id)
 
             return self.__increment()
         except Exception as e:
-            self.__set_failed(f'Failed to fetch novel. {repr(e)}')
+            return self.__set_failed(f'Failed to fetch novel. {repr(e)}')
 
-    def _volume_batch(self):
+    def _volume_batch(self) -> bool:
         try:
             volume_ids = self.job.extra.get('volume_ids', [])
             if not volume_ids:
                 return self.__set_success()
 
             self.__set_running()
+
             for volume_id in volume_ids:
                 ctx.jobs.fetch_volume(self.user, volume_id, parent_id=self.job.id)
 
             return self.__increment()
         except Exception as e:
-            self.__set_failed(f'Failed to create jobs. {repr(e)}')
+            return self.__set_failed(f'Failed to create jobs. {repr(e)}')
 
-    def _volume(self):
+    def _volume(self) -> bool:
         try:
             volume_id = self.job.extra.get('volume_id')
             if not volume_id:
-                return self.__set_success()
+                return self.__set_failed('No volume id')
 
             self.__set_running()
-            chapters = ctx.chapters.list(volume_id=volume_id, is_crawled=False)
+
+            chapters = ctx.chapters.list(volume_id=volume_id)
             for chapter in chapters:
                 ctx.jobs.fetch_chapter(self.user, chapter.id, parent_id=self.job.id)
 
             return self.__increment()
         except Exception as e:
-            self.__set_failed(f'Failed to create jobs. {repr(e)}')
+            return self.__set_failed(f'Failed to create jobs. {repr(e)}')
 
-    def _chapter_batch(self):
+    def _chapter_batch(self) -> bool:
         try:
             chapter_ids = self.job.extra.get('chapter_ids')
             if not chapter_ids:
                 return self.__set_success()
 
             self.__set_running()
+
             for chapter_id in chapter_ids:
                 ctx.jobs.fetch_chapter(self.user, chapter_id, parent_id=self.job.id)
 
             return self.__increment()
         except Exception as e:
-            self.__set_failed(f'Failed to create jobs. {repr(e)}')
+            return self.__set_failed(f'Failed to create jobs. {repr(e)}')
 
-    def _chapter(self):
+    def _chapter(self) -> bool:
         try:
             chapter_id = self.job.extra.get('chapter_id')
             if not chapter_id:
-                return self.__set_success()
+                return self.__set_failed('No chapter id')
 
             self.__set_running()
+
             chapter = ctx.crawler.fetch_chapter(chapter_id, self.signal)
             if not chapter.is_available:
                 return self.__set_failed('Failed to fetch contents')
@@ -203,27 +198,28 @@ class JobRunner:
 
             return self.__increment()
         except Exception as e:
-            self.__set_failed(f'Failed to fetch chapter. {repr(e)}')
+            return self.__set_failed(f'Failed to fetch chapter. {repr(e)}')
 
-    def _image_batch(self):
+    def _image_batch(self) -> bool:
         try:
             image_ids = self.job.extra.get('image_ids')
             if not image_ids:
                 return self.__set_success()
 
             self.__set_running()
+
             for image_id in image_ids:
                 ctx.jobs.fetch_image(self.user, image_id, parent_id=self.job.id)
 
             return self.__increment()
         except Exception as e:
-            self.__set_failed(f'Failed to create jobs. {repr(e)}')
+            return self.__set_failed(f'Failed to create jobs. {repr(e)}')
 
-    def _image(self):
+    def _image(self) -> bool:
         try:
             image_id = self.job.extra.get('image_id')
             if not image_id:
-                return self.__set_success()
+                return self.__set_failed('No image id')
 
             self.__set_running()
 
@@ -233,29 +229,36 @@ class JobRunner:
 
             return self.__set_success()
         except Exception as e:
-            self.__set_failed(f'Failed to fetch image. {repr(e)}')
+            return self.__set_failed(f'Failed to fetch image. {repr(e)}')
 
-    def _artifact_batch(self):
+    def _artifact_batch(self) -> bool:
         try:
-            formats = self.job.extra.get('formats')
             novel_id = self.job.extra.get('novel_id')
-            if not (novel_id and formats):
+            if not novel_id:
+                return self.__set_failed('No novel id')
+
+            formats = self.job.extra.get('formats')
+            if not formats:
                 return self.__set_success()
 
             self.__set_running()
+
             for fmt in formats:
                 ctx.jobs.make_artifact(self.user, novel_id, fmt, parent_id=self.job.id)
 
             return self.__increment()
         except Exception as e:
-            self.__set_failed(f'Failed to create jobs. {repr(e)}')
+            return self.__set_failed(f'Failed to create jobs. {repr(e)}')
 
-    def _artifact(self):
+    def _artifact(self) -> bool:
         try:
-            format = self.job.extra.get('format')
             novel_id = self.job.extra.get('novel_id')
-            if not (novel_id and format):
-                return self.__set_success()
+            if not novel_id:
+                return self.__set_failed('No novel id')
+
+            format = self.job.extra.get('format')
+            if not format:
+                return self.__set_failed('No output format')
 
             if format not in set(OutputFormat):
                 return self.__set_failed(f'Invalid format: {format}')
@@ -274,4 +277,4 @@ class JobRunner:
 
             return self.__set_success()
         except Exception as e:
-            self.__set_failed(f'Failed to make artifact. {repr(e)}')
+            return self.__set_failed(f'Failed to make artifact. {repr(e)}')

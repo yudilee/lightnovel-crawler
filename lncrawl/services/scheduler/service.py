@@ -7,6 +7,7 @@ from sqlmodel import asc, col, desc, select, true
 from ...context import ctx
 from ...dao import Job
 from ...utils.time_utils import current_timestamp
+from .cleaner import run_cleaner
 from .runner import JobRunner
 
 logger = logging.getLogger(__name__)
@@ -63,6 +64,7 @@ class JobScheduler:
                 signal.wait(ctx.config.crawler.runner_cooldown)
                 if signal.is_set():
                     return
+                self.__cleaner(signal)
                 self.__job(signal)
             except KeyboardInterrupt:
                 signal.set()
@@ -84,6 +86,7 @@ class JobScheduler:
             jobs = sess.exec(
                 select(Job)
                 .where(col(Job.is_done).is_not(true()))
+                .where(col(Job.parent_job_id).is_(None))
                 .order_by(
                     desc(Job.priority),
                     asc(Job.created_at),
@@ -96,11 +99,20 @@ class JobScheduler:
                     self.queue.add(job.id)
                     return job
 
-    # def __cleaner(self):
-    #     # skip if cleaner has run recently
-    #     timeout = ctx.config.crawler.cleaner_cooldown * 1000
-    #     now = current_timestamp()
-    #     if now - self.last_cleanup_ts < timeout:
-    #         return
-    #     self.last_cleanup_ts = now
-    #     # TODO
+    def __cleaner(self, signal=Event()):
+        job_id = 'cleaner'
+
+        with self.lock:
+            if job_id in self.queue:
+                return
+            timeout = ctx.config.crawler.cleaner_cooldown * 1000
+            if current_timestamp() - self.last_cleanup_ts < timeout:
+                return
+            self.queue.add(job_id)
+
+        try:
+            run_cleaner(signal)
+        finally:
+            with self.lock:
+                self.queue.remove(job_id)
+                self.last_cleanup_ts = current_timestamp()

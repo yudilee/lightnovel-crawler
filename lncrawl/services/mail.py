@@ -8,8 +8,8 @@ import lxml.html
 
 from ..assets import emails
 from ..context import ctx
-from ..dao import Novel, Job
-from ..dao.enums import JobStatus
+from ..dao import Job, User
+from ..dao.enums import JobType
 from ..exceptions import ServerErrors
 
 logger = logging.getLogger(__name__)
@@ -79,28 +79,35 @@ class MailService:
         body = emails.repass_template().render(link=link)
         self.send(email, subject, body)
 
-    def send_job_success(self, email: str, job: Job):
-        ctx.novels.get(job.)
-        if not (
-            job
-            and job.novel
-            and detail.job.run_state == RunState.SUCCESS
-        ):
-            raise ServerErrors.server_error
+    def send_full_novel_job_success(self, user: User, job: Job):
+        if job.type != JobType.FULL_NOVEL:
+            return
+
+        if not ctx.users.is_verified(user.email):
+            return
+
+        novel_id = job.extra.get('novel_id')
+        if not novel_id:
+            return
+
+        novel = ctx.novels.get(novel_id)
+        artifacts = ctx.artifacts.list(job_id=job.id)
 
         base_url = ctx.config.server.base_url
-        job_url = f'{base_url}/job/{detail.job.id}'
-        novel_title = detail.novel.title or "Unknown Title"
-        novel_authors = detail.novel.authors or "Unknown Author"
-        chapter_count = '?'  # detail.novel.chapter_count
-        volume_count = '?'  # detail.novel.volume_count
-        novel_synopsis = detail.novel.synopsis or "No synopsis available."
+        job_url = f'{base_url}/job/{job.id}'
+        novel_title = novel.title or "Unknown Title"
+        novel_authors = novel.authors or "Unknown Author"
+        chapter_count = novel.chapter_count or "?"
+        volume_count = novel.volume_count or "?"
+        novel_synopsis = novel.synopsis or "No synopsis available."
+
+        token = ctx.users.generate_token(user)
         artifacts = [
             {
-                'name': item.file_name,
                 'format': str(item.format),
-                'url': f'{base_url}/api/artifact/{item.id}/download',
-            } for item in (detail.artifacts or [])
+                'name': ctx.files.resolve(item.output_file).name,
+                'url': f'{base_url}/static/{item.output_file}/download?token={token}',
+            } for item in artifacts.items
         ]
 
         if len(novel_synopsis) > 300:
@@ -116,4 +123,4 @@ class MailService:
             novel_synopsis=novel_synopsis,
         )
 
-        self.send(email, novel_title, body)
+        self.send(user.email, novel_title, body)

@@ -37,7 +37,7 @@ class JobType(IntEnum):
     NOVEL_ARTIFACTS = 42
 
 
-class JobStatus(str, Enum):
+class JobStatus(IntEnum):
     PENDING = 0
     RUNNING = 1
     SUCCESS = 2
