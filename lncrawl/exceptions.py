@@ -1,6 +1,9 @@
+import logging
+from typing import Optional
 from urllib.error import URLError
 
-from fastapi import HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from PIL import UnidentifiedImageError
 from requests.exceptions import RequestException
 from urllib3.exceptions import HTTPError
@@ -36,11 +39,46 @@ RetryErrorGroup = (
 
 class ServerError(HTTPException, LNException):
     def __init__(self, status=400, *args, **kwargs) -> None:
+        self.extra: Optional[str] = None
         super().__init__(status, *args, **kwargs)
 
-    def with_detail(self, detail: str) -> 'ServerError':
-        self.detail = detail
+    def with_extra(self, extra: str) -> 'ServerError':
+        self.extra = extra
         return self
+
+    def to_response(self):
+        return JSONResponse(
+            status_code=self.status_code,
+            headers=self.headers,
+            content={
+                "error": self.detail,
+                "detail": self.extra,
+            },
+        )
+
+
+def attach_exception_handlers(app: FastAPI):
+    def server_error_handler(req: Request, err: ServerError):
+        return err.to_response()
+
+    def http_exception_handler(req: Request, err: HTTPException):
+        logging.error(repr(err), exc_info=True)
+        return JSONResponse(
+            status_code=err.status_code,
+            content={"error": err.detail},
+            headers=err.headers,
+        )
+
+    def general_exception_handler(req: Request, err: Exception):
+        logging.error(repr(err), exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={"error": "Internal Server Error"},
+        )
+
+    app.exception_handler(ServerError)(server_error_handler)
+    app.exception_handler(HTTPException)(http_exception_handler)
+    app.exception_handler(Exception)(general_exception_handler)
 
 
 class ServerErrors:

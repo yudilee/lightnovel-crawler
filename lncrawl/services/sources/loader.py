@@ -163,9 +163,9 @@ class SourceLoader:
         if not host:
             raise ServerErrors.invalid_url
         if host in self.rejected:
-            raise ServerErrors.host_rejected.with_detail(self.rejected[host])
+            raise ServerErrors.host_rejected.with_extra(self.rejected[host])
         if host not in self.crawlers:
-            raise ServerErrors.no_crawler.with_detail(host)
+            raise ServerErrors.no_crawler.with_extra(host)
 
         return self.crawlers[host]
 

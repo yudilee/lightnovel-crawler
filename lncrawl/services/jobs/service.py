@@ -1,8 +1,9 @@
+from functools import lru_cache
 from typing import Any, List, Optional
 
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import update as sa_update
-from sqlmodel import and_, asc, case, literal, col, func, select, true
+from sqlmodel import and_, asc, case, col, func, literal, select, true
 
 from ...context import ctx
 from ...dao import Job, User
@@ -381,6 +382,17 @@ class JobService:
             sess.refresh(job)
             return job
 
+    @lru_cache
+    def _get_root(self, job_id: str) -> Optional[str]:
+        with ctx.db.session() as sess:
+            sa_pars = sa_select_parents(job_id)
+            return sess.exec(
+                select(Job.id)
+                .where(col(Job.id).in_(sa_pars))
+                .where(col(Job.parent_job_id).is_(None))
+                .limit(1)
+            ).first()
+
     def _next_pending(self, job_id: str) -> Optional[Job]:
         with ctx.db.session() as sess:
             return sess.exec(
@@ -423,7 +435,7 @@ class JobService:
             )
             sess.commit()
 
-    def _set_done(self, job_id: str, error: Optional[str] = None) -> bool:
+    def _set_done(self, job_id: str, error: Optional[str] = None) -> None:
         with ctx.db.session() as sess:
             now = current_timestamp()
             sess.exec(

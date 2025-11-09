@@ -25,7 +25,7 @@ class JobRunner:
             self.job = ctx.jobs.get(self.job.id)
             return self.__increment()
 
-        logger.info(f'Processing: {self.job.id}, type: {self.job.type.name} (parent: {self.job.parent_job_id})')
+        logger.info(f'Processing: {self.job.id}, type: {self.job.type.name}')
         if self.job.type == JobType.FULL_NOVEL_BATCH:
             return self._novel_batch()
         if self.job.type == JobType.NOVEL_BATCH:
@@ -268,9 +268,9 @@ class JobRunner:
             artifact = ctx.binder.make_artifact(
                 novel_id=novel_id,
                 format=format,
-                job_id=self.job.id,
-                user_id=self.user.id,
                 signal=self.signal,
+                user_id=self.user.id,
+                job_id=self.job.parent_job_id or self.job.id,
             )
             if not artifact.is_available:
                 return self.__set_failed('Failed to make artifact')

@@ -1,14 +1,16 @@
-import traceback
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from ..assets.version import get_version
 from ..context import ctx
-from ..exceptions import ServerError
+from ..exceptions import attach_exception_handlers
+from .api import router as api
+from .middleware.static_guard import StaticFilesGuard
 
 web_dir = (Path(__file__).parent / 'web').absolute()
 
@@ -20,6 +22,10 @@ app = FastAPI(
     on_shutdown=[ctx.destroy],
 )
 
+# Add exception handlers
+attach_exception_handlers(app)
+
+# Add middleares
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -33,21 +39,20 @@ app.add_middleware(
     minimum_size=1000,
 )
 
+app.add_middleware(
+    StaticFilesGuard,
+    prefix='/static'
+)
 
 # Add APIs
-try:
-    from .api import router as api
-    app.include_router(api, prefix='/api')
-except ImportError:
-    traceback.print_exc()
+app.include_router(api, prefix='/api')
 
-
-# Mount output directory
-try:
-    from .static import app as static_app
-    app.mount("/static", static_app)
-except ImportError:
-    traceback.print_exc()
+# Mount static files
+app.mount(
+    "/static",
+    StaticFiles(directory=ctx.config.app.output_path),
+    name="static",
+)
 
 
 # Mount frontend
@@ -57,32 +62,3 @@ async def serve_web(fallback: str):
     if target_file.is_file():
         return FileResponse(target_file)
     return FileResponse(web_dir / "index.html")
-
-
-# Add exception handlers
-@app.exception_handler(ServerError)
-async def global_client_error_handler(req: Request, err: ServerError):
-    return JSONResponse(
-        status_code=err.status_code,
-        content={"detail": err.detail},
-        headers=err.headers,
-    )
-
-
-@app.exception_handler(HTTPException)
-async def global_http_exception_handler(req: Request, err: HTTPException):
-    traceback.print_exception(err)
-    return JSONResponse(
-        status_code=err.status_code,
-        content={"detail": err.detail},
-        headers=err.headers,
-    )
-
-
-@app.exception_handler(Exception)
-async def global_exception_handler(req: Request, err: Exception):
-    traceback.print_exception(err)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal Server Error"},
-    )

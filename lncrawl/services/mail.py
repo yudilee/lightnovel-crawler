@@ -106,7 +106,7 @@ class MailService:
             {
                 'format': str(item.format),
                 'name': ctx.files.resolve(item.output_file).name,
-                'url': f'{base_url}/static/{item.output_file}/download?token={token}',
+                'url': f'{base_url}/static/{item.output_file}?token={token}',
             } for item in artifacts.items
         ]
 
