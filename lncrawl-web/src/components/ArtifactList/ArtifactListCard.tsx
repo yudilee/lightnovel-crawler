@@ -61,9 +61,7 @@ export const ArtifactListCard: React.FC<{ artifacts?: Artifact[] }> = ({
                 }
                 title={
                   <Flex wrap="wrap-reverse" gap={8} align="center">
-                    <Tag icon={<TagOutlined />} style={{ margin: 0 }}>
-                      {item.format}
-                    </Tag>
+                    <Tag icon={<TagOutlined />}>{item.format}</Tag>
                     {Boolean(item.file_size && item.file_size > 0) && (
                       <Typography.Text
                         type="warning"

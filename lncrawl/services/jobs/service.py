@@ -3,7 +3,7 @@ from typing import Any, List, Optional
 
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import update as sa_update
-from sqlmodel import and_, asc, case, col, func, literal, select, true
+from sqlmodel import and_, asc, case, col, desc, func, literal, select, true
 
 from ...context import ctx
 from ...dao import Job, User
@@ -64,7 +64,10 @@ class JobService:
                 cnt = cnt.where(cnd)
 
             # Apply sorting
-            stmt = stmt.order_by(asc(Job.created_at))
+            if parent_job_id is not None:
+                stmt = stmt.order_by(asc(Job.created_at))
+            else:
+                stmt = stmt.order_by(desc(Job.created_at))
 
             # Apply pagination
             stmt = stmt.offset(offset).limit(limit)
@@ -241,11 +244,18 @@ class JobService:
         *,
         parent_id: Optional[str] = None,
     ) -> Job:
+        volume = ctx.volumes.get(volume_id)
+        novel = ctx.novels.get(volume.novel_id)
         return self._create(
             user=user,
             parent_id=parent_id,
             type=JobType.VOLUME,
-            data={'volume_id': volume_id},
+            data={
+                'novel_id': novel.id,
+                'volume_id': volume.id,
+                'novel_title': novel.title,
+                'volume_serial': volume.serial,
+            },
         )
 
     def fetch_many_volumes(
@@ -268,11 +278,18 @@ class JobService:
         *,
         parent_id: Optional[str] = None,
     ) -> Job:
+        chapter = ctx.chapters.get(chapter_id)
+        novel = ctx.novels.get(chapter.novel_id)
         return self._create(
             user=user,
             parent_id=parent_id,
             type=JobType.CHAPTER,
-            data={'chapter_id': chapter_id},
+            data={
+                'novel_id': novel.id,
+                'chapter_id': chapter.id,
+                'novel_title': novel.title,
+                'chapter_serial': chapter.serial,
+            },
         )
 
     def fetch_many_chapters(
@@ -295,11 +312,15 @@ class JobService:
         *,
         parent_id: Optional[str] = None,
     ) -> Job:
+        image = ctx.images.get(image_id)
         return self._create(
             user=user,
             parent_id=parent_id,
             type=JobType.IMAGE,
-            data={'image_id': image_id},
+            data={
+                'url': image.url,
+                'image_id': image.id,
+            },
         )
 
     def fetch_many_images(
@@ -323,11 +344,16 @@ class JobService:
         *,
         parent_id: Optional[str] = None,
     ) -> Job:
+        novel = ctx.novels.get(novel_id)
         return self._create(
             user=user,
             parent_id=parent_id,
             type=JobType.ARTIFACT,
-            data={'novel_id': novel_id, 'format': format},
+            data={
+                'format': format,
+                'novel_id': novel_id,
+                'novel_title': novel.title,
+            },
         )
 
     def make_many_artifacts(
@@ -337,11 +363,16 @@ class JobService:
         *formats: OutputFormat,
         parent_id: Optional[str] = None,
     ) -> Job:
+        novel = ctx.novels.get(novel_id)
         return self._create(
             user=user,
             parent_id=parent_id,
             type=JobType.ARTIFACT_BATCH,
-            data={'novel_id': novel_id, 'formats': formats},
+            data={
+                'formats': formats,
+                'novel_id': novel_id,
+                'novel_title': novel.title,
+            },
         )
 
     # -------------------------------------------------------------------------

@@ -1,20 +1,21 @@
-import {
-  JobStatus,
-  type Artifact,
-  type Job,
-  type JobDetails,
-  type Novel,
-  type User,
-} from '@/types';
+import { type Job, type User } from '@/types';
 import { stringifyError } from '@/utils/errors';
-import { Button, Flex, Grid, Result, Space, Spin } from 'antd';
+import {
+  Button,
+  Card,
+  Flex,
+  Grid,
+  Result,
+  Space,
+  Spin,
+  Typography,
+} from 'antd';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ArtifactListCard } from '../../components/ArtifactList/ArtifactListCard';
-import { NovelDetailsCard } from '../NovelDetails/NovelDetailsCard';
-import { UserDetailsCard } from './UserDetailsCard';
+import { JobListPage } from '../JobList';
 import { JobDetailsCard } from './JobDetailsCard';
+import { UserDetailsCard } from './UserDetailsCard';
 
 export const JobDetailsPage: React.FC<any> = () => {
   const { lg } = Grid.useBreakpoint();
@@ -25,18 +26,16 @@ export const JobDetailsPage: React.FC<any> = () => {
   const [error, setError] = useState<string>();
 
   const [job, setJob] = useState<Job>();
-  const [novel, setNovel] = useState<Novel>();
   const [user, setUser] = useState<User>();
-  const [artifacts, setArtifacts] = useState<Artifact[]>([]);
 
   const fetchJob = async (id: string) => {
     setError(undefined);
     try {
-      const { data } = await axios.get<JobDetails>(`/api/job/${id}`);
-      setJob(data.job);
-      setUser(data.user);
-      setNovel(data.novel);
-      setArtifacts(data.artifacts);
+      const { data: job } = await axios.get<Job>(`/api/job/${id}`);
+      setJob(job);
+
+      const { data: user } = await axios.get<User>(`/api/user/${job.user_id}`);
+      setUser(user);
     } catch (err: any) {
       setError(stringifyError(err));
     } finally {
@@ -51,7 +50,7 @@ export const JobDetailsPage: React.FC<any> = () => {
   }, [id, refreshId]);
 
   useEffect(() => {
-    if (job && job.status !== JobStatus.COMPLETED) {
+    if (job && !job.is_done) {
       const iid = setInterval(() => {
         setRefreshId((v) => v + 1);
       }, 2000);
@@ -92,11 +91,15 @@ export const JobDetailsPage: React.FC<any> = () => {
   }
 
   return (
-    <Space direction="vertical" size={lg ? 'large' : 'small'}>
+    <Space direction="vertical" size={lg ? 'middle' : 'small'}>
       <JobDetailsCard job={job} />
       <UserDetailsCard user={user} />
-      <NovelDetailsCard novel={novel} />
-      <ArtifactListCard artifacts={artifacts} />
+      <Card>
+        <Typography.Title level={4} style={{ margin: 0, marginBottom: 16 }}>
+          Child Jobs
+        </Typography.Title>
+        <JobListPage key={job.id} parentJobId={job.id} disableFilters />
+      </Card>
     </Space>
   );
 };

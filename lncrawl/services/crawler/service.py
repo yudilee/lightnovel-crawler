@@ -146,7 +146,7 @@ class CrawlerService:
         ctx.files.save_text(chapter.content_file, model.body)
 
         # save chapter images
-        ctx.chapter_images.sync(chapter, model.images)
+        ctx.images.sync(chapter, model.images)
 
         # update db
         with ctx.db.session() as sess:
@@ -158,7 +158,7 @@ class CrawlerService:
         return chapter
 
     def fetch_image(self, image_id: str, signal=Event()) -> ChapterImage:
-        image = ctx.chapter_images.get(image_id)
+        image = ctx.images.get(image_id)
 
         # get crawler
         url = HttpUrl(image.url)

@@ -208,7 +208,7 @@ def make_epub(working_dir: Path, artifact: Artifact, signal=Event()) -> None:
     # add images
     if signal.is_set():
         raise ServerErrors.canceled_by_signal
-    for image in ctx.chapter_images.list(novel_id=artifact.novel_id):
+    for image in ctx.images.list(novel_id=artifact.novel_id):
         if not image.is_available:
             continue
         image_item = epub.EpubImage(

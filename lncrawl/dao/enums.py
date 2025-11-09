@@ -34,7 +34,6 @@ class JobType(IntEnum):
     IMAGE_BATCH = 31
     ARTIFACT = 40
     ARTIFACT_BATCH = 41
-    NOVEL_ARTIFACTS = 42
 
 
 class JobStatus(IntEnum):
@@ -68,10 +67,8 @@ class OutputFormat(str, Enum):
     azw3 = "azw3"
     lit = "lit"
     lrf = "lrf"
-    oeb = "oeb"
     pdb = "pdb"
     rb = "rb"
-    snb = "snb"
     tcr = "tcr"
 
     def __str__(self) -> str:

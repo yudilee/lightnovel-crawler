@@ -41,7 +41,7 @@ export const LoginPage: React.FC<any> = () => {
     <Layout
       style={{
         padding: '10px',
-        overflow: 'auto',
+        overflow: 'hidden',
         height: 'calc(100vh - 40px)',
       }}
     >

@@ -76,8 +76,8 @@ class AppContext:
         return ChapterService()
 
     @cached_property
-    def chapter_images(self):
-        from .services.chapter_images import ChapterImageService
+    def images(self):
+        from .services.images import ChapterImageService
         return ChapterImageService()
 
     @cached_property

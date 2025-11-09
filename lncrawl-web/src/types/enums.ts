@@ -19,21 +19,29 @@ export const JobPriority = {
 export type JobPriority = (typeof JobPriority)[keyof typeof JobPriority];
 
 export const JobStatus = {
-  PENDING: 'pending',
-  RUNNING: 'running',
-  COMPLETED: 'done',
+  PENDING: 0,
+  RUNNING: 1,
+  SUCCESS: 2,
+  FAILED: 3,
+  CANCELED: 4,
 };
 export type JobStatus = (typeof JobStatus)[keyof typeof JobStatus];
 
-export const RunState = {
-  FAILED: 0,
-  SUCCESS: 1,
-  CANCELED: 2,
-  FETCHING_NOVEL: 3,
-  FETCHING_CONTENT: 4,
-  CREATING_ARTIFACTS: 5,
+export const JobType = {
+  NOVEL: 0,
+  NOVEL_BATCH: 1,
+  FULL_NOVEL: 5,
+  FULL_NOVEL_BATCH: 6,
+  CHAPTER: 10,
+  CHAPTER_BATCH: 11,
+  VOLUME: 20,
+  VOLUME_BATCH: 21,
+  IMAGE: 30,
+  IMAGE_BATCH: 31,
+  ARTIFACT: 40,
+  ARTIFACT_BATCH: 41,
 };
-export type RunState = (typeof RunState)[keyof typeof RunState];
+export type JobType = (typeof JobType)[keyof typeof JobType];
 
 export const OutputFormat = {
   json: 'json',

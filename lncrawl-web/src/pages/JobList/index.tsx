@@ -1,12 +1,12 @@
 import {
   Button,
   Divider,
+  Empty,
   Flex,
   List,
   Pagination,
   Result,
   Spin,
-  Typography,
 } from 'antd';
 import { useJobList } from './hooks';
 import { JobFilterBox } from './JobFilterBox';
@@ -14,8 +14,9 @@ import { JobListItemCard } from './JobListItemCard';
 
 export const JobListPage: React.FC<{
   userId?: string;
+  parentJobId?: string;
   disableFilters?: boolean;
-}> = ({ userId, disableFilters }) => {
+}> = ({ userId, parentJobId, disableFilters }) => {
   const {
     currentPage,
     error,
@@ -24,9 +25,10 @@ export const JobListPage: React.FC<{
     total,
     jobs,
     status,
+    type,
     refresh,
     updateParams,
-  } = useJobList(true, userId);
+  } = useJobList(true, userId, parentJobId);
 
   if (loading) {
     return (
@@ -51,19 +53,29 @@ export const JobListPage: React.FC<{
 
   return (
     <>
-      <Typography.Title level={2}>🛠 Job List</Typography.Title>
       {!disableFilters && (
         <>
           <Divider size="small" />
-          <JobFilterBox status={status} updateParams={updateParams} />
+          <JobFilterBox
+            status={status}
+            type={type}
+            updateParams={updateParams}
+          />
           <Divider size="small" />
         </>
       )}
-      <List
-        itemLayout="horizontal"
-        dataSource={jobs}
-        renderItem={(job) => <JobListItemCard job={job} onChange={refresh} />}
-      />
+      {jobs.length > 0 ? (
+        <List
+          itemLayout="horizontal"
+          dataSource={jobs}
+          renderItem={(job) => <JobListItemCard job={job} onChange={refresh} />}
+        />
+      ) : (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description="No available jobs"
+        />
+      )}
       {(jobs.length > 0 || currentPage > 1) && total / perPage > 1 && (
         <Pagination
           current={currentPage}

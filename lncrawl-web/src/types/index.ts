@@ -1,8 +1,8 @@
 import type {
   JobPriority,
   JobStatus,
+  JobType,
   OutputFormat,
-  RunState,
   UserRole,
   UserTier,
 } from './enums';
@@ -51,16 +51,40 @@ export interface Job {
   id: string;
   created_at: number;
   updated_at: number;
+
   user_id: string;
-  novel_id: string;
-  url: string;
+  type: JobType;
   priority: JobPriority;
+
   status: JobStatus;
-  run_state: RunState;
-  progress: number;
+  is_done: boolean;
+  is_running: boolean;
+  is_pending: boolean;
+
   error: string;
   started_at: number;
   finished_at: number;
+
+  done: number;
+  total: number;
+  progress: number;
+
+  extra: {
+    url?: string;
+    urls?: string[];
+    novel_id?: string;
+    volume_id?: string;
+    volume_ids?: string[];
+    chapter_id?: string;
+    chapter_ids?: string[];
+    image_id?: string;
+    image_ids?: string[];
+    format?: OutputFormat;
+    formats?: OutputFormat[];
+    novel_title?: string;
+    volume_serial?: string;
+    chapter_serial?: string;
+  };
 }
 
 export interface Artifact {
@@ -72,27 +96,6 @@ export interface Artifact {
   file_name: string;
   file_size?: number;
   is_available: boolean;
-}
-
-export interface RunnerHistoryItem {
-  time: number;
-  job_id: string;
-  user_id: string;
-  novel_id: string;
-  status: JobStatus;
-  run_state: RunState;
-}
-
-export interface RunnerStatus {
-  running: boolean;
-  history: RunnerHistoryItem[];
-}
-
-export interface JobDetails {
-  job: Job;
-  novel: Novel;
-  user: User;
-  artifacts: Artifact[];
 }
 
 export interface SupportedSource {

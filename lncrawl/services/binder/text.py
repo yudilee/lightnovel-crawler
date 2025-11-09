@@ -45,7 +45,7 @@ def make_text(working_dir: Path, artifact: Artifact, signal=Event()):
 
         if signal.is_set():
             raise ServerErrors.canceled_by_signal
-        for image in ctx.chapter_images.list(novel_id=artifact.novel_id):
+        for image in ctx.images.list(novel_id=artifact.novel_id):
             if image.is_available:
                 content = ctx.files.load(image.image_file)
                 zipf.writestr(f'images/{image.id}.jpg', content)

@@ -64,7 +64,8 @@ def self_name_update(
     body: NameUpdateRequest = Body(description='The update request'),
 ) -> bool:
     request = UpdateRequest(name=body.name)
-    return ctx.users.update(user.id, request)
+    ctx.users.update(user.id, request)
+    return True
 
 
 @router.put('/me/password', summary='Update current user password')
@@ -72,14 +73,16 @@ def self_password_update(
     user: User = Security(ensure_user),
     body: PasswordUpdateRequest = Body(description='The update request'),
 ) -> bool:
-    return ctx.users.change_password(user, body)
+    ctx.users.change_password(user, body)
+    return True
 
 
 @router.post('/send-password-reset-link', summary='Send reset password link to email')
 def send_password_reset_link(
     body: ForgotPasswordRequest = Body(description='The request body'),
 ) -> bool:
-    return ctx.users.send_password_reset_link(body.email)
+    ctx.users.send_password_reset_link(body.email)
+    return True
 
 
 @router.post('/reset-password-with-token', summary='Verify token and change password')
@@ -88,9 +91,9 @@ def reset_password_with_token(
     body: ResetPasswordRequest = Body(description='The request body'),
 ) -> bool:
     request = UpdateRequest(password=body.password)
-    updated = ctx.users.update(user.id, request)
-    is_verified = ctx.users.set_verified(user.email)
-    return updated and is_verified
+    ctx.users.update(user.id, request)
+    ctx.users.set_verified(user.email)
+    return True
 
 
 @router.post('/me/send-otp', summary='Send OTP to current user email for verification')
@@ -106,4 +109,5 @@ def verify_otp(
     otp: str = Form(),
     token: str = Form(),
 ) -> bool:
-    return ctx.users.verify_otp(token, otp)
+    ctx.users.verify_otp(token, otp)
+    return True

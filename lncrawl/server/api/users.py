@@ -48,7 +48,8 @@ def update_user(
     if user_id == user.id:
         body.role = None
         body.is_active = None
-    return ctx.users.update(user_id, body)
+    ctx.users.update(user_id, body)
+    return True
 
 
 @router.delete('/{user_id}', summary='Delete the user')
@@ -58,4 +59,5 @@ def delete_user(
 ) -> bool:
     if user.id == user_id:
         raise ServerErrors.can_not_delete_self
-    return ctx.users.remove(user_id)
+    ctx.users.remove(user_id)
+    return True

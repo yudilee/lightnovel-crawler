@@ -7,7 +7,7 @@ from datetime import datetime
 from decimal import Decimal
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Type, TypeVar, Union, cast
+from typing import Any, Callable, Optional, Type, TypeVar, Union, cast
 
 import dotenv
 import typer
@@ -75,19 +75,20 @@ def _deserialize(val: Any, typ: Type[T]) -> T:
     return cast(T, val)
 
 
-def _snapshot(obj: object) -> Dict[str, Any]:
-    out = {}
+def _traverse(obj: object) -> None:
     for name in dir(obj):
         if name.startswith("_"):
             continue
+
         attr = getattr(type(obj), name, None)
-        if isinstance(attr, property):
-            out[name] = _serialize(getattr(obj, name))
+        if isinstance(attr, property) and attr.fset:
+            value = getattr(obj, name)
+            setattr(obj, name, value)
+
         elif isinstance(attr, cached_property):
             value = getattr(obj, name)
             if isinstance(value, _Section):
-                out[value.section] = _snapshot(value)
-    return out
+                _traverse(value)
 
 
 # ------------------------------------------------------------------ #
@@ -147,7 +148,7 @@ class Config(object):
             )
         else:
             self._data = {}
-        self._data = _snapshot(self)
+        _traverse(self)
         self.save()
 
     def save(self) -> None:

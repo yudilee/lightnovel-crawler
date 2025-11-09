@@ -1,24 +1,24 @@
+import { Auth } from '@/store/_auth';
 import { stringifyError } from '@/utils/errors';
 import { PlayCircleFilled, XFilled } from '@ant-design/icons';
-import { Button, Flex, message, Select, Typography } from 'antd';
+import { Button, Divider, Flex, Grid, message, Select, Typography } from 'antd';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { JobStatusFilterParams } from './constants';
-import type { JobListHook } from './hooks';
 import { useSelector } from 'react-redux';
-import { Auth } from '@/store/_auth';
+import { JobStatusFilterParams, JobTypeFilterParams } from './constants';
+import type { JobListHook } from './hooks';
 
 export const JobFilterBox: React.FC<
-  Pick<JobListHook, 'status' | 'updateParams'>
-> = ({ status, updateParams }) => {
+  Pick<JobListHook, 'type' | 'status' | 'updateParams'>
+> = ({ status, type, updateParams }) => {
+  const { lg } = Grid.useBreakpoint();
   const isAdmin = useSelector(Auth.select.isAdmin);
   const [isRunning, setIsRunning] = useState<boolean>();
   const [messageApi, contextHolder] = message.useMessage();
 
   const fetchStatus = async () => {
     try {
-      const resp = await axios.get<boolean>(`/api/runner/status`);
-      console.log('resp', resp.data);
+      const resp = await axios.get<boolean>(`/api/admin/runner/status`);
       return Boolean(resp.data);
     } catch {
       return undefined;
@@ -27,7 +27,7 @@ export const JobFilterBox: React.FC<
 
   const startRunner = async () => {
     try {
-      await axios.post(`/api/runner/start`);
+      await axios.post(`/api/admin/runner/start`);
       setIsRunning(true);
     } catch (err) {
       messageApi.open({
@@ -39,7 +39,7 @@ export const JobFilterBox: React.FC<
 
   const stopRunner = async () => {
     try {
-      await axios.post(`/api/runner/stop`);
+      await axios.post(`/api/admin/runner/stop`);
       setIsRunning(false);
     } catch (err) {
       messageApi.open({
@@ -59,32 +59,66 @@ export const JobFilterBox: React.FC<
   }, [isAdmin]);
 
   return (
-    <Flex align="center" gap={5}>
+    <Flex justify="space-between" align="center" wrap gap={5}>
       {contextHolder}
 
-      <Typography.Text>Status:</Typography.Text>
-      <Select
-        allowClear
-        defaultValue={status || JobStatusFilterParams[0].value}
-        onChange={(status) => updateParams({ status, page: 1 })}
-        placeholder="Filter by Status"
-        style={{ minWidth: 150 }}
-        options={JobStatusFilterParams}
-      />
+      <Flex align="center" gap={5} style={lg ? { flex: 1 } : { width: '100%' }}>
+        <Typography.Text
+          style={{
+            textAlign: 'right',
+            width: lg ? undefined : 50,
+          }}
+        >
+          Status:
+        </Typography.Text>
+        <Select
+          options={JobStatusFilterParams}
+          defaultValue={status ?? JobStatusFilterParams[0].value}
+          onChange={(status) => updateParams({ status, page: 1 })}
+          style={{ flex: 1 }}
+          allowClear
+        />
+      </Flex>
 
-      <div style={{ flex: 1 }} />
+      {lg && <Divider type="vertical" />}
+
+      <Flex align="center" gap={5} style={lg ? { flex: 1 } : { width: '100%' }}>
+        <Typography.Text
+          style={{
+            textAlign: 'right',
+            width: lg ? undefined : 50,
+          }}
+        >
+          Type:
+        </Typography.Text>
+        <Select
+          defaultValue={type ?? JobTypeFilterParams[0].value}
+          onChange={(type) => updateParams({ type, page: 1 })}
+          options={JobTypeFilterParams}
+          style={{ flex: 1 }}
+          allowClear
+        />
+      </Flex>
+
+      {lg && <div style={{ flex: 1 }} />}
 
       {isAdmin && (
         <>
           {typeof isRunning === 'undefined' ? null : isRunning ? (
-            <Button onClick={stopRunner} icon={<XFilled />} danger>
+            <Button
+              danger
+              onClick={stopRunner}
+              icon={<XFilled />}
+              style={{ width: lg ? undefined : '100%' }}
+            >
               Stop Jobs
             </Button>
           ) : (
             <Button
+              type="primary"
               onClick={startRunner}
               icon={<PlayCircleFilled />}
-              type="primary"
+              style={{ width: lg ? undefined : '100%' }}
             >
               Start Jobs
             </Button>

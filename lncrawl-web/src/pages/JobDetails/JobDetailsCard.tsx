@@ -1,18 +1,19 @@
 import {
   JobPriorityTag,
   JobStatusTag,
-  RunStateTag,
+  JobTypeTag,
 } from '@/components/Tags/jobs';
-import { JobStatus, RunState, type Job } from '@/types';
+import { JobStatus, type Job } from '@/types';
 import { formatDate, formatDuration } from '@/utils/time';
 import {
   ClockCircleFilled,
   ClockCircleOutlined,
   HourglassFilled,
 } from '@ant-design/icons';
-import { Alert, Card, Flex, Grid, Space, Tag, Typography } from 'antd';
+import { Alert, Card, Flex, Grid, Tag, Typography } from 'antd';
 import { JobActionButtons } from '../JobList/JobActionButtons';
 import { JobProgressLine } from '../JobList/JobProgessBar';
+import { JobTitleText } from './JobTitleText';
 
 export const JobDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
   const { lg } = Grid.useBreakpoint();
@@ -27,41 +28,37 @@ export const JobDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
           fontFamily: "'Roboto Slab', serif",
         }}
       >
-        {job.url}
+        <JobTitleText job={job} />
       </Typography.Title>
 
       <Flex wrap align="center" gap={5}>
-        <JobStatusTag value={job.status} state={job.run_state} />
+        <JobTypeTag value={job.type} />
         <JobPriorityTag value={job.priority} />
-      </Flex>
-
-      <Space wrap style={{ marginTop: 20 }}>
-        <Typography.Text strong>Status:</Typography.Text>
-        <RunStateTag value={job.run_state} />
-      </Space>
-
-      <JobProgressLine job={job} size={['100%', 16]} style={{ marginTop: 8 }} />
-
-      <Flex wrap style={{ marginTop: 5 }}>
         <Tag icon={<ClockCircleOutlined />} color="default">
           <b>Requested:</b> {formatDate(job.created_at)}
         </Tag>
-        {[JobStatus.RUNNING, JobStatus.COMPLETED].includes(job.status) && (
+      </Flex>
+
+      <JobProgressLine job={job} size={['100%', 18]} style={{ marginTop: 8 }} />
+
+      <Flex wrap gap={4} style={{ marginTop: 5 }}>
+        <JobStatusTag value={job.status} />
+        {!job.is_pending && (
           <Tag icon={<ClockCircleOutlined />} color="default">
             <b>Started:</b> {formatDate(job.started_at)}
           </Tag>
         )}
-        {job.status === JobStatus.RUNNING && (
+        {!job.is_done && (
           <Tag icon={<ClockCircleOutlined spin />} color="default">
             <b>Elapsed:</b> {formatDuration(Date.now() - job.started_at)}
           </Tag>
         )}
-        {job.status === JobStatus.COMPLETED && (
+        {job.is_done && (
           <Tag icon={<ClockCircleFilled />} color="default">
             <b>Completed:</b> {formatDate(job.finished_at)}
           </Tag>
         )}
-        {job.status === JobStatus.COMPLETED && (
+        {job.is_done && (
           <Tag icon={<HourglassFilled />} color="default">
             <b>Runtime:</b> {formatDuration(job.finished_at - job.started_at)}
           </Tag>
@@ -72,7 +69,7 @@ export const JobDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
         <Alert
           showIcon
           description={job.error}
-          type={job.run_state === RunState.FAILED ? 'error' : 'warning'}
+          type={job.status === JobStatus.FAILED ? 'error' : 'warning'}
           style={{ marginTop: 15, padding: '10px 20px' }}
         />
       )}

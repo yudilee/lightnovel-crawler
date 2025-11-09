@@ -63,6 +63,19 @@ def cancel_job(
     return True
 
 
+@router.post("/{job_id}/replay", summary='Replay a job')
+def replay_job(
+    user: User = Security(ensure_user),
+    job_id: str = Path(),
+) -> Job:
+    job = ctx.jobs.get(job_id)
+    return ctx.jobs._create(
+        user=user,
+        type=job.type,
+        data=job.extra,
+    )
+
+
 @router.post("/create/fetch-novel", summary='Create a job to fetch novel details')
 def fetch_novel(
     user: User = Security(ensure_user),

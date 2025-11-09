@@ -1,4 +1,4 @@
-import { JobStatus, RunState } from '@/types';
+import { JobStatus, JobType } from '@/types';
 
 export const JobStatusFilterParams = [
   {
@@ -6,24 +6,19 @@ export const JobStatusFilterParams = [
     label: 'Any',
   },
   {
-    value: 'completed',
-    label: 'Completed',
-    params: { status: JobStatus.COMPLETED },
-  },
-  {
     value: 'successful',
     label: 'Successful',
-    params: { run_state: RunState.SUCCESS },
+    params: { status: JobStatus.SUCCESS },
   },
   {
     value: 'failed',
     label: 'Failed',
-    params: { run_state: RunState.FAILED },
+    params: { status: JobStatus.FAILED },
   },
   {
     value: 'canceled',
     label: 'Canceled',
-    params: { run_state: RunState.CANCELED },
+    params: { status: JobStatus.CANCELED },
   },
   {
     value: 'pending',
@@ -34,5 +29,60 @@ export const JobStatusFilterParams = [
     value: 'running',
     label: 'Running',
     params: { status: JobStatus.RUNNING },
+  },
+];
+
+export const JobTypeFilterParams = [
+  {
+    value: -1,
+    label: 'Any',
+  },
+  {
+    value: JobType.NOVEL,
+    label: 'Novel',
+  },
+  {
+    value: JobType.NOVEL_BATCH,
+    label: 'Novel Batch',
+  },
+  {
+    value: JobType.FULL_NOVEL,
+    label: 'Full Novel',
+  },
+  {
+    value: JobType.FULL_NOVEL_BATCH,
+    label: 'Full Novel Batch',
+  },
+  {
+    value: JobType.CHAPTER,
+    label: 'Chapter',
+  },
+  {
+    value: JobType.CHAPTER_BATCH,
+    label: 'Chapter Batch',
+  },
+  {
+    value: JobType.VOLUME,
+    label: 'Volume',
+  },
+  {
+    value: JobType.VOLUME_BATCH,
+    label: 'Volume Batch',
+  },
+  {
+    value: JobType.IMAGE,
+    label: 'Image',
+  },
+  {
+    value: JobType.IMAGE_BATCH,
+    label: 'Image Batch',
+  },
+  {
+    value: JobType.ARTIFACT,
+    label: 'Artifact',
+  },
+  {
+    value: JobType.ARTIFACT_BATCH,
+    label: 'Artifact Batch',
   },
 ];

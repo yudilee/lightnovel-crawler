@@ -44,9 +44,7 @@ export const SupportedSourceItem: React.FC<{
         {source.language && (
           <Flex wrap align="center" gap="7px">
             <SourceFeatureIcons source={source} />
-            <Tag icon={<FlagFilled />} style={{ margin: 0 }}>
-              {source.language.toUpperCase()}
-            </Tag>
+            <Tag icon={<FlagFilled />}>{source.language.toUpperCase()}</Tag>
           </Flex>
         )}
       </Flex>

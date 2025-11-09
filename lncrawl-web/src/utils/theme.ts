@@ -8,6 +8,9 @@ export const appTheme: ThemeConfig = {
     colorBgLayout: '#1c1c1c',
   },
   components: {
+    Tag: {
+      marginXS: 0,
+    },
     Menu: {
       iconSize: 16,
       collapsedIconSize: 14,

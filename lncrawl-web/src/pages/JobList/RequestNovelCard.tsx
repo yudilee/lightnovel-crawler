@@ -20,8 +20,9 @@ export const RequestNovelCard: React.FC<any> = () => {
     setLoading(true);
     setError(undefined);
     try {
+      values.full = true;
       const result = await axios.post<Job>(
-        `/api/job`,
+        `/api/job/fetch-novel`,
         new URLSearchParams(values).toString(),
         {
           headers: {

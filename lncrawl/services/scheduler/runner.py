@@ -109,9 +109,11 @@ class JobRunner:
             self.__set_running()
 
             novel = ctx.crawler.fetch_novel(url, self.signal)
+            extra = dict(**self.job.extra)
+            extra['novel_id'] = novel.id
             ctx.jobs._update(
                 self.job.id,
-                extra=dict(**self.job.extra, novel_id=novel.id),
+                extra=extra,
             )
 
             if self.job.type != JobType.FULL_NOVEL:
@@ -189,7 +191,7 @@ class JobRunner:
             if not chapter.is_available:
                 return self.__set_failed('Failed to fetch contents')
 
-            images = ctx.chapter_images.list(chapter_id=chapter.id, is_crawled=False)
+            images = ctx.images.list(chapter_id=chapter.id, is_crawled=False)
             if not images:
                 return self.__set_success()
 

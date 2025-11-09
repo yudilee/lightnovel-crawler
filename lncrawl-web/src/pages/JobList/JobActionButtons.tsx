@@ -1,8 +1,8 @@
 import { Auth } from '@/store/_auth';
-import { JobStatus, type Job } from '@/types';
+import { type Job } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { CloseOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Button, message } from 'antd';
+import { Button, message, type ButtonProps } from 'antd';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +10,8 @@ import { useNavigate } from 'react-router-dom';
 export const JobActionButtons: React.FC<{
   job: Job;
   onChange?: () => any;
-}> = ({ job, onChange }) => {
+  size?: ButtonProps['size'];
+}> = ({ job, size, onChange }) => {
   const navigate = useNavigate();
   const isAdmin = useSelector(Auth.select.isAdmin);
   const currentUser = useSelector(Auth.select.user);
@@ -30,15 +31,11 @@ export const JobActionButtons: React.FC<{
 
   const replayJob = async () => {
     try {
-      const result = await axios.post<Job>(
-        `/api/job`,
-        new URLSearchParams({ url: job.url }).toString(),
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        }
-      );
+      const result = await axios.post<Job>(`/api/job/${job.id}/replay`, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
       navigate({ pathname: `/job/${result.data.id}` });
     } catch (err) {
       messageApi.open({
@@ -51,17 +48,16 @@ export const JobActionButtons: React.FC<{
   return (
     <>
       {contextHolder}
-      {job.status === JobStatus.COMPLETED && (
-        <Button onClick={replayJob}>
+      {job.is_done && (
+        <Button size={size} onClick={replayJob}>
           <ReloadOutlined /> Replay
         </Button>
       )}
-      {(isAdmin || job.user_id === currentUser?.id) &&
-        job.status !== JobStatus.COMPLETED && (
-          <Button danger onClick={cancelJob}>
-            <CloseOutlined /> Cancel
-          </Button>
-        )}
+      {(isAdmin || job.user_id === currentUser?.id) && job.is_done && (
+        <Button size={size} danger onClick={cancelJob}>
+          <CloseOutlined /> Cancel
+        </Button>
+      )}
     </>
   );
 };

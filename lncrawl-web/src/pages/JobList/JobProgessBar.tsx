@@ -1,21 +1,18 @@
-import { JobStatus, RunState, type Job } from '@/types';
+import { JobStatus, type Job } from '@/types';
 import { Progress, type ProgressProps } from 'antd';
 
 function getProgressStatus(job: Job): ProgressProps['status'] {
   switch (job.status) {
     case JobStatus.PENDING:
+      return 'normal';
     case JobStatus.RUNNING:
       return 'active';
-    case JobStatus.COMPLETED:
-      switch (job.run_state) {
-        case RunState.SUCCESS:
-          return 'success';
-        case RunState.FAILED:
-        case RunState.CANCELED:
-          return 'exception';
-      }
+    case JobStatus.SUCCESS:
+      return 'success';
+    case JobStatus.FAILED:
+    case JobStatus.CANCELED:
+      return 'exception';
   }
-  return 'normal';
 }
 
 export const JobProgressCircle: React.FC<

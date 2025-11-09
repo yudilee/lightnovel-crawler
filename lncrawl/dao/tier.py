@@ -27,22 +27,5 @@ ENABLED_FORMATS = {
         OutputFormat.epub,
         OutputFormat.mobi,
     ],
-    UserTier.VIP: [
-        OutputFormat.json,
-        OutputFormat.epub,
-        OutputFormat.mobi,
-        OutputFormat.text,
-        OutputFormat.pdf,
-        OutputFormat.docx,
-        OutputFormat.rtf,
-        OutputFormat.fb2,
-        OutputFormat.azw3,
-        OutputFormat.lit,
-        OutputFormat.lrf,
-        OutputFormat.oeb,
-        OutputFormat.pdb,
-        OutputFormat.rb,
-        OutputFormat.snb,
-        OutputFormat.tcr,
-    ],
+    UserTier.VIP: list(OutputFormat)
 }
