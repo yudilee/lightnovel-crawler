@@ -1,4 +1,4 @@
-import type { PaginatiedResponse, User } from '@/types';
+import type { Paginatied, User } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import axios from 'axios';
 import { debounce } from 'lodash';
@@ -35,7 +35,7 @@ export function useUserList() {
     setError(undefined);
     try {
       const offset = (page - 1) * limit;
-      const { data } = await axios.get<PaginatiedResponse<User>>('/api/users', {
+      const { data } = await axios.get<Paginatied<User>>('/api/users', {
         params: { search, offset, limit },
       });
       setTotal(data.total);

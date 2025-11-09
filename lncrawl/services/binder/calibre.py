@@ -58,13 +58,14 @@ def convert_epub(working_dir: Path, artifact: Artifact, signal=Event()) -> None:
                 format=OutputFormat.epub,
                 job_id=artifact.job_id,
                 user_id=artifact.user_id,
+                file_name=out_file.with_suffix('.epub').name,
             )
             make_epub(working_dir, epub)
             sess.add(epub)
             sess.commit()
 
     if not epub.is_available:
-        raise ServerErrors.failed_creating_artifact(OutputFormat.epub)
+        raise ServerErrors.failed_creating_artifact
 
     tmp_file = working_dir / out_file.name
     novel = ctx.novels.get(artifact.novel_id)

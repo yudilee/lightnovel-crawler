@@ -68,55 +68,44 @@ export const JobStatusTag: React.FC<{ value: JobStatus }> = ({ value }) => {
 };
 
 export const JobTypeTag: React.FC<{ value: JobType }> = ({ value }) => {
+  function single(icon: any, name: string) {
+    return <Tag icon={icon}>{name}</Tag>;
+  }
+  function batch(icon: any, name: string) {
+    return (
+      <Tag color="cyan" style={{ position: 'relative', paddingLeft: 24 }}>
+        <span style={{ position: 'absolute', left: 4, top: 0 }}>{icon}</span>
+        <span style={{ position: 'absolute', left: 6, top: 2 }}>{icon}</span>
+        {name}
+      </Tag>
+    );
+  }
+
   switch (value) {
     case JobType.NOVEL:
-      return <Tag icon={<BookOutlined />}>Novel</Tag>;
+      return single(<BookOutlined />, 'Novel');
     case JobType.NOVEL_BATCH:
-      return (
-        <Tag icon={<BookOutlined />} color="cyan">
-          Novels
-        </Tag>
-      );
+      return batch(<BookOutlined />, 'Novels');
     case JobType.FULL_NOVEL:
-      return <Tag icon={<ReadOutlined />}>Full Novel</Tag>;
+      return single(<ReadOutlined />, 'Full Novel');
     case JobType.FULL_NOVEL_BATCH:
-      return (
-        <Tag icon={<ReadOutlined />} color="cyan">
-          Full Novels
-        </Tag>
-      );
+      return batch(<ReadOutlined />, 'Full Novels');
     case JobType.CHAPTER:
-      return <Tag icon={<FileTextOutlined />}>Chapter</Tag>;
+      return single(<FileTextOutlined />, 'Chapter');
     case JobType.CHAPTER_BATCH:
-      return (
-        <Tag icon={<FileTextOutlined />} color="cyan">
-          Chapters
-        </Tag>
-      );
+      return batch(<FileTextOutlined />, 'Chapters');
     case JobType.VOLUME:
-      return <Tag icon={<FolderOutlined />}>Volume</Tag>;
+      return single(<FolderOutlined />, 'Volume');
     case JobType.VOLUME_BATCH:
-      return (
-        <Tag icon={<FolderOutlined />} color="cyan">
-          Volumes
-        </Tag>
-      );
+      return batch(<FolderOutlined />, 'Volumes');
     case JobType.IMAGE:
-      return <Tag icon={<PictureOutlined />}>Image</Tag>;
+      return single(<PictureOutlined />, 'Image');
     case JobType.IMAGE_BATCH:
-      return (
-        <Tag icon={<PictureOutlined />} color="cyan">
-          Images
-        </Tag>
-      );
+      return batch(<PictureOutlined />, 'Images');
     case JobType.ARTIFACT:
-      return <Tag icon={<AppstoreOutlined />}>Artifact</Tag>;
+      return single(<AppstoreOutlined />, 'Artifact');
     case JobType.ARTIFACT_BATCH:
-      return (
-        <Tag icon={<AppstoreOutlined />} color="cyan">
-          Artifacts
-        </Tag>
-      );
+      return batch(<AppstoreOutlined />, 'Artifacts');
     default:
       return null;
   }

@@ -1,5 +1,5 @@
 import { Auth } from '@/store/_auth';
-import { JobType, type Job, type PaginatiedResponse } from '@/types';
+import { JobType, type Job, type Paginatied } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import axios from 'axios';
 import { debounce } from 'lodash';
@@ -66,7 +66,7 @@ export function useJobList(
       const statusParams = JobStatusFilterParams.find(
         (v) => v.value === status
       )?.params;
-      const { data } = await axios.get<PaginatiedResponse<Job>>('/api/jobs', {
+      const { data } = await axios.get<Paginatied<Job>>('/api/jobs', {
         params: {
           offset,
           limit,

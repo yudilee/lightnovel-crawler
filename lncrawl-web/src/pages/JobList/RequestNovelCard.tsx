@@ -21,8 +21,8 @@ export const RequestNovelCard: React.FC<any> = () => {
     setError(undefined);
     try {
       values.full = true;
-      const result = await axios.post<Job>(
-        `/api/job/fetch-novel`,
+      const { data: job } = await axios.post<Job>(
+        `/api/job/create/fetch-novel`,
         new URLSearchParams(values).toString(),
         {
           headers: {
@@ -30,7 +30,7 @@ export const RequestNovelCard: React.FC<any> = () => {
           },
         }
       );
-      navigate({ pathname: `/job/${result.data.id}` });
+      navigate({ pathname: `/job/${job.id}` });
     } catch (err) {
       setError(stringifyError(err, 'Oops! Something went wrong.'));
     } finally {

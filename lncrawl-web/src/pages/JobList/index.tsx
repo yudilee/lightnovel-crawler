@@ -16,7 +16,9 @@ export const JobListPage: React.FC<{
   userId?: string;
   parentJobId?: string;
   disableFilters?: boolean;
-}> = ({ userId, parentJobId, disableFilters }) => {
+  autoRefresh?: boolean;
+  hideIfEmpty?: boolean;
+}> = ({ userId, hideIfEmpty, autoRefresh, parentJobId, disableFilters }) => {
   const {
     currentPage,
     error,
@@ -28,7 +30,7 @@ export const JobListPage: React.FC<{
     type,
     refresh,
     updateParams,
-  } = useJobList(true, userId, parentJobId);
+  } = useJobList(autoRefresh, userId, parentJobId);
 
   if (loading) {
     return (
@@ -36,6 +38,10 @@ export const JobListPage: React.FC<{
         <Spin size="large" style={{ marginTop: 100 }} />
       </Flex>
     );
+  }
+
+  if (hideIfEmpty && !jobs?.length) {
+    return null;
   }
 
   if (error) {

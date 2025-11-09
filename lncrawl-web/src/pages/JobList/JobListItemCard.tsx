@@ -27,9 +27,9 @@ export const JobListItemCard: React.FC<{
 
           <div style={{ flex: 1, minWidth: lg ? 0 : '100%' }}>
             <Typography.Text
-              ellipsis
               style={{
                 display: 'block',
+                whiteSpace: 'wrap',
                 fontSize: '1.15rem',
                 fontFamily: "'Roboto Slab', serif",
               }}
@@ -37,7 +37,7 @@ export const JobListItemCard: React.FC<{
               <JobTitleText job={job} />
             </Typography.Text>
 
-            <Space style={{ marginTop: 5 }}>
+            <Space wrap style={{ marginTop: 5 }}>
               <JobTypeTag value={job.type} />
               <Tag icon={<ClockCircleOutlined />} color="default">
                 {formatDate(job.created_at)}
@@ -49,7 +49,6 @@ export const JobListItemCard: React.FC<{
           </div>
 
           <Flex
-            wrap
             justify="end"
             align="center"
             gap={5}

@@ -1,19 +1,12 @@
-import { type Job, type User } from '@/types';
+import { ArtifactListCard } from '@/components/ArtifactList/ArtifactListCard';
+import { type Artifact, type Job, type Novel, type User } from '@/types';
 import { stringifyError } from '@/utils/errors';
-import {
-  Button,
-  Card,
-  Flex,
-  Grid,
-  Result,
-  Space,
-  Spin,
-  Typography,
-} from 'antd';
+import { Button, Flex, Grid, Result, Space, Spin } from 'antd';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { JobListPage } from '../JobList';
+import { NovelDetailsCard } from '../NovelDetails/NovelDetailsCard';
 import { JobDetailsCard } from './JobDetailsCard';
 import { UserDetailsCard } from './UserDetailsCard';
 
@@ -26,28 +19,62 @@ export const JobDetailsPage: React.FC<any> = () => {
   const [error, setError] = useState<string>();
 
   const [job, setJob] = useState<Job>();
-  const [user, setUser] = useState<User>();
-
-  const fetchJob = async (id: string) => {
-    setError(undefined);
-    try {
-      const { data: job } = await axios.get<Job>(`/api/job/${id}`);
-      setJob(job);
-
-      const { data: user } = await axios.get<User>(`/api/user/${job.user_id}`);
-      setUser(user);
-    } catch (err: any) {
-      setError(stringifyError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [user, setUser] = useState<User | undefined>();
+  const [novel, setNovel] = useState<Novel | undefined>();
+  const [artifact, setArtifact] = useState<Artifact | undefined>();
 
   useEffect(() => {
+    const fetchJob = async (id: string) => {
+      setError(undefined);
+      try {
+        const { data: job } = await axios.get<Job>(`/api/job/${id}`);
+        setJob(job);
+      } catch (err: any) {
+        setError(stringifyError(err));
+      } finally {
+        setLoading(false);
+      }
+    };
     if (id) {
       fetchJob(id);
     }
   }, [id, refreshId]);
+
+  useEffect(() => {
+    const fetchUser = async (id: string) => {
+      try {
+        const res = await axios.get<User>(`/api/user/${id}`);
+        setUser(res.data);
+      } catch {}
+    };
+    if (job?.user_id) {
+      fetchUser(job.user_id);
+    }
+  }, [job?.user_id]);
+
+  useEffect(() => {
+    const fetchNovel = async (id: string) => {
+      try {
+        const res = await axios.get<Novel>(`/api/novel/${id}`);
+        setNovel(res.data);
+      } catch {}
+    };
+    if (job?.extra.novel_id) {
+      fetchNovel(job.extra.novel_id);
+    }
+  }, [job?.extra.novel_id]);
+
+  useEffect(() => {
+    const fetchArtifact = async (id: string) => {
+      try {
+        const res = await axios.get<Artifact>(`/api/artifact/${id}`);
+        setArtifact(res.data);
+      } catch {}
+    };
+    if (job?.extra.artifact_id) {
+      fetchArtifact(job?.extra.artifact_id);
+    }
+  }, [job?.extra.artifact_id]);
 
   useEffect(() => {
     if (job && !job.is_done) {
@@ -68,7 +95,7 @@ export const JobDetailsPage: React.FC<any> = () => {
     );
   }
 
-  if (!job || !user) {
+  if (!job) {
     return (
       <Flex align="center" justify="center" style={{ height: '100%' }}>
         <Result
@@ -93,13 +120,17 @@ export const JobDetailsPage: React.FC<any> = () => {
   return (
     <Space direction="vertical" size={lg ? 'middle' : 'small'}>
       <JobDetailsCard job={job} />
-      <UserDetailsCard user={user} />
-      <Card>
-        <Typography.Title level={4} style={{ margin: 0, marginBottom: 16 }}>
-          Child Jobs
-        </Typography.Title>
-        <JobListPage key={job.id} parentJobId={job.id} disableFilters />
-      </Card>
+      {user && <UserDetailsCard user={user} />}
+      {novel && <NovelDetailsCard novel={novel} />}
+      {artifact && <ArtifactListCard artifacts={[artifact]} />}
+
+      <JobListPage
+        key={job.id}
+        parentJobId={job.id}
+        disableFilters
+        autoRefresh={!job.is_done}
+        hideIfEmpty
+      />
     </Space>
   );
 };

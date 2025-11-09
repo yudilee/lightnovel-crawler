@@ -14,10 +14,12 @@ class BaseTable(SQLModel):
         description="ID"
     )
     created_at: int = Field(
+        index=True,
         default_factory=current_timestamp,
         sa_type=BigInteger
     )
     updated_at: int = Field(
+        index=True,
         default_factory=current_timestamp,
         sa_type=BigInteger
     )

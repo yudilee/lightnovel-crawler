@@ -26,7 +26,7 @@ export interface AuthLoginResponse {
   is_verified: boolean;
 }
 
-export interface PaginatiedResponse<T> {
+export interface Paginatied<T> {
   total: number;
   offset: number;
   limit: number;
@@ -35,16 +35,31 @@ export interface PaginatiedResponse<T> {
 
 export interface Novel {
   id: string;
-  created_at: number;
-  updated_at: number;
+
   url: string;
+  domain: string;
+
   title: string;
   crawled: boolean;
   authors: string;
   synopsis: string;
   tags: string[];
+  manga: boolean;
+  mtl: boolean;
+  language: string;
+  rtl: boolean;
   volume_count: number;
   chapter_count: number;
+
+  cover_url: string;
+  cover_file: string;
+  cover_available: boolean;
+
+  created_at: number;
+  updated_at: number;
+  extra: {
+    crawler_version?: number;
+  };
 }
 
 export interface Job {
@@ -84,6 +99,7 @@ export interface Job {
     novel_title?: string;
     volume_serial?: string;
     chapter_serial?: string;
+    artifact_id?: string;
   };
 }
 
@@ -93,6 +109,10 @@ export interface Artifact {
   created_at: number;
   updated_at: number;
   novel_id: string;
+  job_id?: string;
+  user_id?: string;
+  is_zip: boolean;
+  output_file: string;
   file_name: string;
   file_size?: number;
   is_available: boolean;

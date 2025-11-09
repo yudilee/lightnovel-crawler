@@ -37,7 +37,7 @@ def get_novel(
 async def get_novel_volumes(
     novel_id: str = Path(),
 ) -> List[Volume]:
-    return ctx.volumes.list(novel_id)
+    return ctx.volumes.list(novel_id=novel_id)
 
 
 @router.get("/{novel_id}/chapters", summary='Gets all chapters')
@@ -47,11 +47,8 @@ async def get_novel_chapters(
     return ctx.chapters.list(novel_id=novel_id)
 
 
-@router.get(
-    "/{novel_id}/artifacts",
-    summary='Returns cached artifacts',
-)
-def get_novel_artifacts(
+@router.get("/{novel_id}/artifacts", summary='Gets latest artifacts')
+async def get_novel_artifacts(
     novel_id: str = Path(),
 ) -> List[Artifact]:
-    return ctx.novels.get_artifacts(novel_id)
+    return ctx.artifacts.list_latest(novel_id=novel_id)

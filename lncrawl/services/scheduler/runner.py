@@ -126,8 +126,12 @@ class JobRunner:
             for volume in volumes:
                 ctx.jobs.fetch_volume(self.user, volume.id, parent_id=self.job.id)
 
-            for format in ENABLED_FORMATS[self.user.tier]:
-                ctx.jobs.make_artifact(self.user, novel.id, format, parent_id=self.job.id)
+            ctx.jobs.make_many_artifacts(
+                self.user,
+                novel.id,
+                *ENABLED_FORMATS[self.user.tier],
+                parent_id=self.job.id,
+            )
 
             return self.__increment()
         except Exception as e:
@@ -267,15 +271,28 @@ class JobRunner:
 
             self.__set_running()
 
+            novel_title = self.job.extra.get('novel_title')
+            if not novel_title:
+                novel_title = ctx.novels.get(novel_id).title
+
             artifact = ctx.binder.make_artifact(
-                novel_id=novel_id,
                 format=format,
-                signal=self.signal,
-                user_id=self.user.id,
+                novel_id=novel_id,
+                novel_title=novel_title,
                 job_id=self.job.parent_job_id or self.job.id,
+                user_id=self.user.id,
+                signal=self.signal,
             )
             if not artifact.is_available:
                 return self.__set_failed('Failed to make artifact')
+
+            extra = dict(**self.job.extra)
+            extra['artifact_id'] = artifact.id
+            extra['novel_title'] = novel_title
+            ctx.jobs._update(
+                self.job.id,
+                extra=extra,
+            )
 
             return self.__set_success()
         except Exception as e:

@@ -1,11 +1,14 @@
 import { API_BASE_URL } from '@/config';
+import { Auth } from '@/store/_auth';
 import type { Novel } from '@/types';
 import { Avatar, Card, Flex, Image, Tooltip, Typography } from 'antd';
 import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 export const NovelListItemCard: React.FC<{ novel: Novel }> = ({ novel }) => {
   const navigate = useNavigate();
+  const token = useSelector(Auth.select.authToken);
 
   const novelUrl = useMemo(() => new URL(novel.url), [novel.url]);
 
@@ -45,7 +48,7 @@ export const NovelListItemCard: React.FC<{ novel: Novel }> = ({ novel }) => {
         <Image
           alt="cover"
           preview={false}
-          src={`${API_BASE_URL}/api/novel/${novel.id}/cover`}
+          src={`${API_BASE_URL}/static/${novel.cover_file}?token=${token}`}
           fallback="/no-image.svg"
           loading="lazy"
           fetchPriority="low"

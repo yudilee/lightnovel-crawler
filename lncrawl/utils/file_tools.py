@@ -1,4 +1,5 @@
 import logging
+import re
 import shlex
 import subprocess
 from pathlib import Path
@@ -6,6 +7,9 @@ from pathlib import Path
 from lncrawl.utils.platforms import Platform
 
 logger = logging.getLogger(__name__)
+
+
+__re_invalid_name = re.compile(r'[\s<>:"/\\|?*\x00-\x1F]+', re.M)
 
 
 def format_size(num_bytes: int, decimals: int = 1, suffix: str = "B") -> str:
@@ -59,3 +63,9 @@ def folder_size(folder: str) -> int:
     except Exception:
         logger.error("Failed to calculate folder size in Python fallback", exc_info=True)
         return 0
+
+
+def safe_filename(name: str) -> str:
+    name = __re_invalid_name.sub(' ', name)
+    name = name.strip(" .")[:255]
+    return name or "untitled"

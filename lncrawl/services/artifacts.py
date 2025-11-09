@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import List, Optional
 
-from sqlmodel import desc, func, select
+from sqlmodel import and_, asc, desc, func, select
 
 from ..context import ctx
 from ..dao import Artifact, User
@@ -67,7 +67,33 @@ class ArtifactService:
             sess.commit()
             return True
 
-    def get_latest(self, novel_id: str, format: str) -> Optional[Artifact]:
+    def list_latest(self, novel_id: str) -> List[Artifact]:
+        with ctx.db.session() as sess:
+            subq = (
+                select(
+                    Artifact.format,
+                    func.max(Artifact.updated_at).label("max_updated_at")
+                )
+                .where(Artifact.novel_id == novel_id)
+                .group_by(Artifact.format)
+                .subquery()
+            )
+            rows = sess.exec(
+                select(Artifact)
+                .join(
+                    subq,
+                    and_(
+                        Artifact.format == subq.c.format,
+                        Artifact.updated_at == subq.c.max_updated_at
+                    )
+                )
+                .order_by(
+                    asc(Artifact.format)
+                )
+            ).all()
+            return list(rows)
+
+    def get_latest(self, novel_id: str, format: OutputFormat) -> Optional[Artifact]:
         with ctx.db.session() as sess:
             artifact = sess.exec(
                 select(Artifact)

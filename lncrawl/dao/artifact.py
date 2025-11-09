@@ -1,7 +1,7 @@
 from typing import Optional
 
 from pydantic import computed_field
-from sqlmodel import Field, Index
+from sqlmodel import Field
 
 from ..context import ctx
 from ._base import BaseTable
@@ -10,11 +10,9 @@ from .enums import OutputFormat
 
 class Artifact(BaseTable, table=True):
     __tablename__ = 'artifacts'  # type: ignore
-    __table_args__ = (
-        Index("ix_artifact_novel_id_format", 'novel_id', 'format', 'updated_at'),
-    )
 
     novel_id: str = Field(
+        index=True,
         foreign_key="novels.id",
         ondelete='CASCADE'
     )
@@ -30,23 +28,15 @@ class Artifact(BaseTable, table=True):
         index=True,
         description="The output format of the artifact"
     )
-    is_zip: bool = Field(
-        default=False,
-        description='Whether the artifact is a ZIP archive'
-    )
-    is_done: bool = Field(
-        default=False,
-        description='Whether the artifact was created once'
+    file_name: str = Field(
+        description='Artifact output file name'
     )
 
     @computed_field  # type: ignore[misc]
     @property
     def output_file(self) -> str:
         '''Artifact file path'''
-        ext = str(self.format)
-        if self.is_zip:
-            ext += '.zip'
-        return f"novels/{self.novel_id}/artifacts/{self.id}.{ext}"
+        return f"novels/{self.novel_id}/artifacts/{self.file_name}"
 
     @computed_field  # type: ignore[misc]
     @property

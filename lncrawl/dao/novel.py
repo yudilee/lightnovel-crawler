@@ -17,7 +17,6 @@ class Novel(BaseTable, table=True):
     )
     url: str = Field(
         unique=True,
-        index=True,
         description="Full URL of the novel main page"
     )
 

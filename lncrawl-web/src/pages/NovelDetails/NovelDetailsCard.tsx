@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/config';
+import { Auth } from '@/store/_auth';
 import { type Novel } from '@/types';
 import { formatDate } from '@/utils/time';
 import { ExportOutlined } from '@ant-design/icons';
@@ -15,6 +16,7 @@ import {
   Typography,
 } from 'antd';
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
 import { NovelDomainName } from './NovelDomainName';
 
@@ -22,6 +24,7 @@ export const NovelDetailsCard: React.FC<{ novel?: Novel }> = ({ novel }) => {
   const location = useLocation();
   const { lg } = Grid.useBreakpoint();
 
+  const token = useSelector(Auth.select.authToken);
   const [hasMore, setHasMore] = useState<boolean>(false);
   const [showMore, setShowMore] = useState<boolean>(false);
 
@@ -74,7 +77,7 @@ export const NovelDetailsCard: React.FC<{ novel?: Novel }> = ({ novel }) => {
         <Flex vertical align="center" justify="flex-start" gap="5px">
           <Image
             alt="Novel Cover"
-            src={`${API_BASE_URL}/api/novel/${novel.id}/cover`}
+            src={`${API_BASE_URL}/static/${novel.cover_file}?token=${token}`}
             fallback="/no-image.svg"
             style={{
               display: 'block',

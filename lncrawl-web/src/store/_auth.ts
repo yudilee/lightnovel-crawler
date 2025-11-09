@@ -71,6 +71,10 @@ const selectIsAdmin = createSelector(
   selectUser, //
   (user) => user?.role === UserRole.ADMIN
 );
+const selectToken = createSelector(
+  selectAuth, //
+  (auth) => auth.token
+);
 const selectAuthorization = createSelector(
   selectAuth,
   selectLoggedIn, //
@@ -87,6 +91,7 @@ export const Auth = {
     loggedIn: selectLoggedIn,
     user: selectUser,
     isAdmin: selectIsAdmin,
+    authToken: selectToken,
     isVerified: selectEmailVerified,
     authorization: selectAuthorization,
   },

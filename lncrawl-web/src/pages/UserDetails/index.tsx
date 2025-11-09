@@ -20,7 +20,7 @@ export const UserDetailsPage: React.FC<any> = () => {
 
       <Divider size="large" />
 
-      <JobListPage userId={id} disableFilters />
+      <JobListPage userId={id} disableFilters autoRefresh />
     </div>
   );
 };

@@ -8,6 +8,7 @@ import { type User } from '@/types';
 import { formatDate } from '@/utils/time';
 import { CalendarOutlined } from '@ant-design/icons';
 import { Card, Col, Flex, Row, Space, Typography } from 'antd';
+import { Link } from 'react-router-dom';
 
 export const UserDetailsCard: React.FC<{ user: User }> = ({ user }) => {
   return (
@@ -26,9 +27,11 @@ export const UserDetailsCard: React.FC<{ user: User }> = ({ user }) => {
             />
             <Flex vertical>
               <Typography.Title level={5} style={{ margin: 0 }}>
-                {user.name || 'Unknown User'}
+                <Link to={`/admin/user/${user.id}`}>
+                  {user.name || 'Unknown User'}
+                </Link>
               </Typography.Title>
-              {/* <Text type="secondary">{user.email}</Text> */}
+              <Typography.Text type="secondary">{user.email}</Typography.Text>
             </Flex>
           </Space>
         </Col>

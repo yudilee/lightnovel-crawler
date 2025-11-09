@@ -13,7 +13,7 @@ export const MainPage: React.FC<any> = () => {
       <Typography.Title level={2}>
         <DeploymentUnitOutlined /> Your Jobs
       </Typography.Title>
-      <JobListPage />
+      <JobListPage autoRefresh />
     </>
   );
 };

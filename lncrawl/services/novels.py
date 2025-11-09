@@ -3,7 +3,7 @@ from typing import Any, List
 from sqlmodel import and_, desc, func, select
 
 from ..context import ctx
-from ..dao import Artifact, Novel
+from ..dao import Novel
 from ..exceptions import ServerErrors
 from ..server.models.pagination import Paginated
 
@@ -67,14 +67,3 @@ class NovelService:
             sess.delete(novel)
             sess.commit()
             return True
-
-    def get_artifacts(self, novel_id: str) -> List[Artifact]:
-        with ctx.db.session() as sess:
-            novel = sess.get(Novel, novel_id)
-            if not novel:
-                raise ServerErrors.no_such_novel
-            artifacts = sess.exec(
-                select(Artifact)
-                .where(Artifact.novel_id == novel.id)
-            ).all()
-            return list(artifacts)

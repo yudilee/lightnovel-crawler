@@ -57,10 +57,8 @@ export const OutputFormat = {
   fb2: 'fb2',
   lit: 'lit',
   lrf: 'lrf',
-  oeb: 'oeb',
   pdb: 'pdb',
   rb: 'rb',
-  snb: 'snb',
   tcr: 'tcr',
 };
 export type OutputFormat = (typeof OutputFormat)[keyof typeof OutputFormat];

@@ -1,4 +1,4 @@
-import type { Novel, PaginatiedResponse } from '@/types';
+import type { Novel, Paginatied } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { Grid } from 'antd';
 import axios from 'axios';
@@ -47,12 +47,9 @@ export function useNovelList() {
     setError(undefined);
     try {
       const offset = (page - 1) * limit;
-      const { data } = await axios.get<PaginatiedResponse<Novel>>(
-        '/api/novels',
-        {
-          params: { search, offset, limit },
-        }
-      );
+      const { data } = await axios.get<Paginatied<Novel>>('/api/novels', {
+        params: { search, offset, limit },
+      });
       setTotal(data.total);
       setNovels(data.items);
     } catch (err: any) {
