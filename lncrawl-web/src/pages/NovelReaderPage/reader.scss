@@ -33,6 +33,10 @@
   p > br {
     display: none;
   }
+
+  @media screen and (max-width: 800px) {
+    padding: 15px;
+  }
 }
 
 /* Serif text families */

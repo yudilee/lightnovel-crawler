@@ -48,37 +48,41 @@ export const MainLayout: React.FC<{
         style={{
           height: '100vh',
           overflow: 'auto',
-          padding: noPadding ? undefined : md ? 20 : 10,
-          paddingBottom: noPadding ? undefined : md ? 50 : 100,
+          padding: noPadding ? 0 : md ? 20 : 10,
+          paddingBottom: noPadding ? 0 : md ? 50 : 100,
         }}
         onClickCapture={() => setCollapsed(overlay)}
       >
         <div
           style={{
-            margin: '0 auto',
             maxWidth: 1200,
+            margin: '0 auto',
             minHeight: 'calc(100% - 25px)',
+            transition: 'all 0.2s ease-in-out',
             opacity: overlay && !collapsed ? '0.5' : undefined,
             pointerEvents: overlay && !collapsed ? 'none' : undefined,
-            transition: 'all 0.2s ease-in-out',
           }}
         >
           {!md && (
             <>
               <Typography.Title
-                level={4}
-                style={{ margin: 0, textAlign: 'center' }}
                 onClick={() => navigate('/')}
+                level={4}
+                style={{
+                  textAlign: 'center',
+                  fontSize: 18,
+                  margin: noPadding ? 7 : 0,
+                }}
               >
                 <Avatar
                   shape="square"
                   src="/lncrawl.svg"
-                  size={28}
-                  style={{ marginBottom: 5 }}
+                  size={24}
+                  style={{ paddingBottom: 3 }}
                 />
                 Lightnovel Crawler
               </Typography.Title>
-              <Divider size="small" />
+              {!noPadding && <Divider size="small" />}
             </>
           )}
           <Outlet />

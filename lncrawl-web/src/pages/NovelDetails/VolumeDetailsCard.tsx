@@ -11,7 +11,8 @@ export const VolumeDetailsCard: React.FC<{
   volume: Volume;
   inner?: boolean;
   history?: ReadHistory;
-}> = ({ volume, inner, history = {} }) => {
+  hideChapters?: boolean;
+}> = ({ volume, inner, hideChapters, history = {} }) => {
   const { lg } = Grid.useBreakpoint();
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -29,15 +30,16 @@ export const VolumeDetailsCard: React.FC<{
         setChapters([]);
       }
     };
-
-    fetchChapters(volume.id);
-  }, [volume.id, messageApi]);
+    if (!hideChapters) {
+      fetchChapters(volume.id);
+    }
+  }, [volume.id, hideChapters, messageApi]);
 
   return (
     <Card
       type={inner ? 'inner' : undefined}
       title={inner ? undefined : volume.title}
-      variant={inner ? 'borderless' : 'outlined'}
+      variant={inner ? 'borderless' : undefined}
       styles={{
         body: {
           padding: 10,

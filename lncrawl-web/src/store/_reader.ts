@@ -10,6 +10,7 @@ import type { RootState } from '.';
 //
 
 export interface ReaderState {
+  voice?: string;
   fontSize: number;
   lineHeight: number;
   theme: ReaderTheme;
@@ -17,10 +18,11 @@ export interface ReaderState {
 }
 
 const buildInitialState = (): ReaderState => ({
-  fontSize: 18,
-  lineHeight: 1.25,
+  voice: undefined,
+  fontSize: 16,
+  lineHeight: 1.4,
   theme: ReaderTheme.Dark,
-  fontFamily: FontFamily.ArbutusSlab,
+  fontFamily: FontFamily.Literata,
 });
 
 //
@@ -30,16 +32,19 @@ export const ReaderSlice = createSlice({
   name: 'reader',
   initialState: buildInitialState(),
   reducers: {
-    setColor(state, action: PayloadAction<ReaderTheme>) {
+    setVoice(state, action: PayloadAction<ReaderState['voice']>) {
+      state.voice = action.payload;
+    },
+    setTheme(state, action: PayloadAction<ReaderState['theme']>) {
       state.theme = action.payload;
     },
-    setLineHeight(state, action: PayloadAction<number>) {
+    setLineHeight(state, action: PayloadAction<ReaderState['lineHeight']>) {
       state.lineHeight = action.payload;
     },
-    setFontSize(state, action: PayloadAction<number>) {
+    setFontSize(state, action: PayloadAction<ReaderState['fontSize']>) {
       state.fontSize = action.payload;
     },
-    setFontFamily(state, action: PayloadAction<FontFamily>) {
+    setFontFamily(state, action: PayloadAction<ReaderState['fontFamily']>) {
       state.fontFamily = action.payload;
     },
   },
@@ -57,6 +62,7 @@ export const Reader = {
     fontSize: createSelector(selectReader, (reader) => reader.fontSize),
     fontFamily: createSelector(selectReader, (reader) => reader.fontFamily),
     lineHeight: createSelector(selectReader, (reader) => reader.lineHeight),
+    voice: createSelector(selectReader, (reader) => reader.voice),
   },
 };
 

@@ -160,7 +160,7 @@ export const JobDetailsPage: React.FC<any> = () => {
       <JobDetailsCard job={job} />
       {user && <UserDetailsCard user={user} />}
       {novel && <NovelDetailsCard novel={novel} withPageLink />}
-      {volume && <VolumeDetailsCard volume={volume} />}
+      {volume && <VolumeDetailsCard volume={volume} hideChapters />}
       {chapter && <ChapterDetailsCard chapter={chapter} />}
       {artifact && <ArtifactListCard artifacts={[artifact]} />}
 

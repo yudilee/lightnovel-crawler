@@ -2,8 +2,8 @@ import type { ReadChapter } from '@/types';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { Button, Flex, Grid } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { ReaderContentsButton } from './ReaderContentsButton';
 import { ReaderSettingsButton } from './ReaderSettingsButton';
+import { ReaderTextToSpeechButton } from './ReaderSpeakButton';
 
 export const ReaderNavBar: React.FC<{
   data: ReadChapter;
@@ -33,8 +33,9 @@ export const ReaderNavBar: React.FC<{
         {sm && ' Previous'}
       </Button>
 
-      <ReaderContentsButton novelId={data.novel.id} />
-      <ReaderSettingsButton />
+      <ReaderTextToSpeechButton />
+      {/* <ReaderContentsButton novelId={data.novel.id} /> */}
+      <ReaderSettingsButton data={data} />
 
       <Button
         size="large"
