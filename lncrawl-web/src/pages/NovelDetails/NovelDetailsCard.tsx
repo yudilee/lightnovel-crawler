@@ -1,6 +1,6 @@
 import { API_BASE_URL } from '@/config';
 import { Auth } from '@/store/_auth';
-import { type Novel } from '@/types';
+import type { Novel } from '@/types';
 import { formatDate } from '@/utils/time';
 import { ExportOutlined } from '@ant-design/icons';
 import {
@@ -19,11 +19,13 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Favicon } from '../../components/Favicon';
+import { NovelActionButtons } from './NovelActionButtons';
 
 export const NovelDetailsCard: React.FC<{
   novel: Novel;
+  showActions?: boolean;
   withPageLink?: boolean;
-}> = ({ novel, withPageLink }) => {
+}> = ({ novel, showActions, withPageLink }) => {
   const { lg } = Grid.useBreakpoint();
 
   const token = useSelector(Auth.select.authToken);
@@ -155,6 +157,13 @@ export const NovelDetailsCard: React.FC<{
             </Tag>
           ))}
         </Flex>
+      )}
+
+      {showActions && (
+        <>
+          <Divider size="small" />
+          <NovelActionButtons novel={novel} />
+        </>
       )}
     </Card>
   );
