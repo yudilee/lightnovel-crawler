@@ -7,7 +7,6 @@ import {
   Card,
   Descriptions,
   Divider,
-  Empty,
   Flex,
   Grid,
   Image,
@@ -18,27 +17,18 @@ import {
 } from 'antd';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Favicon } from '../../components/Favicon';
 
-export const NovelDetailsCard: React.FC<{ novel?: Novel }> = ({ novel }) => {
-  const location = useLocation();
+export const NovelDetailsCard: React.FC<{
+  novel: Novel;
+  withPageLink?: boolean;
+}> = ({ novel, withPageLink }) => {
   const { lg } = Grid.useBreakpoint();
 
   const token = useSelector(Auth.select.authToken);
   const [hasMore, setHasMore] = useState<boolean>(false);
   const [showMore, setShowMore] = useState<boolean>(false);
-
-  if (!novel?.title) {
-    return (
-      <Card variant="outlined">
-        <Empty
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description="Novel details is not available"
-        />
-      </Card>
-    );
-  }
 
   return (
     <Card
@@ -58,10 +48,10 @@ export const NovelDetailsCard: React.FC<{ novel?: Novel }> = ({ novel }) => {
             </Typography.Text>
           </Space>
           <Typography.Text style={{ fontSize: '24px', whiteSpace: 'wrap' }}>
-            {location.pathname === `/novel/${novel.id}` ? (
-              novel.title
-            ) : (
+            {withPageLink ? (
               <Link to={`/novel/${novel.id}`}>{novel.title}</Link>
+            ) : (
+              novel.title
             )}
           </Typography.Text>
         </Flex>

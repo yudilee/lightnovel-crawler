@@ -20,17 +20,11 @@ export const RequestNovelCard: React.FC<any> = () => {
     setLoading(true);
     setError(undefined);
     try {
-      values.full = true;
-      const { data: job } = await axios.post<Job>(
-        `/api/job/create/fetch-novel`,
-        new URLSearchParams(values).toString(),
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        }
-      );
-      navigate({ pathname: `/job/${job.id}` });
+      const result = await axios.post<Job>(`/api/job/create/fetch-novel`, {
+        ...values,
+        full: true,
+      });
+      navigate(`/job/${result.data.id}`);
     } catch (err) {
       setError(stringifyError(err, 'Oops! Something went wrong.'));
     } finally {

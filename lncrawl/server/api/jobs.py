@@ -1,12 +1,14 @@
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Form, Path, Query, Security
-from pydantic import HttpUrl
+from fastapi import APIRouter, Body, Path, Query, Security
 
 from ...context import ctx
 from ...dao import Job
-from ...dao.enums import JobPriority, JobStatus, JobType, OutputFormat
+from ...dao.enums import JobPriority, JobStatus, JobType
 from ...exceptions import ServerErrors
+from ..models.job import (FetchChaptersRequest, FetchImagesRequest,
+                          FetchNovelRequest, FetchVolumesRequest,
+                          MakeArtifactsRequest)
 from ..models.pagination import Paginated
 from ..models.user import User
 from ..security import ensure_user
@@ -79,56 +81,58 @@ def replay_job(
 @router.post("/create/fetch-novel", summary='Create a job to fetch novel details')
 def fetch_novel(
     user: User = Security(ensure_user),
-    url: HttpUrl = Form(description='The novel page url'),
-    full: bool = Form(default=False, description='To fetch all contents')
+    body: FetchNovelRequest = Body(),
 ) -> Job:
-    return ctx.jobs.fetch_novel(user, url.encoded_string(), full=full)
+    return ctx.jobs.fetch_novel(user, body.url.encoded_string(), full=body.full)
 
 
 @router.post("/create/fetch-volumes", summary='Create a job to fetch all chapter contents for the volumes')
 def fetch_volumes(
     user: User = Security(ensure_user),
-    volumes: List[str] = Form(description='List of volume ids to fetch'),
+    body: FetchVolumesRequest = Body(),
 ) -> Job:
+    volumes = list(set(body.volumes))
     if not volumes:
         raise ServerErrors.no_volumes_to_download
     if len(volumes) == 1:
-        return ctx.jobs.fetch_volume(user, volumes[1])
+        return ctx.jobs.fetch_volume(user, volumes[0])
     return ctx.jobs.fetch_many_volumes(user, *volumes)
 
 
 @router.post("/create/fetch-chapters", summary='Create a job to fetch chapter contents')
 def fetch_chapters(
     user: User = Security(ensure_user),
-    chapters: List[str] = Form(description='List of chapter ids to fetch'),
+    body: FetchChaptersRequest = Body(),
 ) -> Job:
+    chapters = list(set(body.chapters))
     if not chapters:
         raise ServerErrors.no_chapters_to_download
     if len(chapters) == 1:
-        return ctx.jobs.fetch_chapter(user, chapters[1])
+        return ctx.jobs.fetch_chapter(user, chapters[0])
     return ctx.jobs.fetch_many_chapters(user, *chapters)
 
 
 @router.post("/create/fetch-images", summary='Create a job to fetch chapter images')
 def fetch_images(
     user: User = Security(ensure_user),
-    images: List[str] = Form(description='List of image ids to fetch'),
+    body: FetchImagesRequest = Body(),
 ) -> Job:
+    images = list(set(body.images))
     if not images:
         raise ServerErrors.no_images_to_download
     if len(images) == 1:
-        return ctx.jobs.fetch_image(user, images[1])
+        return ctx.jobs.fetch_image(user, images[0])
     return ctx.jobs.fetch_many_images(user, *images)
 
 
 @router.post("/create/make-artifacts", summary='Create a job to make novel artifacts')
 def make_artifacts(
     user: User = Security(ensure_user),
-    novel_id: str = Form(description='The novel id'),
-    formats: List[OutputFormat] = Form(description='The novel id'),
+    body: MakeArtifactsRequest = Body()
 ) -> Job:
+    formats = list(set(body.formats))
     if not formats:
         raise ServerErrors.no_artifacts_to_create
     if len(formats) == 1:
-        return ctx.jobs.make_artifact(user, novel_id, formats[1])
-    return ctx.jobs.make_many_artifacts(user, novel_id, *formats)
+        return ctx.jobs.make_artifact(user, body.novel_id, formats[0])
+    return ctx.jobs.make_many_artifacts(user, body.novel_id, *formats)
