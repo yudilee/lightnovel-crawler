@@ -1,3 +1,4 @@
+import shutil
 from typing import Any, List
 
 from sqlmodel import and_, desc, func, select
@@ -60,6 +61,8 @@ class NovelService:
             return novel
 
     def delete(self, novel_id: str) -> bool:
+        novel_dir = ctx.files.resolve(f'novels/{novel_id}')
+        shutil.rmtree(novel_dir, True)
         with ctx.db.session() as sess:
             novel = sess.get(Novel, novel_id)
             if not novel:

@@ -52,3 +52,11 @@ async def get_novel_artifacts(
     novel_id: str = Path(),
 ) -> List[Artifact]:
     return ctx.artifacts.list_latest(novel_id=novel_id)
+
+
+@router.delete("/{novel_id}", summary='Removes a novel')
+def delete_novel(
+    novel_id: str = Path(),
+) -> bool:
+    ctx.novels.delete(novel_id)
+    return True
