@@ -1,11 +1,10 @@
 import { type Chapter, type ReadHistory, type Volume } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { formatDate } from '@/utils/time';
-import { Card, Collapse, Descriptions, Grid, message } from 'antd';
+import { Card, Descriptions, Grid, message } from 'antd';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ChapterDetailsCard } from './ChapterDetailsCard';
+import { ChapterListCard } from './ChapterListCard';
 
 export const VolumeDetailsCard: React.FC<{
   volume: Volume;
@@ -74,25 +73,7 @@ export const VolumeDetailsCard: React.FC<{
       />
 
       {chapters.length > 0 && (
-        <Collapse
-          accordion
-          style={{ marginTop: 10 }}
-          items={chapters.map((chapter) => ({
-            key: chapter.id,
-            label: chapter.title,
-            children: <ChapterDetailsCard inner chapter={chapter} />,
-            styles: {
-              body: { padding: 0 },
-              header: {
-                opacity: history[chapter.id] ? 0.5 : 1,
-                textTransform: 'capitalize',
-              },
-            },
-            extra: chapter.is_available ? (
-              <Link to={`/read/${chapter.id}`}>Read</Link>
-            ) : undefined,
-          }))}
-        />
+        <ChapterListCard chapters={chapters} history={history} />
       )}
     </Card>
   );
