@@ -6,7 +6,7 @@ from sqlalchemy import update as sa_update
 from sqlmodel import case, col, func, select, true
 
 from ..context import ctx
-from ..dao import Chapter, Novel, User, Volume
+from ..dao import Chapter, User, Volume
 from ..exceptions import ServerErrors
 from ..models import Chapter as ModelChapter
 from ..server.models.novel import ReadChapterResponse
@@ -94,13 +94,15 @@ class ChapterService:
         with ctx.db.session() as sess:
             previous_id = sess.exec(
                 select(Chapter.id)
-                .where(Novel.id == novel.id)
-                .where(Chapter.serial == chapter.serial - 1)
+                .where(Chapter.novel_id == novel.id)
+                .where(Chapter.serial == (chapter.serial - 1))
+                .limit(1)
             ).first()
             next_id = sess.exec(
                 select(Chapter.id)
-                .where(Novel.id == novel.id)
-                .where(Chapter.serial == chapter.serial + 1)
+                .where(Chapter.novel_id == novel.id)
+                .where(Chapter.serial == (chapter.serial + 1))
+                .limit(1)
             ).first()
 
         ctx.history.add(user.id, chapter.id)

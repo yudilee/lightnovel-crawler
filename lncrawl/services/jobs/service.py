@@ -1,9 +1,10 @@
 from functools import lru_cache
-from typing import Any, List, Optional
+from typing import Any, Iterable, List, Optional
 
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import update as sa_update
-from sqlmodel import and_, asc, case, col, desc, func, literal, select, true
+from sqlmodel import (Session, and_, asc, case, col, desc, func, literal,
+                      select, true)
 
 from ...context import ctx
 from ...dao import Job, User
@@ -97,60 +98,28 @@ class JobService:
         with ctx.db.session() as sess:
             # verify job exists
             job = sess.get(Job, job_id)
-            if not job or job.is_done:
+            if not job:
                 return
 
             # verify user access
             if job.user_id != user.id and user.role != UserRole.ADMIN:
                 raise ServerErrors.forbidden
 
+            self._cancel_down(sess, job_id)
+            if job.is_done:
+                return
+
             if not reason:
                 who = 'user' if job.user_id == user.id else 'admin'
                 reason = f'Canceled by {who}'
 
-            # selectors
-            sa_pars = sa_select_parents(job_id)
-            sa_deps = sa_select_children(job_id)
-
-            # recursively update parents
-            now = current_timestamp()
-            sa_done = Job.done + job.total
-            sa_is_done = sa_done == Job.total
-            sa_started_at = func.coalesce(Job.started_at, now)
-            sa_finished_at = func.coalesce(Job.finished_at, now)
-            sess.exec(
-                sa_update(Job)
-                .where(col(Job.id).in_(sa_pars))
-                .values(
-                    done=sa_done,
-                    is_done=sa_is_done,
-                    error=case((sa_is_done, reason), else_=Job.error),
-                    started_at=case((sa_is_done, sa_started_at), else_=Job.started_at),
-                    finished_at=case((sa_is_done, sa_finished_at), else_=Job.finished_at),
-                    status=case(
-                        (sa_is_done, literal(JobStatus.CANCELED, type_=job_status_type)),
-                        else_=Job.status
-                    ),
-                )
+            self._success(sess, job_id)
+            self._update(
+                sess,
+                job_id,
+                error=reason,
+                status=JobStatus.CANCELED,
             )
-
-            # cancel job and all children
-            sess.exec(
-                sa_update(Job)
-                .where(
-                    col(Job.id).in_(sa_deps),
-                    col(Job.is_done).is_not(true()),
-                )
-                .values(
-                    error=reason,
-                    is_done=True,
-                    done=Job.total,
-                    started_at=sa_started_at,
-                    finished_at=sa_finished_at,
-                    status=JobStatus.CANCELED,
-                )
-            )
-
             sess.commit()
 
     # -------------------------------------------------------------------------
@@ -167,19 +136,14 @@ class JobService:
             if job.user_id != user.id and user.role != UserRole.ADMIN:
                 raise ServerErrors.forbidden
 
-            # selectors
-            sa_pars = sa_select_parents(job_id)
-            sa_deps = sa_select_children(job_id)
-
-            # parameters
+            # recursively update parents
             now = current_timestamp()
             sa_done = Job.done - job.done
             sa_total = Job.total - job.total
             sa_is_done = sa_done == sa_total
             sa_started_at = func.coalesce(Job.started_at, now)
             sa_finished_at = func.coalesce(Job.finished_at, now)
-
-            # recursively update parents
+            sa_pars = sa_select_parents(job_id)
             sess.exec(
                 sa_update(Job)
                 .where(col(Job.id).in_(sa_pars))
@@ -197,6 +161,7 @@ class JobService:
             )
 
             # delete job with the subtree
+            sa_deps = sa_select_children(job_id, True)
             sess.exec(
                 sa_delete(Job)
                 .where(col(Job.id).in_(sa_deps))
@@ -424,7 +389,20 @@ class JobService:
                 .limit(1)
             ).first()
 
-    def _next_pending(self, job_id: str) -> Optional[Job]:
+    def _pending(self, skip_job_ids: Iterable[str]) -> Optional[Job]:
+        with ctx.db.session() as sess:
+            return sess.exec(
+                select(Job)
+                .where(col(Job.id).not_in(skip_job_ids))
+                .where(col(Job.status) == JobStatus.PENDING)
+                .order_by(
+                    desc(Job.priority),
+                    asc(Job.created_at),
+                )
+                .limit(1)
+            ).first()
+
+    def _pending_child(self, job_id: str) -> Optional[Job]:
         with ctx.db.session() as sess:
             return sess.exec(
                 select(Job)
@@ -434,51 +412,66 @@ class JobService:
                 .limit(1)
             ).first()
 
-    def _update(self, job_id: str, **values) -> None:
-        with ctx.db.session() as sess:
-            sess.exec(
-                sa_update(Job)
-                .where(col(Job.id) == job_id)
-                .values(**values)
-            )
-            sess.commit()
+    def _update(self, sess: Session, job_id: str, **values) -> None:
+        sess.exec(
+            sa_update(Job)
+            .where(col(Job.id) == job_id)
+            .values(**values)
+        )
 
-    def _increment(self, job_id: str) -> None:
-        with ctx.db.session() as sess:
-            now = current_timestamp()
-            sa_done = Job.done + 1
-            sa_is_done = Job.total == sa_done
-            sa_started_at = func.coalesce(Job.started_at, now)
-            sa_finished_at = func.coalesce(Job.finished_at, now)
-            sess.exec(
-                sa_update(Job)
-                .where(col(Job.id) == job_id)
-                .values(
-                    done=sa_done,
-                    is_done=sa_is_done,
-                    started_at=case((sa_is_done, sa_started_at), else_=Job.started_at),
-                    finished_at=case((sa_is_done, sa_finished_at), else_=Job.finished_at),
-                    status=case(
-                        (sa_is_done, literal(JobStatus.SUCCESS, type_=job_status_type)),
-                        else_=Job.status
-                    )
-                )
+    def _cancel_down(self, sess: Session, job_id: str) -> None:
+        now = current_timestamp()
+        sa_deps = sa_select_children(job_id)
+        sess.exec(
+            sa_update(Job)
+            .where(
+                col(Job.id).in_(sa_deps),
+                col(Job.is_done).is_not(true()),
             )
-            sess.commit()
+            .values(
+                done=Job.total,
+                is_done=True,
+                status=JobStatus.CANCELED,
+                error='Canceled by one of the parent job',
+                started_at=func.coalesce(Job.started_at, now),
+                finished_at=func.coalesce(Job.finished_at, now),
+            )
+        )
 
-    def _set_done(self, job_id: str, error: Optional[str] = None) -> None:
-        with ctx.db.session() as sess:
-            now = current_timestamp()
-            sess.exec(
-                sa_update(Job)
-                .where(col(Job.id) == job_id)
-                .values(
-                    error=error,
-                    is_done=True,
-                    done=Job.total,
-                    finished_at=now,
-                    started_at=func.coalesce(Job.started_at, now),
-                    status=JobStatus.FAILED if error else JobStatus.SUCCESS,
-                )
+    def _increment_up(self, sess: Session, job_id: str, step: int = 1) -> None:
+        now = current_timestamp()
+
+        sa_pars = sa_select_parents(job_id, True)
+        sa_done = func.min(Job.total, Job.done + step)
+        sa_is_done = Job.total == sa_done
+        sa_status = case(
+            (sa_is_done, literal(JobStatus.SUCCESS, type_=job_status_type)),
+            else_=Job.status
+        )
+        sa_started_at = case(
+            (sa_is_done, func.coalesce(Job.started_at, now)),
+            else_=Job.started_at
+        )
+        sa_finished_at = case(
+            (sa_is_done, func.coalesce(Job.finished_at, now)),
+            else_=Job.finished_at
+        )
+
+        sess.exec(
+            sa_update(Job)
+            .where(col(Job.id).in_(sa_pars))
+            .values(
+                done=sa_done,
+                is_done=sa_is_done,
+                status=sa_status,
+                started_at=sa_started_at,
+                finished_at=sa_finished_at,
             )
-            sess.commit()
+        )
+
+    def _success(self, sess: Session, job_id: str) -> None:
+        pending = sess.exec(
+            select(Job.total - Job.done)
+            .where(Job.id == job_id)
+        ).one()
+        self._increment_up(sess, job_id, pending)

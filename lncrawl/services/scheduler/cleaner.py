@@ -2,10 +2,11 @@ import logging
 import shutil
 from threading import Event
 
+from sqlmodel import col
 from sqlalchemy import delete as sa_delete
 
 from ...context import ctx
-from ...dao import Job, Novel
+from ...dao import Job
 from ...dao.enums import JobStatus
 from ...utils.file_tools import folder_size, format_size
 from ...utils.time_utils import current_timestamp
@@ -14,12 +15,12 @@ logger = logging.getLogger(__name__)
 
 
 def __delete_canceled() -> None:
-    cutoff = current_timestamp() - 5 * 24 * 3600 * 1000  # 5 days
+    cutoff = current_timestamp() - 5 * 24 * 3600 * 1000
     with ctx.db.session() as sess:
         result = sess.exec(
             sa_delete(Job)
-            .where(Job.status == JobStatus.CANCELED)
-            .where(Job.created_at < cutoff)
+            .where(col(Job.status) == JobStatus.CANCELED)
+            .where(col(Job.created_at) < cutoff)
         )
         sess.commit()
         if result.rowcount:
@@ -52,9 +53,7 @@ def __free_disk_size(signal: Event):
             current_size -= size
             shutil.rmtree(folder, ignore_errors=True)
             logger.info(f'Deleted novel: {folder.name} [{format_size(size)}]')
-            with ctx.db.session() as sess:
-                sess.exec(sa_delete(Novel).where(Novel.id == folder.name))
-                sess.commit()
+            ctx.novels.delete(folder.name)
         except Exception:
             logger.info(f'Error removing: {folder.name}', exc_info=True)
 

@@ -1,5 +1,6 @@
 import logging
 from threading import Event
+from typing import Any
 
 from ...context import ctx
 from ...dao import Job
@@ -17,14 +18,6 @@ class JobRunner:
         self.user = ctx.users.get(self.job.user_id)
 
     def process(self) -> bool:
-        if self.job.is_running:
-            child = ctx.jobs._next_pending(self.job.id)
-            if not child:
-                return self.__set_success()
-            JobRunner(child).process()
-            self.job = ctx.jobs.get(self.job.id)
-            return self.__increment()
-
         logger.info(f'Processing: {self.job.id}, type: {self.job.type.name}')
         if self.job.type == JobType.FULL_NOVEL_BATCH:
             return self._novel_batch()
@@ -50,39 +43,72 @@ class JobRunner:
             return self._artifact_batch()
         if self.job.type == JobType.ARTIFACT:
             return self._artifact()
-
         return self.__set_failed(f'Job type is not supported: {self.job.type}')
 
     def __set_running(self) -> None:
-        ctx.jobs._update(
-            self.job.id,
-            status=JobStatus.RUNNING,
-            started_at=current_timestamp(),
-        )
+        with ctx.db.session() as sess:
+            now = current_timestamp()
+            ctx.jobs._update(
+                sess,
+                self.job.id,
+                started_at=now,
+                status=JobStatus.RUNNING,
+            )
+            sess.commit()
+            self.job.started_at = now
+            self.job.status = JobStatus.RUNNING
 
-    def __increment(self) -> bool:
-        ctx.jobs._increment(self.job.id)
+    def __increment(self, step: int = 1) -> bool:
+        with ctx.db.session() as sess:
+            ctx.jobs._increment_up(sess, self.job.id, step)
+            sess.commit()
+            self.job = sess.get_one(Job, self.job.id)
         self.__send_mail()
         return True
 
     def __set_success(self) -> bool:
-        ctx.jobs._set_done(self.job.id)
+        with ctx.db.session() as sess:
+            ctx.jobs._success(sess, self.job.id)
+            sess.commit()
+            self.job = sess.get_one(Job, self.job.id)
         self.__send_mail()
         return True
 
     def __set_failed(self, reason: str) -> bool:
-        ctx.jobs._set_done(self.job.id, reason)
+        with ctx.db.session() as sess:
+            ctx.jobs._success(sess, self.job.id)
+            ctx.jobs._cancel_down(sess, self.job.id)
+            ctx.jobs._update(
+                sess,
+                self.job.id,
+                error=reason,
+                status=JobStatus.FAILED,
+            )
+            sess.commit()
+            self.job = sess.get_one(Job, self.job.id)
         self.__send_mail()
         return False
+
+    def __set_extra(self, **values: Any) -> None:
+        extra = dict(**self.job.extra)
+        for k, v in values.items():
+            extra[k] = v
+        with ctx.db.session() as sess:
+            ctx.jobs._update(
+                sess,
+                self.job.id,
+                extra=extra,
+            )
+            sess.commit()
+            self.job.extra = extra
 
     def __send_mail(self):
         if self.job.parent_job_id:
             return
-        job = ctx.jobs.get(self.job.id)
-        if job.status != JobStatus.SUCCESS:
+        if self.job.status != JobStatus.SUCCESS:
             return
-        if job.type == JobType.FULL_NOVEL:
-            ctx.mail.send_full_novel_job_success(self.user, job)
+        if self.job.type == JobType.FULL_NOVEL:
+            ctx.mail.send_full_novel_job_success(self.user, self.job)
 
     def _novel_batch(self) -> bool:
         try:
@@ -109,12 +135,7 @@ class JobRunner:
             self.__set_running()
 
             novel = ctx.crawler.fetch_novel(url, self.signal)
-            extra = dict(**self.job.extra)
-            extra['novel_id'] = novel.id
-            ctx.jobs._update(
-                self.job.id,
-                extra=extra,
-            )
+            self.__set_extra(novel_id=novel.id)
 
             if self.job.type != JobType.FULL_NOVEL:
                 return self.__set_success()
@@ -124,20 +145,18 @@ class JobRunner:
                 return self.__set_success()
 
             for volume in volumes:
-                job = ctx.jobs.fetch_volume(
+                ctx.jobs.fetch_volume(
                     self.user,
                     volume.id,
                     parent_id=self.job.id,
                 )
-                JobRunner(job).process()
 
-            job = ctx.jobs.make_many_artifacts(
+            ctx.jobs.make_many_artifacts(
                 self.user,
                 novel.id,
                 *ENABLED_FORMATS[self.user.tier],
                 parent_id=self.job.id,
             )
-            JobRunner(job).process()
 
             return self.__increment()
         except Exception as e:
@@ -292,14 +311,10 @@ class JobRunner:
             if not artifact.is_available:
                 return self.__set_failed('Failed to make artifact')
 
-            extra = dict(**self.job.extra)
-            extra['artifact_id'] = artifact.id
-            extra['novel_title'] = novel_title
-            ctx.jobs._update(
-                self.job.id,
-                extra=extra,
+            self.__set_extra(
+                artifact_id=artifact.id,
+                novel_title=novel_title
             )
-
             return self.__set_success()
         except Exception as e:
             return self.__set_failed(f'Failed to make artifact. {repr(e)}')

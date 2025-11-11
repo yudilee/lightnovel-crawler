@@ -2,10 +2,7 @@ import logging
 from threading import Event, Lock, Thread
 from typing import List, Optional, Set
 
-from sqlmodel import asc, col, desc, select, true
-
 from ...context import ctx
-from ...dao import Job
 from ...utils.time_utils import current_timestamp
 from .cleaner import run_cleaner
 from .runner import JobRunner
@@ -72,32 +69,17 @@ class JobScheduler:
                 logger.error('Runner error', exc_info=True)
 
     def __job(self, signal=Event()):
-        job = self.__get_next_job()
-        if not job:
-            return
+        with self.lock:
+            job = ctx.jobs._pending(self.queue)
+            if not job:
+                return
+            self.queue.add(job.id)
+
         try:
             JobRunner(job, signal).process()
         finally:
             with self.lock:
                 self.queue.remove(job.id)
-
-    def __get_next_job(self) -> Optional[Job]:
-        with ctx.db.session() as sess:
-            jobs = sess.exec(
-                select(Job)
-                .where(col(Job.is_done).is_not(true()))
-                .where(col(Job.parent_job_id).is_(None))
-                .order_by(
-                    desc(Job.priority),
-                    asc(Job.created_at),
-                )
-            ).all()
-            for job in jobs:
-                with self.lock:
-                    if job.id in self.queue:
-                        continue
-                    self.queue.add(job.id)
-                    return job
 
     def __cleaner(self, signal=Event()):
         job_id = 'cleaner'

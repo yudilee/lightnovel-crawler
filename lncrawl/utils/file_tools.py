@@ -3,6 +3,7 @@ import re
 import shlex
 import subprocess
 from pathlib import Path
+from typing import Union
 
 from lncrawl.utils.platforms import Platform
 
@@ -28,7 +29,7 @@ def format_size(num_bytes: int, decimals: int = 1, suffix: str = "B") -> str:
     return f"{size:.{decimals}f} Y{suffix}"
 
 
-def folder_size(folder: str) -> int:
+def folder_size(folder: Union[str, Path]) -> int:
     """
     Return the total size of a folder in bytes.
 
