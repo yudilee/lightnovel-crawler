@@ -5,7 +5,16 @@ import { Reader } from '@/store/_reader';
 import type { ReadChapter } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { formatFromNow } from '@/utils/time';
-import { Button, Divider, Flex, Result, Spin, Typography } from 'antd';
+import {
+  Button,
+  Card,
+  Divider,
+  Empty,
+  Flex,
+  Result,
+  Spin,
+  Typography,
+} from 'antd';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -96,11 +105,20 @@ export const NovelReaderPage: React.FC<any> = () => {
         Updated {formatFromNow(data.chapter.updated_at)}
       </Typography.Text>
 
-      {data.content && (
+      {data.content ? (
         <div
-          dangerouslySetInnerHTML={{ __html: data.content }}
+          dangerouslySetInnerHTML={{
+            __html: data.content,
+          }}
           style={{ margin: '25px 0' }}
         />
+      ) : (
+        <Card style={{ margin: '25px 0' }}>
+          <Empty
+            description="No contents available"
+            style={{ padding: 'calc(50vh - 300px) 0' }}
+          />
+        </Card>
       )}
 
       <ReaderNavBar data={data} />
