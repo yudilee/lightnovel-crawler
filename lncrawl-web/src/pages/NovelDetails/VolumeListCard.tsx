@@ -1,4 +1,4 @@
-import { type Novel, type ReadHistory, type Volume } from '@/types';
+import { type ReadHistory, type Volume } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { Card, Collapse, message, Typography } from 'antd';
 import axios from 'axios';
@@ -6,8 +6,9 @@ import { useEffect, useState } from 'react';
 import { VolumeDetailsCard } from './VolumeDetailsCard';
 
 export const VolumeListCard: React.FC<{
-  novel: Novel;
-}> = ({ novel }) => {
+  novelId: string;
+  inner?: boolean;
+}> = ({ novelId, inner }) => {
   const [messageApi, contextHolder] = message.useMessage();
   const [volumes, setVolumes] = useState<Volume[]>([]);
   const [history, setHistory] = useState<ReadHistory>({});
@@ -42,13 +43,16 @@ export const VolumeListCard: React.FC<{
       }
     };
 
-    fetchVolumes(novel.id);
-    fetchReadHistory(novel.id);
-  }, [novel.id, messageApi]);
+    fetchVolumes(novelId);
+    fetchReadHistory(novelId);
+  }, [novelId, messageApi]);
 
   return (
     <Card
-      title="Table of Contents"
+      type={inner ? 'inner' : undefined}
+      title={!inner && 'Table of Contents'}
+      variant={inner ? 'borderless' : 'outlined'}
+      style={{ borderRadius: inner ? 0 : undefined }}
       styles={{
         body: { padding: 10 },
         title: { fontSize: 22 },

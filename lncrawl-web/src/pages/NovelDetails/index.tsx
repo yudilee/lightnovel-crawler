@@ -89,7 +89,7 @@ export const NovelDetailsPage: React.FC<any> = () => {
         novelId={novel.id}
         showMakeButton
       />
-      <VolumeListCard novel={novel} />
+      <VolumeListCard novelId={novel.id} />
     </Space>
   );
 };

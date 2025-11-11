@@ -1,17 +1,16 @@
-import '@fontsource/arbutus-slab/400.css';
-import '@fontsource/roboto-slab/400.css';
 import './reader.scss';
 
 import { Auth } from '@/store/_auth';
+import { Reader } from '@/store/_reader';
 import type { ReadChapter } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { formatFromNow } from '@/utils/time';
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import { Button, Divider, Flex, Grid, Result, Spin, Typography } from 'antd';
+import { Button, Divider, Flex, Result, Spin, Typography } from 'antd';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import { ReaderNavBar } from './ReaderNavBar';
 
 export const NovelReaderPage: React.FC<any> = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +20,11 @@ export const NovelReaderPage: React.FC<any> = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
   const [data, setData] = useState<ReadChapter>();
+
+  const theme = useSelector(Reader.select.theme);
+  const fontSize = useSelector(Reader.select.fontSize);
+  const lineHeight = useSelector(Reader.select.lineHeight);
+  const fontFamily = useSelector(Reader.select.fontFamily);
 
   useEffect(() => {
     const fetchChapter = async (id: string) => {
@@ -66,70 +70,40 @@ export const NovelReaderPage: React.FC<any> = () => {
   }
 
   return (
-    <Flex vertical>
-      <Flex
-        vertical
-        wrap
-        align="center"
-        gap={5}
-        style={{ textAlign: 'center' }}
-      >
-        <Typography.Text type="success">{data.novel.authors}</Typography.Text>
-        <Typography.Title level={3} style={{ margin: 0 }}>
-          <Link to={`/novel/${data.novel.id}`}>{data.novel.title}</Link>
+    <Flex
+      vertical
+      className="novel-reader"
+      style={{ fontSize, lineHeight, fontFamily, ...theme }}
+    >
+      <div style={{ textAlign: 'center' }}>
+        <Typography.Title level={4} style={{ margin: 0, color: '#F16C6F' }}>
+          {data.novel.authors}
         </Typography.Title>
-        <Typography.Title level={4} type="secondary" style={{ margin: 0 }}>
-          {data.chapter.title}
+        <Typography.Title level={1} style={{ margin: 0 }}>
+          <Link to={`/novel/${data.novel.id}`} style={{ color: '#8484F4' }}>
+            {data.novel.title}
+          </Link>
         </Typography.Title>
-        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-          Updated {formatFromNow(data.chapter.updated_at)}
-        </Typography.Text>
-      </Flex>
+      </div>
 
-      <Divider size="small" />
-      <NavigationButtons data={data} />
-      <Divider size="small" />
+      <Divider size="middle" />
+      <ReaderNavBar data={data} />
+
+      <h1 style={{ marginBottom: 0 }}>{data.chapter.title}</h1>
+      <Typography.Text style={{ fontSize: 12, color: 'inherit', opacity: 0.8 }}>
+        {data.chapter.serial} of {data.novel.chapter_count}
+        <Divider type="vertical" style={{ background: theme.color }} />
+        Updated {formatFromNow(data.chapter.updated_at)}
+      </Typography.Text>
 
       {data.content && (
         <div
-          className="novel-content-reader"
           dangerouslySetInnerHTML={{ __html: data.content }}
+          style={{ margin: '25px 0' }}
         />
       )}
 
-      <Divider size="small" />
-      <NavigationButtons data={data} />
-      <Divider size="small" />
-    </Flex>
-  );
-};
-
-export const NavigationButtons: React.FC<{
-  data: ReadChapter;
-}> = ({ data }) => {
-  const { sm } = Grid.useBreakpoint();
-  const navigate = useNavigate();
-  return (
-    <Flex align="center" justify="space-between">
-      <Button
-        disabled={!data.previous_id}
-        onClick={() => navigate(`/read/${data.previous_id}`)}
-      >
-        <LeftOutlined />
-        {sm && ' Previous'}
-      </Button>
-
-      <Typography.Text type="secondary">
-        {data.chapter.serial} of {data.novel.chapter_count}
-      </Typography.Text>
-
-      <Button
-        disabled={!data.next_id}
-        onClick={() => navigate(`/read/${data.next_id}`)}
-      >
-        {sm && 'Next '}
-        <RightOutlined />
-      </Button>
+      <ReaderNavBar data={data} />
     </Flex>
   );
 };

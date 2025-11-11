@@ -1,4 +1,3 @@
-import '@fontsource/roboto-slab/800.css';
 import './main.scss';
 
 import { ConfigProvider } from 'antd';

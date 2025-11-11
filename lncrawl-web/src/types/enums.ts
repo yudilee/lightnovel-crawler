@@ -60,3 +60,30 @@ export const OutputFormat = {
   tcr: 'tcr',
 };
 export type OutputFormat = (typeof OutputFormat)[keyof typeof OutputFormat];
+
+export const FontFamily = {
+  Literata: 'Literata, serif',
+  Merriweather: 'Merriweather, serif',
+  NotoSerif: 'Noto Serif, serif',
+  SourceSerif4: 'Source Serif 4, serif',
+  CrimsonText: 'Crimson Text, serif',
+  PTSerif: 'PT Serif, serif',
+  IBMPlexSerif: 'IBM Plex Serif, serif',
+  Taviraj: 'Taviraj, serif',
+  Cormorant: 'Cormorant, serif',
+  PlayfairDisplay: 'Playfair Display, serif',
+  ArbutusSlab: 'Arbutus Slab, serif',
+  RobotoSlab: 'Roboto Slab, serif',
+};
+export type FontFamily = (typeof FontFamily)[keyof typeof FontFamily];
+
+export const ReaderTheme = {
+  Dark: { background: '#121212', color: '#E0E0E0' },
+  Black: { background: '#000000', color: '#FFFFFF' },
+  White: { background: '#FFFFFF', color: '#000000' },
+  Paper: { background: '#F5F2E7', color: '#2B2B2B' },
+  Sepia: { background: '#FDF6E3', color: '#333333' },
+  Coffee: { background: '#EAE7DC', color: '#2C2C2C' },
+  Parchment: { background: '#FBEEC1', color: '#3C3C3C' },
+};
+export type ReaderTheme = (typeof ReaderTheme)[keyof typeof ReaderTheme];

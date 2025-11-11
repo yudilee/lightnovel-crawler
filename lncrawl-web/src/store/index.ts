@@ -10,9 +10,11 @@ import {
   persistStore,
 } from 'redux-persist';
 import { AuthSlice, authPersistConfig } from './_auth';
+import { ReaderSlice, readerPersistConfig } from './_reader';
 
 const reducer = combineReducers({
   auth: persistReducer(authPersistConfig, AuthSlice.reducer),
+  reader: persistReducer(readerPersistConfig, ReaderSlice.reducer),
 });
 
 export type RootState = ReturnType<typeof reducer>;

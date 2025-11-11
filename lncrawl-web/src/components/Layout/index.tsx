@@ -3,7 +3,9 @@ import { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { MainLayoutSidebar } from './sidebar';
 
-export const MainLayout: React.FC<any> = () => {
+export const MainLayout: React.FC<{
+  noPadding?: boolean;
+}> = ({ noPadding }) => {
   const navigate = useNavigate();
   const { md } = Grid.useBreakpoint();
   const [overlay, setOverlay] = useState(false);
@@ -46,8 +48,8 @@ export const MainLayout: React.FC<any> = () => {
         style={{
           height: '100vh',
           overflow: 'auto',
-          padding: md ? 20 : 10,
-          paddingBottom: md ? 50 : 100,
+          padding: noPadding ? undefined : md ? 20 : 10,
+          paddingBottom: noPadding ? undefined : md ? 50 : 100,
         }}
         onClickCapture={() => setCollapsed(overlay)}
       >

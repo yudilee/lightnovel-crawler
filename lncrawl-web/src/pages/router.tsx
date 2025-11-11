@@ -69,10 +69,6 @@ export const USER_ROUTES: RouteObject[] = [
         element: <NovelDetailsPage />,
       },
       {
-        path: 'read/:id',
-        element: <NovelReaderPage />,
-      },
-      {
         path: 'meta',
         children: [
           {
@@ -80,6 +76,16 @@ export const USER_ROUTES: RouteObject[] = [
             element: <SupportedSourcesPage />,
           },
         ],
+      },
+    ],
+  },
+  {
+    path: 'read',
+    element: <MainLayout noPadding />,
+    children: [
+      {
+        path: ':id',
+        element: <NovelReaderPage />,
       },
     ],
   },
