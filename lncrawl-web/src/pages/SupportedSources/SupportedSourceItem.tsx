@@ -1,6 +1,7 @@
+import { Favicon } from '@/components/Favicon';
 import type { SupportedSource } from '@/types';
 import { FlagFilled, GlobalOutlined, StopOutlined } from '@ant-design/icons';
-import { Avatar, Card, Flex, Tag, Typography } from 'antd';
+import { Card, Flex, Tag, Typography } from 'antd';
 import { useInView } from 'react-intersection-observer';
 import { SourceFeatureIcons } from './SourceFeatureIcons';
 
@@ -12,6 +13,7 @@ export const SupportedSourceItem: React.FC<{
     triggerOnce: true,
     rootMargin: '5px',
   });
+
   return (
     <Card
       ref={ref}
@@ -20,11 +22,13 @@ export const SupportedSourceItem: React.FC<{
       style={{ opacity: disabled ? 0.8 : 1 }}
     >
       <Flex align="center" gap={15}>
-        <Avatar
-          style={{ backgroundColor: '#39f' }}
-          src={inView ? `${source.url}/favicon.ico` : undefined}
-          icon={disabled ? <StopOutlined /> : <GlobalOutlined />}
-        />
+        {inView && (
+          <Favicon
+            url={source.url}
+            style={{ backgroundColor: '#39f' }}
+            icon={disabled ? <StopOutlined /> : <GlobalOutlined />}
+          />
+        )}
         <Flex vertical style={{ flex: 1 }}>
           <Typography.Link
             strong
@@ -33,7 +37,7 @@ export const SupportedSourceItem: React.FC<{
             target="_blank"
             rel="noopener noreferrer"
           >
-            {source.domain}
+            {source.url}
           </Typography.Link>
           {disabled && source.disable_reason && (
             <Typography.Text type="secondary">

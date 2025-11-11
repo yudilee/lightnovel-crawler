@@ -21,3 +21,7 @@ class Volume(BaseTable, table=True):
     title: str = Field(
         description="Name of the volume",
     )
+    chapter_count: int = Field(
+        default=0,
+        description="Number of available chapters",
+    )

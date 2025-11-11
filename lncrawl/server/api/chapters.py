@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Path, Security
+from typing import List
+
+from fastapi import APIRouter, Path, Security, Query
 
 from ...context import ctx
-from ...dao import Chapter, Job, User
+from ...dao import Chapter, ChapterImage, Job, User
 from ..security import ensure_user
 
 # The root router
@@ -21,3 +23,14 @@ def fetch_chapter(
     chapter_id: str = Path(),
 ) -> Job:
     return ctx.jobs.fetch_chapter(user, chapter_id)
+
+
+@router.get("/{chapter_id}/images", summary='Gets list of chapter images')
+async def get_chapter_images(
+    chapter_id: str = Path(),
+    available_only: bool = Query(default=False, description='List only available images')
+) -> List[ChapterImage]:
+    return ctx.images.list(
+        chapter_id=chapter_id,
+        is_crawled=available_only,
+    )

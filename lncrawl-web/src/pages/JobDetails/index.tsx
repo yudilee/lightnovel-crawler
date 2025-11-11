@@ -1,14 +1,60 @@
 import { ArtifactListCard } from '@/components/ArtifactList/ArtifactListCard';
-import { type Artifact, type Job, type Novel, type User } from '@/types';
+import {
+  type Artifact,
+  type Chapter,
+  type Job,
+  type Novel,
+  type User,
+  type Volume,
+} from '@/types';
 import { stringifyError } from '@/utils/errors';
-import { Button, Flex, Grid, Result, Space, Spin } from 'antd';
+import { DeploymentUnitOutlined, LeftOutlined } from '@ant-design/icons';
+import {
+  Button,
+  Divider,
+  Flex,
+  Grid,
+  Result,
+  Space,
+  Spin,
+  Typography,
+} from 'antd';
 import axios from 'axios';
+import { LRUCache } from 'lru-cache';
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { JobListPage } from '../JobList';
 import { NovelDetailsCard } from '../NovelDetails/NovelDetailsCard';
+import { ChapterDetailsCard } from './ChapterDetailsCard';
 import { JobDetailsCard } from './JobDetailsCard';
 import { UserDetailsCard } from './UserDetailsCard';
+import { VolumeDetailsCard } from './VolumeDetailsCard';
+
+const _cache = new LRUCache<string, any>({
+  max: 1000,
+  ttl: 30000,
+});
+
+async function handleFetch<T>(
+  name: string,
+  id: string | null | undefined,
+  setValue: (value: T | undefined) => any
+) {
+  if (!id) {
+    setValue(undefined);
+    return;
+  }
+  const url = `/api/${name}/${id}`;
+  if (!_cache.has(url)) {
+    try {
+      const res = await axios.get<T>(url);
+      _cache.set(url, res.data);
+    } catch {
+      _cache.set(url, undefined);
+    }
+  }
+  setValue(_cache.get(url));
+}
 
 export const JobDetailsPage: React.FC<any> = () => {
   const { lg } = Grid.useBreakpoint();
@@ -21,6 +67,8 @@ export const JobDetailsPage: React.FC<any> = () => {
   const [job, setJob] = useState<Job>();
   const [user, setUser] = useState<User | undefined>();
   const [novel, setNovel] = useState<Novel | undefined>();
+  const [volume, setVolume] = useState<Volume | undefined>();
+  const [chapter, setChapter] = useState<Chapter | undefined>();
   const [artifact, setArtifact] = useState<Artifact | undefined>();
 
   useEffect(() => {
@@ -41,39 +89,23 @@ export const JobDetailsPage: React.FC<any> = () => {
   }, [id, refreshId]);
 
   useEffect(() => {
-    const fetchUser = async (id: string) => {
-      try {
-        const res = await axios.get<User>(`/api/user/${id}`);
-        setUser(res.data);
-      } catch {}
-    };
-    if (job?.user_id) {
-      fetchUser(job.user_id);
-    }
+    handleFetch('user', job?.user_id, setUser);
   }, [job?.user_id]);
 
   useEffect(() => {
-    const fetchNovel = async (id: string) => {
-      try {
-        const res = await axios.get<Novel>(`/api/novel/${id}`);
-        setNovel(res.data);
-      } catch {}
-    };
-    if (job?.extra.novel_id) {
-      fetchNovel(job.extra.novel_id);
-    }
+    handleFetch('novel', job?.extra.novel_id, setNovel);
   }, [job?.extra.novel_id]);
 
   useEffect(() => {
-    const fetchArtifact = async (id: string) => {
-      try {
-        const res = await axios.get<Artifact>(`/api/artifact/${id}`);
-        setArtifact(res.data);
-      } catch {}
-    };
-    if (job?.extra.artifact_id) {
-      fetchArtifact(job?.extra.artifact_id);
-    }
+    handleFetch('volume', job?.extra.volume_id, setVolume);
+  }, [job?.extra.volume_id]);
+
+  useEffect(() => {
+    handleFetch('chapter', job?.extra.chapter_id, setChapter);
+  }, [job?.extra.chapter_id]);
+
+  useEffect(() => {
+    handleFetch('artifact', job?.extra.artifact_id, setArtifact);
   }, [job?.extra.artifact_id]);
 
   useEffect(() => {
@@ -119,10 +151,18 @@ export const JobDetailsPage: React.FC<any> = () => {
 
   return (
     <Space direction="vertical" size={lg ? 'middle' : 'small'}>
+      {job.parent_job_id && (
+        <Link to={`/job/${job.parent_job_id}`}>
+          <LeftOutlined /> Parent Request
+        </Link>
+      )}
+
       <JobDetailsCard job={job} />
       {user && <UserDetailsCard user={user} />}
       {novel && <NovelDetailsCard novel={novel} />}
       {artifact && <ArtifactListCard artifacts={[artifact]} />}
+      {volume && <VolumeDetailsCard volume={volume} />}
+      {chapter && <ChapterDetailsCard chapter={chapter} />}
 
       <JobListPage
         key={job.id}
@@ -130,6 +170,14 @@ export const JobDetailsPage: React.FC<any> = () => {
         disableFilters
         autoRefresh={!job.is_done}
         hideIfEmpty
+        title={
+          <>
+            <Divider style={{ margin: 0 }} />
+            <Typography.Title level={3}>
+              <DeploymentUnitOutlined /> Linked Requests
+            </Typography.Title>
+          </>
+        }
       />
     </Space>
   );

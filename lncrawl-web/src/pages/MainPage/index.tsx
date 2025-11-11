@@ -10,10 +10,14 @@ export const MainPage: React.FC<any> = () => {
 
       <Divider />
 
-      <Typography.Title level={2}>
-        <DeploymentUnitOutlined /> Your Jobs
-      </Typography.Title>
-      <JobListPage autoRefresh />
+      <JobListPage
+        autoRefresh
+        title={
+          <Typography.Title level={2}>
+            <DeploymentUnitOutlined /> My Requests
+          </Typography.Title>
+        }
+      />
     </>
   );
 };

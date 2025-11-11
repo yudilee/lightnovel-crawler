@@ -22,7 +22,7 @@ export const buildMenu = (isAdmin: boolean): MenuProps['items'] => [
   },
   {
     key: '/',
-    label: 'Jobs',
+    label: 'Requests',
     icon: <DeploymentUnitOutlined />,
   },
   {

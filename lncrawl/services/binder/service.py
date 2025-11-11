@@ -80,6 +80,7 @@ class BinderService:
         except ServerError as e:
             raise e.with_extra(artifact.format)
         except Exception as e:
+            logger.error(f'Failed to create artifact {file_name}', exc_info=True)
             raise ServerErrors.failed_creating_artifact.with_extra(artifact.format) from e
         finally:
             shutil.rmtree(working_dir, ignore_errors=True)

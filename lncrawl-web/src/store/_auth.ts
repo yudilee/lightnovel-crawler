@@ -1,4 +1,4 @@
-import type { AuthLoginResponse, User } from '@/types';
+import type { LoginResponse, User } from '@/types';
 import { UserRole } from '@/types/enums';
 import { parseJwt } from '@/utils/jwt';
 import type { PayloadAction } from '@reduxjs/toolkit';
@@ -33,7 +33,7 @@ export const AuthSlice = createSlice({
   name: 'auth',
   initialState: buildInitialState(),
   reducers: {
-    setAuth(state, action: PayloadAction<AuthLoginResponse>) {
+    setAuth(state, action: PayloadAction<LoginResponse>) {
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.emailVerified = action.payload.is_verified;

@@ -1,8 +1,7 @@
 import logging
 from typing import Mapping, Optional, Sequence
 
-from sqlalchemy import inspect
-from sqlmodel import Session, create_engine
+from sqlmodel import Session, col, create_engine, inspect, update
 
 from ..context import ctx
 from ..dao import Migration, tables
@@ -124,15 +123,26 @@ class DB:
 
     def __run_migrations(self):
         latest = DB.latest_version
+        current = self.__get_current()
+        while current < latest:
+            logger.info(f'Running migrations: {current} -> {latest}')
+            self.__migrate_next(current)
+            current += 1
+            self.__set_current(current)
+
+    def __get_current(self) -> int:
         with self.session() as sess:
             entry = sess.get_one(Migration, DB.migration_id)
-            current = entry.version
-            while current < latest:
-                logger.info(f'Running migrations: {current} -> {latest}')
-                self.__migrate_next(current)
-                current += 1
-                entry.version = current
-                sess.commit()
+            return entry.version
+
+    def __set_current(self, value: int) -> None:
+        with self.session() as sess:
+            sess.exec(
+                update(Migration)
+                .where(col(Migration.id) == DB.migration_id)
+                .values(version=value)
+            )
+            sess.commit()
 
     def __migrate_next(self, version: int) -> None:
         raise ValueError(f'Unknown version {version}')

@@ -92,6 +92,7 @@ class VolumeService:
                             serial=s,
                             title=wanted[s].title,
                             extra=dict(wanted[s].extra),
+                            chapter_count=wanted[s].chapter_count,
                         ).model_dump()
                         for s in to_insert
                     ]
@@ -99,18 +100,30 @@ class VolumeService:
 
             if to_update:
                 title_updates = {}
+                chapter_count_updates = {}
                 for s in to_update:
                     row = existing[s]
                     rid = row.id
                     title = wanted[s].title
+                    chapters = wanted[s].chapter_count
                     if row.title != title:
                         title_updates[rid] = title
+                    if row.chapter_count != chapters:
+                        chapter_count_updates[rid] = chapters
                 if title_updates:
                     sess.exec(
                         sa_update(Volume)
                         .where(col(Volume.id).in_(title_updates.keys()))
                         .values(
                             title=case(title_updates, value=Volume.id),
+                        )
+                    )
+                if chapter_count_updates:
+                    sess.exec(
+                        sa_update(Volume)
+                        .where(col(Volume.id).in_(chapter_count_updates.keys()))
+                        .values(
+                            title=case(chapter_count_updates, value=Volume.id),
                         )
                     )
 

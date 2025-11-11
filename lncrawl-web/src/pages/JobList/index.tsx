@@ -11,14 +11,23 @@ import {
 import { useJobList } from './hooks';
 import { JobFilterBox } from './JobFilterBox';
 import { JobListItemCard } from './JobListItemCard';
+import type { JSX } from 'react';
 
 export const JobListPage: React.FC<{
+  title?: JSX.Element;
   userId?: string;
   parentJobId?: string;
   disableFilters?: boolean;
   autoRefresh?: boolean;
   hideIfEmpty?: boolean;
-}> = ({ userId, hideIfEmpty, autoRefresh, parentJobId, disableFilters }) => {
+}> = ({
+  title,
+  userId,
+  hideIfEmpty,
+  autoRefresh,
+  parentJobId,
+  disableFilters,
+}) => {
   const {
     currentPage,
     error,
@@ -59,6 +68,7 @@ export const JobListPage: React.FC<{
 
   return (
     <>
+      {title}
       {!disableFilters && (
         <>
           <Divider size="small" />
@@ -79,10 +89,10 @@ export const JobListPage: React.FC<{
       ) : (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description="No available jobs"
+          description="No available requests"
         />
       )}
-      {(jobs.length > 0 || currentPage > 1) && total / perPage > 1 && (
+      {(jobs.length > 0 || currentPage > 1) && total / perPage > 1 ? (
         <Pagination
           current={currentPage}
           total={total}
@@ -91,7 +101,7 @@ export const JobListPage: React.FC<{
           onChange={(page) => updateParams({ page })}
           style={{ textAlign: 'center', marginTop: 32 }}
         />
-      )}
+      ) : null}
     </>
   );
 };

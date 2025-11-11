@@ -11,6 +11,7 @@ import {
   Flex,
   Grid,
   Image,
+  Space,
   Tag,
   Tooltip,
   Typography,
@@ -18,7 +19,7 @@ import {
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
-import { NovelDomainName } from './NovelDomainName';
+import { Favicon } from '../../components/Favicon';
 
 export const NovelDetailsCard: React.FC<{ novel?: Novel }> = ({ novel }) => {
   const location = useLocation();
@@ -50,7 +51,12 @@ export const NovelDetailsCard: React.FC<{ novel?: Novel }> = ({ novel }) => {
       }}
       title={
         <Flex vertical>
-          <NovelDomainName novel={novel} />
+          <Space size="small">
+            <Favicon url={novel.url} />
+            <Typography.Text type="secondary" style={{ fontSize: '18px' }}>
+              {novel.domain}
+            </Typography.Text>
+          </Space>
           <Typography.Text style={{ fontSize: '24px', whiteSpace: 'wrap' }}>
             {location.pathname === `/novel/${novel.id}` ? (
               novel.title
@@ -120,22 +126,22 @@ export const NovelDetailsCard: React.FC<{ novel?: Novel }> = ({ novel }) => {
           />
 
           <Typography.Paragraph
-            type="secondary"
+            ellipsis={{ rows: showMore ? undefined : 5 }}
             style={{
-              textAlign: 'justify',
               overflow: 'hidden',
-              maxHeight: showMore ? undefined : '280px',
+              textAlign: 'justify',
+              whiteSpace: 'wrap',
             }}
             ref={(el) => {
               if (!el) return;
               setHasMore(Math.abs(el.scrollHeight - el.clientHeight) > 10);
             }}
           >
-            {novel.synopsis ? (
-              <span dangerouslySetInnerHTML={{ __html: novel.synopsis }} />
-            ) : (
-              'No synopsis available'
-            )}
+            <div
+              dangerouslySetInnerHTML={{
+                __html: novel.synopsis || '<p>No synopsis available</p>',
+              }}
+            />
           </Typography.Paragraph>
 
           {(hasMore || showMore) && (

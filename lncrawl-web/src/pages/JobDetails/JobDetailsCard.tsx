@@ -48,17 +48,17 @@ export const JobDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
             <b>Started:</b> {formatDate(job.started_at)}
           </Tag>
         )}
-        {!job.is_done && (
+        {!!job.is_running && (
           <Tag icon={<ClockCircleOutlined spin />} color="default">
             <b>Elapsed:</b> {formatDuration(Date.now() - job.started_at)}
           </Tag>
         )}
-        {job.is_done && (
+        {!!job.is_done && (
           <Tag icon={<ClockCircleFilled />} color="default">
             <b>Completed:</b> {formatDate(job.finished_at)}
           </Tag>
         )}
-        {job.is_done && (
+        {!!job.is_done && (
           <Tag icon={<HourglassFilled />} color="default">
             <b>Runtime:</b> {formatDuration(job.finished_at - job.started_at)}
           </Tag>

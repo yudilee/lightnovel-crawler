@@ -20,9 +20,9 @@ export interface User {
   updated_at: number;
 }
 
-export interface AuthLoginResponse {
-  token: string;
+export interface LoginResponse {
   user: User;
+  token: string;
   is_verified: boolean;
 }
 
@@ -33,39 +33,11 @@ export interface Paginatied<T> {
   items: T[];
 }
 
-export interface Novel {
-  id: string;
-
-  url: string;
-  domain: string;
-
-  title: string;
-  crawled: boolean;
-  authors: string;
-  synopsis: string;
-  tags: string[];
-  manga: boolean;
-  mtl: boolean;
-  language: string;
-  rtl: boolean;
-  volume_count: number;
-  chapter_count: number;
-
-  cover_url: string;
-  cover_file: string;
-  cover_available: boolean;
-
-  created_at: number;
-  updated_at: number;
-  extra: {
-    crawler_version?: number;
-  };
-}
-
 export interface Job {
   id: string;
   created_at: number;
   updated_at: number;
+  parent_job_id?: string;
 
   user_id: string;
   type: JobType;
@@ -103,6 +75,65 @@ export interface Job {
   };
 }
 
+export interface Novel {
+  id: string;
+
+  url: string;
+  domain: string;
+
+  title: string;
+  crawled: boolean;
+  authors: string;
+  synopsis: string;
+  tags: string[];
+  manga: boolean;
+  mtl: boolean;
+  language: string;
+  rtl: boolean;
+  volume_count: number;
+  chapter_count: number;
+
+  cover_url: string;
+  cover_file: string;
+  cover_available: boolean;
+
+  created_at: number;
+  updated_at: number;
+  extra: {
+    crawler_version?: number;
+  };
+}
+
+export interface Chapter {
+  id: number;
+  created_at: number;
+  updated_at: number;
+
+  novel_id: string;
+  volume_id: string;
+  url: string;
+  title: string;
+  serial: number;
+
+  is_done: boolean;
+  is_available: boolean;
+  content_file: string;
+
+  extra: {
+    crawler_version?: number;
+  };
+}
+
+export interface Volume {
+  id: number;
+  novel_id: string;
+  title: string;
+  serial: number;
+  chapter_count: number;
+  created_at: number;
+  updated_at: number;
+}
+
 export interface Artifact {
   id: string;
   format: OutputFormat;
@@ -128,28 +159,4 @@ export interface SupportedSource {
   disable_reason?: string;
   can_search: boolean;
   can_login: boolean;
-}
-
-export interface Chapter {
-  id: number;
-  hash: string;
-  title: string;
-  isRead?: boolean;
-}
-
-export interface Volume {
-  id: number;
-  title: string;
-  chapters: Chapter[];
-  isRead?: boolean;
-}
-
-export interface ChapterBody {
-  id: number;
-  title: string;
-  body: string;
-  volume_id: number;
-  volume: string;
-  prev?: Chapter;
-  next?: Chapter;
 }

@@ -21,7 +21,7 @@ def validate_url(url: str, allowed_schemes=['http', 'https']) -> bool:
 def extract_base(url: str) -> str:
     """Extracts the base url."""
     parsed = urlparse(url)
-    return parsed.scheme + '://' + parsed.netloc + '/'
+    return f'{parsed.scheme}://{parsed.netloc}/'
 
 
 def extract_host(url: str) -> str:

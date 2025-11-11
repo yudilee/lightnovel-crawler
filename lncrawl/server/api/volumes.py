@@ -1,9 +1,10 @@
 from typing import List
 
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Path, Security
 
 from ...context import ctx
-from ...dao import Chapter, Volume
+from ...dao import Chapter, Job, User, Volume
+from ..security import ensure_user
 
 # The root router
 router = APIRouter()
@@ -14,6 +15,14 @@ def get_volume(
     volume_id: str = Path(),
 ) -> Volume:
     return ctx.volumes.get(volume_id)
+
+
+@router.get("/{volume_id}/fetch", summary='Create a job to fetch volume')
+def fetch_volume(
+    user: User = Security(ensure_user),
+    volume_id: str = Path(),
+) -> Job:
+    return ctx.jobs.fetch_volume(user, volume_id)
 
 
 @router.get("/{volume_id}/chapters", summary='Gets all chapters')

@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 class NovelHallCrawler(Crawler):
     base_url = [
-        "https://novelhall.com/",
         "https://www.novelhall.com/",
     ]
 

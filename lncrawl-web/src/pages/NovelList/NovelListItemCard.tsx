@@ -1,8 +1,8 @@
+import { Favicon } from '@/components/Favicon';
 import { API_BASE_URL } from '@/config';
 import { Auth } from '@/store/_auth';
 import type { Novel } from '@/types';
-import { Avatar, Card, Flex, Image, Tooltip, Typography } from 'antd';
-import { useMemo } from 'react';
+import { Card, Flex, Image, Tooltip, Typography } from 'antd';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,24 +10,12 @@ export const NovelListItemCard: React.FC<{ novel: Novel }> = ({ novel }) => {
   const navigate = useNavigate();
   const token = useSelector(Auth.select.authToken);
 
-  const novelUrl = useMemo(() => new URL(novel.url), [novel.url]);
-
-  const faviconLink = useMemo(
-    () => novelUrl.origin + '/favicon.ico',
-    [novelUrl]
-  );
-
-  const domainName = useMemo(
-    () => novelUrl.hostname.replace('www.', ''),
-    [novelUrl]
-  );
-
   return (
     <Tooltip
       title={
         <Flex wrap gap="5px">
           <Typography.Text strong>{novel.title}</Typography.Text>
-          <Typography.Text type="secondary">({domainName})</Typography.Text>
+          <Typography.Text type="secondary">({novel.domain})</Typography.Text>
         </Flex>
       }
     >
@@ -59,9 +47,9 @@ export const NovelListItemCard: React.FC<{ novel: Novel }> = ({ novel }) => {
             maxHeight: '50vh',
           }}
         />
-        <Avatar
+        <Favicon
           size="small"
-          src={faviconLink}
+          url={novel.url}
           style={{
             position: 'absolute',
             top: 3,

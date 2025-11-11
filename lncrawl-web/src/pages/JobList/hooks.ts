@@ -113,12 +113,12 @@ export function useJobList(
   }, [error, status, jobs]);
 
   useEffect(() => {
-    if (!autoRefresh) return;
-    const interval = hasIncompleteJobs ? 5000 : 15000;
-    if (currentPage === 1) {
+    // refresh if it has incomplete jobs
+    // or auto refresh is on in the first page,
+    if (hasIncompleteJobs || (autoRefresh && currentPage === 1)) {
       const iid = setInterval(() => {
         setRefreshId((v) => v + 1);
-      }, interval);
+      }, 5000);
       return () => clearInterval(iid);
     }
   }, [autoRefresh, currentPage, hasIncompleteJobs]);

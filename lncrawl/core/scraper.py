@@ -72,42 +72,38 @@ class Scraper(TaskManager, SoupMaker):
 
     def init_scraper(self, session: Optional[Session] = None):
         """Check for option: https://github.com/VeNoMouS/cloudscraper"""
-        try:
-            # OPTIMAL CONFIGURATION for preventing your specific 403 issues
-            self.scraper = create_scraper(
-                # debug=True,  # Enable for monitoring (disable in production)
+        # OPTIMAL CONFIGURATION for preventing your specific 403 issues
+        self.scraper = create_scraper(
+            # debug=True,  # Enable for monitoring (disable in production)
 
-                # KEY SETTINGS to prevent 403 errors
-                min_request_interval=2.0,      # CRITICAL: Prevents TLS blocking
-                max_concurrent_requests=1,     # CRITICAL: Prevents concurrent conflicts
-                rotate_tls_ciphers=True,       # CRITICAL: Avoids cipher detection
+            # KEY SETTINGS to prevent 403 errors
+            min_request_interval=2.0,      # CRITICAL: Prevents TLS blocking
+            max_concurrent_requests=1,     # CRITICAL: Prevents concurrent conflicts
+            rotate_tls_ciphers=True,       # CRITICAL: Avoids cipher detection
 
-                # Enhanced protection
-                auto_refresh_on_403=False,     # Auto-recover from 403 errors
-                max_403_retries=0,             # Max retry attempts
-                session_refresh_interval=900,  # Session refresh time in seconds
+            # Enhanced protection
+            auto_refresh_on_403=False,     # Auto-recover from 403 errors
+            max_403_retries=0,             # Max retry attempts
+            session_refresh_interval=900,  # Session refresh time in seconds
 
-                # Optimized stealth mode
-                enable_stealth=True,
-                stealth_options={
-                    'min_delay': 1.0,          # Reasonable delays
-                    'max_delay': 3.0,
-                    'human_like_delays': True,
-                    'randomize_headers': True,
-                    'browser_quirks': True
-                },
+            # Optimized stealth mode
+            enable_stealth=True,
+            stealth_options={
+                'min_delay': 1.0,          # Reasonable delays
+                'max_delay': 3.0,
+                'human_like_delays': True,
+                'randomize_headers': True,
+                'browser_quirks': True
+            },
 
-                # User agent filtering
-                browser={
-                    'browser': 'chrome',
-                    'platform': 'windows',
-                    'desktop': True,
-                    'mobile': False,
-                },
-            )
-        except Exception:
-            logger.exception("Failed to initialize cloudscraper")
-            self.scraper = session or Session()
+            # User agent filtering
+            browser={
+                'browser': 'chrome',
+                'platform': 'windows',
+                'desktop': True,
+                'mobile': False,
+            },
+        )
 
     # ------------------------------------------------------------------------- #
     # Internal methods

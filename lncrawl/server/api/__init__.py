@@ -4,6 +4,8 @@ from ..security import ensure_admin, ensure_user
 from .admin import router as admin
 from .artifacts import router as artifact
 from .auth import router as auth
+from .chapters import router as chapter
+from .history import router as history
 from .jobs import router as job
 from .meta import router as metadata
 from .novels import router as novel
@@ -25,6 +27,12 @@ router.include_router(
     dependencies=[Depends(ensure_admin)],
 )
 
+router.include_router(
+    job,
+    prefix='/job',
+    tags=['Jobs'],
+    dependencies=[Security(ensure_user)],
+)
 
 router.include_router(
     novel,
@@ -41,6 +49,13 @@ router.include_router(
 )
 
 router.include_router(
+    chapter,
+    prefix='/chapter',
+    tags=['Chapters'],
+    dependencies=[Depends(ensure_user)],
+)
+
+router.include_router(
     artifact,
     prefix='/artifact',
     tags=['Artifacts'],
@@ -48,17 +63,16 @@ router.include_router(
 )
 
 router.include_router(
-    metadata,
-    prefix='/meta',
-    tags=['Metadata'],
+    history,
+    prefix='/read-history',
+    tags=['Read History'],
     dependencies=[Depends(ensure_user)],
 )
 
 router.include_router(
-    job,
-    prefix='/job',
-    tags=['Jobs'],
-    dependencies=[Security(ensure_user)],
+    metadata,
+    prefix='/meta',
+    tags=['Metadata'],
 )
 
 router.include_router(

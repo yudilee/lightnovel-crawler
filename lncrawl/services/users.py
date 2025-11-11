@@ -87,7 +87,7 @@ class UserService:
         }
         return self.encode_token(payload, expiry_minutes)
 
-    def verify_token(self, token: str, required_scopes: List[str]) -> User:
+    def verify_token(self, token: str, required_scopes: List[str] = []) -> User:
         payload = self.decode_token(token)
         user_id = payload.get('uid')
         token_scopes = payload.get('scopes', [])

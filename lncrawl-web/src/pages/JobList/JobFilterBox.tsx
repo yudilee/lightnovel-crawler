@@ -111,7 +111,7 @@ export const JobFilterBox: React.FC<
               icon={<XFilled />}
               style={{ width: lg ? undefined : '100%' }}
             >
-              Stop Jobs
+              Stop Runner
             </Button>
           ) : (
             <Button
@@ -120,7 +120,7 @@ export const JobFilterBox: React.FC<
               icon={<PlayCircleFilled />}
               style={{ width: lg ? undefined : '100%' }}
             >
-              Start Jobs
+              Start Runner
             </Button>
           )}
         </>

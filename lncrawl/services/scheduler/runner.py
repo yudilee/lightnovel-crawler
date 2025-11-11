@@ -124,14 +124,20 @@ class JobRunner:
                 return self.__set_success()
 
             for volume in volumes:
-                ctx.jobs.fetch_volume(self.user, volume.id, parent_id=self.job.id)
+                job = ctx.jobs.fetch_volume(
+                    self.user,
+                    volume.id,
+                    parent_id=self.job.id,
+                )
+                JobRunner(job).process()
 
-            ctx.jobs.make_many_artifacts(
+            job = ctx.jobs.make_many_artifacts(
                 self.user,
                 novel.id,
                 *ENABLED_FORMATS[self.user.tier],
                 parent_id=self.job.id,
             )
+            JobRunner(job).process()
 
             return self.__increment()
         except Exception as e:
