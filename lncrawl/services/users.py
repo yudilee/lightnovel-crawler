@@ -1,11 +1,11 @@
 import logging
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from jose import jwt
 from passlib.context import CryptContext
-from sqlmodel import and_, asc, func, or_, select
+from sqlmodel import and_, asc, col, func, or_, select
 
 from ..context import ctx
 from ..dao import User, VerifiedEmail
@@ -65,7 +65,7 @@ class UserService:
         algorithm = ctx.config.server.token_algo
         default_expiry = ctx.config.server.token_expiry
         minutes = expiry_minutes if expiry_minutes else default_expiry
-        payload['exp'] = datetime.now() + timedelta(minutes=minutes)
+        payload['exp'] = datetime.now(timezone.utc) + timedelta(minutes=minutes)
         return jwt.encode(payload, key, algorithm)
 
     def decode_token(self, token: str) -> Dict[str, Any]:
@@ -110,13 +110,13 @@ class UserService:
             # Apply filters
             conditions: List[Any] = []
             if search:
-                q = f'%{search.lower()}%'
+                q = f'%{search}%'
                 conditions.append(
                     or_(
-                        func.lower(User.name).like(q),
-                        func.lower(User.email).like(q),
-                        func.lower(User.role).like(q),
-                        func.lower(User.tier).like(q),
+                        col(User.name).ilike(q),
+                        col(User.email).ilike(q),
+                        col(User.role).ilike(q),
+                        col(User.tier).ilike(q),
                     )
                 )
 
@@ -158,9 +158,7 @@ class UserService:
         with ctx.db.session() as sess:
             q = select(User).where(User.email == creds.email)
             user = sess.exec(q).first()
-            if not user:
-                raise ServerErrors.no_such_user
-            if not user.is_active:
+            if not (user and user.is_active):
                 raise ServerErrors.inactive_user
         if not self._check(creds.password, user.password):
             raise ServerErrors.unauthorized

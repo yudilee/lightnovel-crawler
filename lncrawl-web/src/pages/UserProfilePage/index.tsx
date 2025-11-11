@@ -109,16 +109,6 @@ export const UserProfilePage: React.FC<any> = () => {
           <ProfilePasswordChangeButton />
         </Descriptions.Item>
       </Descriptions>
-
-      <Divider size="small" />
-
-      <Typography.Paragraph
-        type="secondary"
-        style={{ marginBottom: 0, fontSize: 12 }}
-      >
-        Manage your identity, credentials, and subscription tier. Use the
-        actions above to update your name or change your password.
-      </Typography.Paragraph>
     </div>
   );
 };

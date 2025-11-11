@@ -351,11 +351,11 @@ class ServerConfig(_Section):
 
     @property
     def token_expiry(self) -> int:
-        return self._get("token_expiry", lambda: 7 * 24 * 60)
+        return self._get("token_expiry_minutes", lambda: 7 * 24 * 60)
 
     @token_expiry.setter
     def token_expiry(self, v: Optional[int]) -> None:
-        self._set("token_expiry", v)
+        self._set("token_expiry_minutes", v)
 
 
 # ------------------------------------------------------------------ #
