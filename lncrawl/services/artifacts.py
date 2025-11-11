@@ -67,6 +67,17 @@ class ArtifactService:
             sess.commit()
             return True
 
+    def get_epub(self, depends_on_job_id: str) -> Artifact:
+        with ctx.db.session() as sess:
+            artifact = sess.exec(
+                select(Artifact)
+                .where(Artifact.job_id == depends_on_job_id)
+            ).first()
+            print(depends_on_job_id, artifact)
+            if not artifact or not artifact.is_available:
+                raise ServerErrors.no_epub_file
+            return artifact
+
     def list_latest(self, novel_id: str) -> List[Artifact]:
         with ctx.db.session() as sess:
             subq = (

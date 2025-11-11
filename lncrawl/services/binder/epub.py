@@ -70,7 +70,6 @@ def build_intro(novel: Novel) -> epub.EpubHtml:
 def build_volume(volume: Volume) -> epub.EpubHtml:
     content = RE_WHITESPACE.sub('', f"""
     <div id="volume">
-        <h4>#{volume.serial}</h4>
         <h1>{volume.title}</h1>
     </div>
     """)
@@ -90,7 +89,7 @@ def build_volume(volume: Volume) -> epub.EpubHtml:
 def build_chapter(chapter: Chapter) -> epub.EpubHtml:
     content = RE_WHITESPACE.sub('', f"""
     <div id="chapter">
-        <h4>#{chapter.serial}</h4>
+        <h4 style="opacity: 0.8">#{chapter.serial}</h4>
         <h1>{chapter.title}</h1>
         {ctx.files.load_text(chapter.content_file)}
     </div>
@@ -108,11 +107,14 @@ def build_chapter(chapter: Chapter) -> epub.EpubHtml:
     return item
 
 
-def make_epub(working_dir: Path, artifact: Artifact, signal=Event()) -> None:
+def make_epub(
+    working_dir: Path,
+    artifact: Artifact,
+    signal=Event(),
+    **kwargs
+) -> None:
     out_file = ctx.files.resolve(artifact.output_file)
     tmp_file = working_dir / out_file.name
-    if out_file.exists():
-        return
 
     toc = []
     spine = []
@@ -176,24 +178,18 @@ def make_epub(working_dir: Path, artifact: Artifact, signal=Event()) -> None:
     if signal.is_set():
         raise ServerErrors.canceled_by_signal
     for volume in ctx.volumes.list(novel_id=artifact.novel_id):
-        volume_contents = []
         if signal.is_set():
             raise ServerErrors.canceled_by_signal
-        for chapter in ctx.chapters.list(volume_id=volume.id):
-            if not chapter.is_available:
-                continue
-
-            chapter_item = build_chapter(chapter)
-            volume_contents.append(chapter_item)
-            book.add_item(chapter_item)
-            spine.append(chapter_item)
-
-        if not volume_contents:
-            continue
 
         volume_item = build_volume(volume)
         book.add_item(volume_item)
         spine.append(volume_item)
+        volume_contents = []
+        for chapter in ctx.chapters.list(volume_id=volume.id):
+            chapter_item = build_chapter(chapter)
+            volume_contents.append(chapter_item)
+            book.add_item(chapter_item)
+            spine.append(chapter_item)
 
         volume_section = epub.Section(
             volume.title,
@@ -223,5 +219,6 @@ def make_epub(working_dir: Path, artifact: Artifact, signal=Event()) -> None:
     # save file
     epub.write_epub(str(tmp_file), book, {})
     out_file.parent.mkdir(parents=True, exist_ok=True)
+    out_file.unlink(True)
     tmp_file.rename(out_file)
     logger.info(f"Created: {out_file}")

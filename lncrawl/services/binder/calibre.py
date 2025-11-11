@@ -8,7 +8,6 @@ from ...context import ctx
 from ...dao import Artifact
 from ...dao.enums import OutputFormat
 from ...exceptions import ServerErrors
-from .epub import make_epub
 
 logger = logging.getLogger(__name__)
 
@@ -42,30 +41,17 @@ def is_calibre_available() -> bool:
     return __ebook_convert("--version")
 
 
-def convert_epub(working_dir: Path, artifact: Artifact, signal=Event()) -> None:
+def convert_epub(
+    working_dir: Path,
+    artifact: Artifact,
+    depends_on: str,
+    signal=Event(),
+) -> None:
+    epub = ctx.artifacts.get_epub(depends_on)
     out_file = ctx.files.resolve(artifact.output_file)
-    if out_file.exists():
-        return
 
     if not is_calibre_available():
         raise ServerErrors.calibre_exe_not_found
-
-    epub = ctx.artifacts.get_latest(artifact.novel_id, artifact.format)
-    if not (epub and epub.is_available):
-        with ctx.db.session() as sess:
-            epub = Artifact(
-                novel_id=artifact.novel_id,
-                format=OutputFormat.epub,
-                job_id=artifact.job_id,
-                user_id=artifact.user_id,
-                file_name=out_file.with_suffix('.epub').name,
-            )
-            make_epub(working_dir, epub)
-            sess.add(epub)
-            sess.commit()
-
-    if not epub.is_available:
-        raise ServerErrors.failed_creating_artifact
 
     tmp_file = working_dir / out_file.name
     novel = ctx.novels.get(artifact.novel_id)
@@ -115,5 +101,6 @@ def convert_epub(working_dir: Path, artifact: Artifact, signal=Event()) -> None:
         raise ServerErrors.failed_creating_artifact
 
     out_file.parent.mkdir(parents=True, exist_ok=True)
+    out_file.unlink(True)
     tmp_file.rename(out_file)
     logger.info("Created: %s", out_file.name)

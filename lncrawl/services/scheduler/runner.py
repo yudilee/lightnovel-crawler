@@ -270,8 +270,33 @@ class JobRunner:
 
             self.__set_running()
 
-            for fmt in formats:
-                ctx.jobs.make_artifact(self.user, novel_id, fmt, parent_id=self.job.id)
+            formats = set(map(OutputFormat, formats))
+            need_epub = formats & ctx.binder.depends_on_epub
+            if need_epub:
+                formats.add(OutputFormat.epub)
+            if not formats:
+                return self.__set_success()
+
+            epub_job_id = None
+            for format in (formats - need_epub):
+                job = ctx.jobs.make_artifact(
+                    self.user,
+                    novel_id,
+                    format,
+                    parent_id=self.job.id
+                )
+                if format == OutputFormat.epub:
+                    epub_job_id = job.id
+
+            if epub_job_id:
+                for format in need_epub:
+                    job = ctx.jobs.make_artifact(
+                        self.user,
+                        novel_id,
+                        format,
+                        parent_id=self.job.id,
+                        depends_on=epub_job_id,
+                    )
 
             return self.__increment()
         except Exception as e:
@@ -300,7 +325,8 @@ class JobRunner:
                 format=format,
                 novel_id=novel_id,
                 novel_title=novel_title,
-                job_id=self.job.parent_job_id or self.job.id,
+                depends_on=self.job.depends_on,
+                job_id=self.job.id,
                 user_id=self.user.id,
                 signal=self.signal,
             )

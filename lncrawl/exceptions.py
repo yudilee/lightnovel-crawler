@@ -124,6 +124,7 @@ class ServerErrors:
     email_send_failure = ServerError(500, "Failed to send email")
     canceled_by_signal = ServerError(500, "Canceled by signal")
     calibre_exe_not_found = ServerError(500, "No calibre executables")
+    no_epub_file = ServerError(500, "No EPub file found")
     failed_creating_artifact = ServerError(500, "Failed to create artifact")
     format_not_available = ServerError(500, "The output format is not available")
     host_rejected = ServerError(500, 'The requested domain is rejected')

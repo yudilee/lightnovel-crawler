@@ -75,6 +75,7 @@ def replay_job(
         user=user,
         type=job.type,
         data=job.extra,
+        depends_on=job.depends_on,
     )
 
 
@@ -133,6 +134,4 @@ def make_artifacts(
     formats = list(set(body.formats))
     if not formats:
         raise ServerErrors.no_artifacts_to_create
-    if len(formats) == 1:
-        return ctx.jobs.make_artifact(user, body.novel_id, formats[0])
     return ctx.jobs.make_many_artifacts(user, body.novel_id, *formats)

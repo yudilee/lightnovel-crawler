@@ -23,11 +23,14 @@ def extract_text(html: str) -> str:
     return text
 
 
-def make_text(working_dir: Path, artifact: Artifact, signal=Event()):
+def make_text(
+    working_dir: Path,
+    artifact: Artifact,
+    signal=Event(),
+    **kwargs
+) -> None:
     out_file = ctx.files.resolve(artifact.output_file)
     tmp_file = working_dir / out_file.name
-    if out_file.exists():
-        return
 
     novel = ctx.novels.get(artifact.novel_id)
     with zipfile.ZipFile(tmp_file, "w", zipfile.ZIP_DEFLATED) as zipf:
@@ -68,7 +71,7 @@ def make_text(working_dir: Path, artifact: Artifact, signal=Event()):
             '',
             "-" * 40,
             '',
-            extract_text(novel.synopsis),
+            extract_text(novel.synopsis or ''),
             '',
             "-" * 40,
             '',
@@ -79,5 +82,6 @@ def make_text(working_dir: Path, artifact: Artifact, signal=Event()):
         zipf.writestr('meta.txt', meta_text.encode())
 
     out_file.parent.mkdir(parents=True, exist_ok=True)
+    out_file.unlink(True)
     tmp_file.rename(out_file)
     logger.info(f'Created: {out_file}')

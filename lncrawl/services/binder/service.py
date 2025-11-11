@@ -1,8 +1,8 @@
 import logging
 import shutil
-from pathlib import Path
+from functools import cached_property
 from threading import Event, Lock
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, Set
 
 from ...context import ctx
 from ...dao import Artifact
@@ -20,7 +20,7 @@ requires_zip = set([
     OutputFormat.json,
     OutputFormat.text,
 ])
-archive_maker: Dict[OutputFormat, Callable[[Path, Artifact, Event], None]] = {
+archive_maker: Dict[OutputFormat, Callable[..., None]] = {
     OutputFormat.json: make_json,
     OutputFormat.text: make_text,
     OutputFormat.epub: make_epub,
@@ -43,6 +43,14 @@ class BinderService:
         self.lock = Lock()
         pass
 
+    @cached_property
+    def depends_on_epub(self) -> Set[OutputFormat]:
+        return set([
+            k
+            for k, v in archive_maker.items()
+            if v == convert_epub
+        ])
+
     def make_artifact(
         self,
         novel_id: str,
@@ -50,6 +58,7 @@ class BinderService:
         format: OutputFormat,
         job_id: Optional[str] = None,
         user_id: Optional[str] = None,
+        depends_on: Optional[str] = None,
         signal=Event(),
     ) -> Artifact:
         make = archive_maker[format]
@@ -72,7 +81,12 @@ class BinderService:
         try:
             shutil.rmtree(working_dir, ignore_errors=True)
             working_dir.mkdir(parents=True)
-            make(working_dir, artifact, signal)
+            make(
+                working_dir,
+                signal=signal,
+                artifact=artifact,
+                depends_on=depends_on
+            )
             with self.lock, ctx.db.session() as sess:
                 sess.add(artifact)
                 sess.commit()
