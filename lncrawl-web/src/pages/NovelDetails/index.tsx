@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ArtifactListCard } from '../../components/ArtifactList/ArtifactListCard';
 import { NovelDetailsCard } from './NovelDetailsCard';
+import { VolumeListCard } from './VolumeListCard';
 
 export const NovelDetailsPage: React.FC<any> = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,6 +34,12 @@ export const NovelDetailsPage: React.FC<any> = () => {
       }
     };
 
+    if (id) {
+      fetchNovel(id);
+    }
+  }, [id, refreshId, messageApi]);
+
+  useEffect(() => {
     const fetchArtifacts = async (id: string) => {
       try {
         const { data: artifacts } = await axios.get<Artifact[]>(
@@ -40,18 +47,15 @@ export const NovelDetailsPage: React.FC<any> = () => {
         );
         setArtifacts(artifacts);
       } catch (err) {
-        messageApi.open({
-          type: 'error',
-          content: stringifyError(err, 'Failed to fetch artifacts'),
-        });
+        messageApi.error(stringifyError(err));
       }
     };
 
-    if (id) {
-      fetchNovel(id);
-      fetchArtifacts(id);
+    setArtifacts([]);
+    if (novel?.id) {
+      fetchArtifacts(novel?.id);
     }
-  }, [id, refreshId, messageApi]);
+  }, [novel?.id, messageApi]);
 
   if (loading) {
     return (
@@ -85,6 +89,7 @@ export const NovelDetailsPage: React.FC<any> = () => {
         novelId={novel.id}
         showMakeButton
       />
+      <VolumeListCard novel={novel} />
     </Space>
   );
 };

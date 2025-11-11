@@ -4,17 +4,20 @@ import { Card, Descriptions, Grid } from 'antd';
 
 export const ChapterDetailsCard: React.FC<{
   chapter: Chapter;
-}> = ({ chapter }) => {
+  inner?: boolean;
+}> = ({ chapter, inner }) => {
   const { lg } = Grid.useBreakpoint();
   return (
     <Card
-      size="small"
-      variant="outlined"
-      title={chapter.title}
+      type={inner ? 'inner' : undefined}
+      title={inner ? undefined : chapter.title}
+      variant={inner ? 'borderless' : 'outlined'}
       styles={{
+        body: {
+          padding: 10,
+        },
         title: {
           fontSize: 22,
-          padding: 10,
           whiteSpace: 'wrap',
         },
       }}
@@ -43,8 +46,8 @@ export const ChapterDetailsCard: React.FC<{
             children: chapter.is_available ? 'Yes' : 'No',
           },
           {
-            label: 'Created',
-            children: formatDate(chapter.created_at),
+            label: 'Last Update',
+            children: formatDate(chapter.updated_at),
           },
         ]}
       />

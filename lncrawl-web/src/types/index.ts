@@ -104,8 +104,10 @@ export interface Novel {
   };
 }
 
+export interface ReadHistory extends Record<string, boolean> {}
+
 export interface Chapter {
-  id: number;
+  id: string;
   created_at: number;
   updated_at: number;
 
@@ -125,7 +127,7 @@ export interface Chapter {
 }
 
 export interface Volume {
-  id: number;
+  id: string;
   novel_id: string;
   title: string;
   serial: number;

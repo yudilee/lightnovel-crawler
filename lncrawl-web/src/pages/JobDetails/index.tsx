@@ -25,10 +25,10 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { JobListPage } from '../JobList';
 import { NovelDetailsCard } from '../NovelDetails/NovelDetailsCard';
-import { ChapterDetailsCard } from './ChapterDetailsCard';
+import { ChapterDetailsCard } from '../NovelDetails/ChapterDetailsCard';
 import { JobDetailsCard } from './JobDetailsCard';
 import { UserDetailsCard } from './UserDetailsCard';
-import { VolumeDetailsCard } from './VolumeDetailsCard';
+import { VolumeDetailsCard } from '../NovelDetails/VolumeDetailsCard';
 
 const _cache = new LRUCache<string, any>({
   max: 1000,

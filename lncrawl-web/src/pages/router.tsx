@@ -69,7 +69,7 @@ export const USER_ROUTES: RouteObject[] = [
         element: <NovelDetailsPage />,
       },
       {
-        path: 'novel/:id/chapter/:hash',
+        path: 'read/:id',
         element: <NovelReaderPage />,
       },
       {
