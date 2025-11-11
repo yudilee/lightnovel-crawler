@@ -3,7 +3,8 @@ from typing import Any, Iterable, List, Optional
 
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import update as sa_update
-from sqlmodel import (Session, and_, asc, case, col, desc, func, literal,
+from sqlalchemy.orm import aliased
+from sqlmodel import (Session, and_, asc, case, col, desc, func, literal, or_,
                       select, true)
 
 from ...context import ctx
@@ -16,6 +17,7 @@ from ...server.models.pagination import Paginated
 from ...utils.time_utils import current_timestamp
 from .utils import sa_select_children, sa_select_parents
 
+job_alias = aliased(Job)
 job_status_type = Job.__table__.c.status.type  # type: ignore
 
 
@@ -113,7 +115,11 @@ class JobService:
                 who = 'user' if job.user_id == user.id else 'admin'
                 reason = f'Canceled by {who}'
 
-            self._success(sess, job_id)
+            self._increment_up(
+                sess,
+                job_id,
+                job.total - job.done
+            )
             self._update(
                 sess,
                 job_id,
@@ -179,13 +185,17 @@ class JobService:
         *,
         full: bool = False,
         parent_id: Optional[str] = None,
+        depends_on: Optional[str] = None,
     ) -> Job:
         ctx.sources.get_crawler(url)
         return self._create(
             user=user,
             parent_id=parent_id,
-            data={'url': url},
+            depends_on=depends_on,
             type=JobType.FULL_NOVEL if full else JobType.NOVEL,
+            data={
+                'url': url
+            },
         )
 
     def fetch_many_novels(
@@ -194,12 +204,16 @@ class JobService:
         *urls: str,
         full: bool = False,
         parent_id: Optional[str] = None,
+        depends_on: Optional[str] = None,
     ) -> Job:
         return self._create(
             user=user,
             parent_id=parent_id,
-            data={'urls': urls},
+            depends_on=depends_on,
             type=JobType.FULL_NOVEL_BATCH if full else JobType.NOVEL_BATCH,
+            data={
+                'urls': urls
+            },
         )
 
     def fetch_volume(
@@ -208,12 +222,14 @@ class JobService:
         volume_id: str,
         *,
         parent_id: Optional[str] = None,
+        depends_on: Optional[str] = None,
     ) -> Job:
         volume = ctx.volumes.get(volume_id)
         novel = ctx.novels.get(volume.novel_id)
         return self._create(
             user=user,
             parent_id=parent_id,
+            depends_on=depends_on,
             type=JobType.VOLUME,
             data={
                 'novel_id': novel.id,
@@ -228,12 +244,16 @@ class JobService:
         user: User,
         *volume_ids: str,
         parent_id: Optional[str] = None,
+        depends_on: Optional[str] = None,
     ) -> Job:
         return self._create(
             user=user,
             parent_id=parent_id,
+            depends_on=depends_on,
             type=JobType.VOLUME_BATCH,
-            data={'volume_ids': volume_ids},
+            data={
+                'volume_ids': volume_ids
+            },
         )
 
     def fetch_chapter(
@@ -242,12 +262,14 @@ class JobService:
         chapter_id: str,
         *,
         parent_id: Optional[str] = None,
+        depends_on: Optional[str] = None,
     ) -> Job:
         chapter = ctx.chapters.get(chapter_id)
         novel = ctx.novels.get(chapter.novel_id)
         return self._create(
             user=user,
             parent_id=parent_id,
+            depends_on=depends_on,
             type=JobType.CHAPTER,
             data={
                 'novel_id': novel.id,
@@ -262,12 +284,16 @@ class JobService:
         user: User,
         *chapter_ids: str,
         parent_id: Optional[str] = None,
+        depends_on: Optional[str] = None,
     ) -> Job:
         return self._create(
             user=user,
             parent_id=parent_id,
+            depends_on=depends_on,
             type=JobType.CHAPTER_BATCH,
-            data={'chapter_ids': chapter_ids},
+            data={
+                'chapter_ids': chapter_ids
+            },
         )
 
     def fetch_image(
@@ -276,11 +302,13 @@ class JobService:
         image_id: str,
         *,
         parent_id: Optional[str] = None,
+        depends_on: Optional[str] = None,
     ) -> Job:
         image = ctx.images.get(image_id)
         return self._create(
             user=user,
             parent_id=parent_id,
+            depends_on=depends_on,
             type=JobType.IMAGE,
             data={
                 'url': image.url,
@@ -293,12 +321,16 @@ class JobService:
         user: User,
         *image_ids: str,
         parent_id: Optional[str] = None,
+        depends_on: Optional[str] = None,
     ) -> Job:
         return self._create(
             user=user,
             parent_id=parent_id,
+            depends_on=depends_on,
             type=JobType.IMAGE_BATCH,
-            data={'image_ids': image_ids},
+            data={
+                'image_ids': image_ids
+            },
         )
 
     def make_artifact(
@@ -308,11 +340,13 @@ class JobService:
         format: OutputFormat,
         *,
         parent_id: Optional[str] = None,
+        depends_on: Optional[str] = None,
     ) -> Job:
         novel = ctx.novels.get(novel_id)
         return self._create(
             user=user,
             parent_id=parent_id,
+            depends_on=depends_on,
             type=JobType.ARTIFACT,
             data={
                 'format': format,
@@ -327,11 +361,13 @@ class JobService:
         novel_id: str,
         *formats: OutputFormat,
         parent_id: Optional[str] = None,
+        depends_on: Optional[str] = None,
     ) -> Job:
         novel = ctx.novels.get(novel_id)
         return self._create(
             user=user,
             parent_id=parent_id,
+            depends_on=depends_on,
             type=JobType.ARTIFACT_BATCH,
             data={
                 'formats': formats,
@@ -349,12 +385,14 @@ class JobService:
         type: JobType,
         data: dict,
         parent_id: Optional[str] = None,
+        depends_on: Optional[str] = None,
     ) -> Job:
         with ctx.db.session() as sess:
             job = Job(
                 type=type,
                 extra=data,
                 user_id=user.id,
+                depends_on=depends_on,
                 parent_job_id=parent_id,
                 priority=JOB_PRIORITY_LEVEL[user.tier],
             )
@@ -391,24 +429,35 @@ class JobService:
 
     def _pending(self, skip_job_ids: Iterable[str]) -> Optional[Job]:
         with ctx.db.session() as sess:
+            aliased(Job)
             return sess.exec(
                 select(Job)
+                .outerjoin(job_alias, col(job_alias.id) == Job.depends_on)
                 .where(col(Job.id).not_in(skip_job_ids))
-                .where(col(Job.status) == JobStatus.PENDING)
+                .where(
+                    or_(
+                        col(Job.status) == JobStatus.PENDING,
+                        and_(
+                            col(Job.status) == JobStatus.RUNNING,
+                            col(Job.type).in_([
+                                JobType.NOVEL,
+                                JobType.CHAPTER,
+                                JobType.IMAGE,
+                                JobType.ARTIFACT,
+                            ])
+                        )
+                    )
+                )
+                .where(
+                    or_(
+                        col(Job.depends_on).is_(None),
+                        col(job_alias.is_done).is_(true())
+                    )
+                )
                 .order_by(
                     desc(Job.priority),
                     asc(Job.created_at),
                 )
-                .limit(1)
-            ).first()
-
-    def _pending_child(self, job_id: str) -> Optional[Job]:
-        with ctx.db.session() as sess:
-            return sess.exec(
-                select(Job)
-                .where(Job.parent_job_id == job_id)
-                .where(col(Job.is_done).is_not(true()))
-                .order_by(asc(Job.created_at))
                 .limit(1)
             ).first()
 
@@ -444,10 +493,6 @@ class JobService:
         sa_pars = sa_select_parents(job_id, True)
         sa_done = func.min(Job.total, Job.done + step)
         sa_is_done = Job.total == sa_done
-        sa_status = case(
-            (sa_is_done, literal(JobStatus.SUCCESS, type_=job_status_type)),
-            else_=Job.status
-        )
         sa_started_at = case(
             (sa_is_done, func.coalesce(Job.started_at, now)),
             else_=Job.started_at
@@ -455,6 +500,10 @@ class JobService:
         sa_finished_at = case(
             (sa_is_done, func.coalesce(Job.finished_at, now)),
             else_=Job.finished_at
+        )
+        sa_status = case(
+            (sa_is_done, literal(JobStatus.SUCCESS, type_=job_status_type)),
+            else_=Job.status
         )
 
         sess.exec(
@@ -475,3 +524,13 @@ class JobService:
             .where(Job.id == job_id)
         ).one()
         self._increment_up(sess, job_id, pending)
+
+    def _failed(self, sess: Session, job_id: str, reason: str) -> None:
+        self._cancel_down(sess, job_id)
+        self._success(sess, job_id)
+        self._update(
+            sess,
+            job_id,
+            error=reason,
+            status=JobStatus.FAILED,
+        )

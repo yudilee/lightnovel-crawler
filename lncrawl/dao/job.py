@@ -1,7 +1,7 @@
 from typing import Optional
 
 from pydantic import computed_field
-from sqlmodel import BigInteger, Boolean, Field, Index, asc, desc
+from sqlmodel import BigInteger, Boolean, Field, Index
 
 from ._base import BaseTable
 from .enums import JobPriority, JobStatus, JobType
@@ -12,8 +12,6 @@ class Job(BaseTable, table=True):
     __table_args__ = (
         Index("ix_job_is_done", 'id', 'is_done'),
         Index("ix_job_parent_job_id", 'parent_job_id'),
-        Index("ix_job_user_parent_id", 'user_id', 'parent_job_id'),
-        Index("ix_job_pending_order", 'is_done', desc('priority'), asc('created_at')),
     )
 
     user_id: str = Field(
@@ -21,6 +19,12 @@ class Job(BaseTable, table=True):
         ondelete='CASCADE'
     )
     parent_job_id: Optional[str] = Field(
+        default=None,
+        foreign_key="jobs.id",
+        ondelete='CASCADE',
+        nullable=True,
+    )
+    depends_on: Optional[str] = Field(
         default=None,
         foreign_key="jobs.id",
         ondelete='CASCADE',

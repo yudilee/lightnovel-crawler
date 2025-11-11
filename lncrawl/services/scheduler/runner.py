@@ -76,14 +76,7 @@ class JobRunner:
 
     def __set_failed(self, reason: str) -> bool:
         with ctx.db.session() as sess:
-            ctx.jobs._success(sess, self.job.id)
-            ctx.jobs._cancel_down(sess, self.job.id)
-            ctx.jobs._update(
-                sess,
-                self.job.id,
-                error=reason,
-                status=JobStatus.FAILED,
-            )
+            ctx.jobs._failed(sess, self.job.id, reason)
             sess.commit()
             self.job = sess.get_one(Job, self.job.id)
         self.__send_mail()
@@ -144,18 +137,21 @@ class JobRunner:
             if not volumes:
                 return self.__set_success()
 
+            last_job_id = None
             for volume in volumes:
-                ctx.jobs.fetch_volume(
+                job = ctx.jobs.fetch_volume(
                     self.user,
                     volume.id,
                     parent_id=self.job.id,
                 )
+                last_job_id = job.id
 
             ctx.jobs.make_many_artifacts(
                 self.user,
                 novel.id,
                 *ENABLED_FORMATS[self.user.tier],
                 parent_id=self.job.id,
+                depends_on=last_job_id,
             )
 
             return self.__increment()
