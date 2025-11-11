@@ -290,6 +290,15 @@ class CrawlerConfig(_Section):
         return "https://raw.githubusercontent.com/dipu-bd/lightnovel-crawler/dev/sources/_index.zip"
 
     @property
+    def runner_concurrency(self) -> int:
+        '''Scheduler concurrency'''
+        return self._get("runner_concurrency", 5)
+
+    @runner_concurrency.setter
+    def runner_concurrency(self, v: Optional[int]) -> None:
+        self._set("runner_concurrency", v)
+
+    @property
     def runner_cooldown(self) -> int:
         '''Crawler job cooldown in seconds'''
         return self._get("runner_cooldown", 1)

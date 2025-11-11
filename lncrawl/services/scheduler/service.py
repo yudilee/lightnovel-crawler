@@ -9,8 +9,6 @@ from .runner import JobRunner
 
 logger = logging.getLogger(__name__)
 
-CONCURRENCY = 5
-
 
 class JobScheduler:
     def __init__(self) -> None:
@@ -35,7 +33,7 @@ class JobScheduler:
             return
         self.signal = Event()
         self.start_ts = current_timestamp()
-        for _ in range(CONCURRENCY):
+        for _ in range(ctx.config.crawler.runner_concurrency):
             t = Thread(
                 target=self.run,
                 args=[self.signal],
