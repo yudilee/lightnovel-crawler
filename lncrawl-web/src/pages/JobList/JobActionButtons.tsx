@@ -53,7 +53,7 @@ export const JobActionButtons: React.FC<{
           <ReloadOutlined /> Replay
         </Button>
       )}
-      {(isAdmin || job.user_id === currentUser?.id) && job.is_done && (
+      {(isAdmin || job.user_id === currentUser?.id) && !job.is_done && (
         <Button size={size} danger onClick={cancelJob}>
           <CloseOutlined /> Cancel
         </Button>

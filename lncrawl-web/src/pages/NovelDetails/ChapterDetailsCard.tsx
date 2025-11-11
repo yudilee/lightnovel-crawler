@@ -1,12 +1,16 @@
 import { type Chapter } from '@/types';
 import { formatDate } from '@/utils/time';
-import { Card, Descriptions, Grid } from 'antd';
+import { RightCircleOutlined } from '@ant-design/icons';
+import { Button, Card, Descriptions, Grid } from 'antd';
+import { useNavigate } from 'react-router-dom';
 
 export const ChapterDetailsCard: React.FC<{
   chapter: Chapter;
   inner?: boolean;
 }> = ({ chapter, inner }) => {
+  const navigate = useNavigate();
   const { lg } = Grid.useBreakpoint();
+
   return (
     <Card
       type={inner ? 'inner' : undefined}
@@ -21,6 +25,17 @@ export const ChapterDetailsCard: React.FC<{
           whiteSpace: 'wrap',
         },
       }}
+      extra={
+        !inner && chapter.is_available ? (
+          <Button
+            shape="round"
+            icon={<RightCircleOutlined />}
+            onClick={() => navigate(`/read/${chapter.id}`)}
+          >
+            Read
+          </Button>
+        ) : undefined
+      }
     >
       <Descriptions
         size="small"
