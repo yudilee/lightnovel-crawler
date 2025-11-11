@@ -70,6 +70,7 @@ def build_intro(novel: Novel) -> epub.EpubHtml:
 def build_volume(volume: Volume) -> epub.EpubHtml:
     content = RE_WHITESPACE.sub('', f"""
     <div id="volume">
+        <h4>#{volume.serial}</h4>
         <h1>{volume.title}</h1>
     </div>
     """)
@@ -89,6 +90,7 @@ def build_volume(volume: Volume) -> epub.EpubHtml:
 def build_chapter(chapter: Chapter) -> epub.EpubHtml:
     content = RE_WHITESPACE.sub('', f"""
     <div id="chapter">
+        <h4>#{chapter.serial}</h4>
         <h1>{chapter.title}</h1>
         {ctx.files.load_text(chapter.content_file)}
     </div>

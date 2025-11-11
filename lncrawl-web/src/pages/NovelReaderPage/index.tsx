@@ -2,43 +2,45 @@ import '@fontsource/arbutus-slab/400.css';
 import '@fontsource/roboto-slab/400.css';
 import './reader.scss';
 
-import { type ChapterBody } from '@/types';
+import { Auth } from '@/store/_auth';
+import type { ReadChapter } from '@/types';
 import { stringifyError } from '@/utils/errors';
-import { LeftOutlined, MenuOutlined, RightOutlined } from '@ant-design/icons';
-import { Button, Divider, Flex, Result, Spin } from 'antd';
+import { formatFromNow } from '@/utils/time';
+import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { Button, Divider, Flex, Grid, Result, Spin, Typography } from 'antd';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { setChapterReadStatus } from './readStatus';
+import { useSelector } from 'react-redux';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 export const NovelReaderPage: React.FC<any> = () => {
-  const { id, hash } = useParams<{ id: string; hash: string }>();
+  const { id } = useParams<{ id: string }>();
+  const token = useSelector(Auth.select.authToken);
 
   const [refreshId, setRefreshId] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
-  const [chapter, setChapter] = useState<ChapterBody>();
-
-  const fetchChapter = async (id: string, hash: string) => {
-    setError(undefined);
-    try {
-      const { data } = await axios.get<ChapterBody>(
-        `/api/novel/${id}/chapter/${hash}`
-      );
-      setChapter(data);
-      setChapterReadStatus(id, data.id);
-    } catch (err: any) {
-      setError(stringifyError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [data, setData] = useState<ReadChapter>();
 
   useEffect(() => {
-    if (id && hash) {
-      fetchChapter(id, hash);
+    const fetchChapter = async (id: string) => {
+      setError(undefined);
+      try {
+        const { data: chapter } = await axios.get<ReadChapter>(
+          `/api/chapter/${id}/read`
+        );
+        setData(chapter);
+      } catch (err: any) {
+        setError(stringifyError(err));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchChapter(id);
     }
-  }, [id, hash, refreshId]);
+  }, [id, token, refreshId]);
 
   if (loading) {
     return (
@@ -48,7 +50,7 @@ export const NovelReaderPage: React.FC<any> = () => {
     );
   }
 
-  if (error || !chapter || !id) {
+  if (error || !data || !id) {
     return (
       <Flex align="center" justify="center" style={{ height: '100%' }}>
         <Result
@@ -64,47 +66,69 @@ export const NovelReaderPage: React.FC<any> = () => {
   }
 
   return (
-    <>
-      <Flex vertical>
-        <NavigationButtons novelId={id} chapter={chapter} />
-        <Divider />
+    <Flex vertical>
+      <Flex
+        vertical
+        wrap
+        align="center"
+        gap={5}
+        style={{ textAlign: 'center' }}
+      >
+        <Typography.Text type="success">{data.novel.authors}</Typography.Text>
+        <Typography.Title level={3} style={{ margin: 0 }}>
+          <Link to={`/novel/${data.novel.id}`}>{data.novel.title}</Link>
+        </Typography.Title>
+        <Typography.Title level={4} type="secondary" style={{ margin: 0 }}>
+          {data.chapter.title}
+        </Typography.Title>
+        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+          Updated {formatFromNow(data.chapter.updated_at)}
+        </Typography.Text>
+      </Flex>
+
+      <Divider size="small" />
+      <NavigationButtons data={data} />
+      <Divider size="small" />
+
+      {data.content && (
         <div
           className="novel-content-reader"
-          dangerouslySetInnerHTML={{ __html: chapter.body }}
+          dangerouslySetInnerHTML={{ __html: data.content }}
         />
-        <Divider />
-        <NavigationButtons novelId={id} chapter={chapter} />
-      </Flex>
-    </>
+      )}
+
+      <Divider size="small" />
+      <NavigationButtons data={data} />
+      <Divider size="small" />
+    </Flex>
   );
 };
 
 export const NavigationButtons: React.FC<{
-  novelId: string;
-  chapter: ChapterBody;
-}> = ({ novelId, chapter }) => {
+  data: ReadChapter;
+}> = ({ data }) => {
+  const { sm } = Grid.useBreakpoint();
   const navigate = useNavigate();
-
-  const prev = chapter?.prev?.hash;
-  const next = chapter?.next?.hash;
-
   return (
     <Flex align="center" justify="space-between">
       <Button
-        disabled={!prev}
-        onClick={() => navigate(`/novel/${novelId}/chapter/${prev}`)}
+        disabled={!data.previous_id}
+        onClick={() => navigate(`/read/${data.previous_id}`)}
       >
         <LeftOutlined />
-        Previous
+        {sm && ' Previous'}
       </Button>
-      <Button onClick={() => navigate(`/novel/${novelId}`)}>
-        <MenuOutlined />
-      </Button>
+
+      <Typography.Text type="secondary">
+        {data.chapter.serial} of {data.novel.chapter_count}
+      </Typography.Text>
+
       <Button
-        disabled={!next}
-        onClick={() => navigate(`/novel/${novelId}/chapter/${next}`)}
+        disabled={!data.next_id}
+        onClick={() => navigate(`/read/${data.next_id}`)}
       >
-        Next <RightOutlined />
+        {sm && 'Next '}
+        <RightOutlined />
       </Button>
     </Flex>
   );

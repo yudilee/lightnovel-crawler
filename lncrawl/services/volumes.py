@@ -123,7 +123,7 @@ class VolumeService:
                         sa_update(Volume)
                         .where(col(Volume.id).in_(chapter_count_updates.keys()))
                         .values(
-                            title=case(chapter_count_updates, value=Volume.id),
+                            chapter_count=case(chapter_count_updates, value=Volume.id),
                         )
                     )
 

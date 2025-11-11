@@ -6,9 +6,10 @@ from sqlalchemy import update as sa_update
 from sqlmodel import case, col, func, select, true
 
 from ..context import ctx
-from ..dao import Chapter, Volume
+from ..dao import Chapter, Novel, User, Volume
 from ..exceptions import ServerErrors
 from ..models import Chapter as ModelChapter
+from ..server.models.novel import ReadChapterResponse
 
 
 class ChapterService:
@@ -81,6 +82,36 @@ class ChapterService:
             ctx.files.resolve(chapter.content_file).unlink(True)
             sess.delete(chapter)
             sess.commit()
+
+    def read(self, user: User, chapter_id: str) -> ReadChapterResponse:
+        chapter = self.get(chapter_id)
+        novel = ctx.novels.get(chapter.novel_id)
+
+        content = None
+        if chapter.is_available:
+            content = ctx.files.load_text(chapter.content_file)
+
+        with ctx.db.session() as sess:
+            previous_id = sess.exec(
+                select(Chapter.id)
+                .where(Novel.id == novel.id)
+                .where(Chapter.serial == chapter.serial - 1)
+            ).first()
+            next_id = sess.exec(
+                select(Chapter.id)
+                .where(Novel.id == novel.id)
+                .where(Chapter.serial == chapter.serial + 1)
+            ).first()
+
+        ctx.history.add(user.id, chapter.id)
+
+        return ReadChapterResponse(
+            novel=novel,
+            chapter=chapter,
+            content=content,
+            next_id=next_id,
+            previous_id=previous_id,
+        )
 
     def sync(self, novel_id: str, chapters: List[ModelChapter]):
         with ctx.db.session() as sess:

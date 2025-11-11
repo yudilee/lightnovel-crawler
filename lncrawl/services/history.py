@@ -41,6 +41,15 @@ class ReadHistoryService:
                 for item in items
             }
 
+    def check(self, user_id: str, chapter_id: str) -> bool:
+        with ctx.db.session() as sess:
+            item = sess.exec(
+                select(ReadHistory.id)
+                .where(ReadHistory.user_id == user_id)
+                .where(ReadHistory.chapter_id == chapter_id)
+            ).first()
+            return bool(item)
+
     def add(self, user_id: str, chapter_id: str) -> None:
         with ctx.db.session() as sess:
             chapter = ctx.chapters.get(chapter_id)

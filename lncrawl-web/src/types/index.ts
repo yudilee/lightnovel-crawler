@@ -104,8 +104,6 @@ export interface Novel {
   };
 }
 
-export interface ReadHistory extends Record<string, boolean> {}
-
 export interface Chapter {
   id: string;
   created_at: number;
@@ -161,4 +159,14 @@ export interface SupportedSource {
   disable_reason?: string;
   can_search: boolean;
   can_login: boolean;
+}
+
+export interface ReadHistory extends Record<string, boolean> {}
+
+export interface ReadChapter {
+  novel: Novel;
+  chapter: Chapter;
+  content?: string;
+  next_id?: string;
+  previous_id?: string;
 }

@@ -1,9 +1,10 @@
 from typing import List
 
-from fastapi import APIRouter, Path, Security, Query
+from fastapi import APIRouter, Path, Query, Security
 
 from ...context import ctx
 from ...dao import Chapter, ChapterImage, Job, User
+from ..models.novel import ReadChapterResponse
 from ..security import ensure_user
 
 # The root router
@@ -34,3 +35,11 @@ async def get_chapter_images(
         chapter_id=chapter_id,
         is_crawled=available_only,
     )
+
+
+@router.get("/{chapter_id}/read", summary='Get chapter content for reading')
+def read_chapter(
+    user: User = Security(ensure_user),
+    chapter_id: str = Path(),
+) -> ReadChapterResponse:
+    return ctx.chapters.read(user, chapter_id)
