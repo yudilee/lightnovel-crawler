@@ -1,6 +1,6 @@
 import type { Job } from '@/types';
 import { stringifyError } from '@/utils/errors';
-import { SendOutlined } from '@ant-design/icons';
+import { BookTwoTone, SendOutlined } from '@ant-design/icons';
 import { Alert, Button, Form, Grid, Input, Typography } from 'antd';
 import type { TextAreaProps } from 'antd/es/input';
 import axios from 'axios';
@@ -51,7 +51,9 @@ export const RequestNovelCard: React.FC<any> = () => {
       labelCol={{ style: { padding: 0 } }}
       encType="application/x-www-form-urlencoded"
     >
-      <Typography.Title level={2}>📘 Request Novel</Typography.Title>
+      <Typography.Title level={2}>
+        <BookTwoTone /> Request Novel
+      </Typography.Title>
 
       {Boolean(error) && (
         <Alert

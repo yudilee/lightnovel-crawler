@@ -1,3 +1,4 @@
+import { TeamOutlined } from '@ant-design/icons';
 import {
   Button,
   Divider,
@@ -48,7 +49,9 @@ export const UserListPage: React.FC<any> = () => {
 
   return (
     <>
-      <Typography.Title level={2}>👥 Users</Typography.Title>
+      <Typography.Title level={2}>
+        <TeamOutlined /> Users
+      </Typography.Title>
 
       <Divider size="small" />
 
