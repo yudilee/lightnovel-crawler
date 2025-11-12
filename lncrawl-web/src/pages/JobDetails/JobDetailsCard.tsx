@@ -3,14 +3,14 @@ import {
   JobStatusTag,
   JobTypeTag,
 } from '@/components/Tags/jobs';
-import { JobStatus, type Job } from '@/types';
+import type { Job } from '@/types';
 import { formatDate, formatDuration } from '@/utils/time';
 import {
   ClockCircleFilled,
   ClockCircleOutlined,
   HourglassFilled,
 } from '@ant-design/icons';
-import { Alert, Card, Flex, Grid, Tag, Typography } from 'antd';
+import { Card, Flex, Grid, Tag, Typography } from 'antd';
 import { JobActionButtons } from '../JobList/JobActionButtons';
 import { JobProgressLine } from '../JobList/JobProgessBar';
 import { JobTitleText } from './JobTitleText';
@@ -66,11 +66,24 @@ export const JobDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
       </Flex>
 
       {Boolean(job.error) && (
-        <Alert
-          showIcon
-          description={job.error}
-          type={job.status === JobStatus.FAILED ? 'error' : 'warning'}
-          style={{ marginTop: 15, padding: '10px 20px' }}
+        <pre
+          style={{
+            maxHeight: 300,
+            margin: '15px 0',
+            padding: '10px 20px',
+            whiteSpace: 'nowrap',
+            overflow: 'auto',
+            borderRadius: 10,
+            color: '#f63',
+            border: '1px solid #f63',
+          }}
+          dangerouslySetInnerHTML={{
+            __html: job.error
+              .split('\n')
+              .filter(Boolean)
+              .map((line) => line.replace(/^\s+/, '&nbsp;'))
+              .join('<br/>'),
+          }}
         />
       )}
 
