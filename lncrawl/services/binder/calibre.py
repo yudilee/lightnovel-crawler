@@ -1,15 +1,26 @@
 import logging
+import shlex
 import subprocess
-from functools import lru_cache
 from pathlib import Path
-from threading import Event
+from threading import Event, Lock
 
 from ...context import ctx
 from ...dao import Artifact
 from ...dao.enums import OutputFormat
-from ...exceptions import ServerErrors
+from ...exceptions import AbortedException, ServerErrors
 
 logger = logging.getLogger(__name__)
+
+__lock = Lock()
+__is_available = None
+__wait_timeout = 0.1
+
+
+def __acquire(signal: Event):
+    while not signal.is_set():
+        if __lock.acquire(timeout=__wait_timeout):
+            return
+    raise AbortedException()
 
 
 def __ebook_convert(*args, signal=Event()) -> bool:
@@ -18,27 +29,37 @@ def __ebook_convert(*args, signal=Event()) -> bool:
     Visit https://manual.calibre-ebook.com/generated/en/ebook-convert.html for argument list.
     """
     try:
+        __acquire(signal)  # run only one at a time
+
         with subprocess.Popen(
             args=['ebook-convert'] + [str(a) for a in args],
-            stdout=subprocess.STDOUT if ctx.logger.is_debug else subprocess.DEVNULL,
             stderr=subprocess.STDOUT if ctx.logger.is_warn else subprocess.DEVNULL,
+            stdout=subprocess.STDOUT if ctx.logger.is_debug else subprocess.DEVNULL,
         ) as p:
-            while p.poll() is None and not signal.is_set():
-                signal.wait(0.1)
-            if p.poll() is not None:
-                return p.poll() == 0
-            p.terminate()
-            if p.poll() is None:
-                p.kill()
-            return False
-    except Exception:
-        logger.error("Failed to convert ebook.", exc_info=True)
-        return False
+            logger.debug(shlex.join(p.args))  # type:ignore
+
+            while p.poll() is None:
+                if signal.is_set():
+                    raise AbortedException()
+                signal.wait(__wait_timeout)
+
+            if p.poll() != 0:
+                raise ServerErrors.ebook_convert_error
+
+            return True
+    finally:
+        __lock.release()
 
 
-@lru_cache
 def is_calibre_available() -> bool:
-    return __ebook_convert("--version")
+    global __is_available
+    if __is_available is None:
+        try:
+            __ebook_convert("--version")
+            __is_available = True
+        except Exception:
+            __is_available = False
+    return __is_available
 
 
 def convert_epub(
@@ -50,14 +71,14 @@ def convert_epub(
     epub = ctx.artifacts.get_epub(depends_on)
     out_file = ctx.files.resolve(artifact.output_file)
 
-    if not is_calibre_available():
-        raise ServerErrors.calibre_exe_not_found
-
     tmp_file = working_dir / out_file.name
     novel = ctx.novels.get(artifact.novel_id)
     epub_file = ctx.files.resolve(epub.output_file)
 
-    logger.info(f'Converting "{epub_file}" to "{out_file}"', )
+    if not is_calibre_available():
+        raise ServerErrors.calibre_exe_not_found
+
+    logger.info(f'Converting "{epub_file.name}" to "{out_file.name}"', )
     args = [
         epub_file,
         tmp_file,
