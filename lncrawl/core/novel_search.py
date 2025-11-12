@@ -31,7 +31,7 @@ def _search_process(
         from ..models import SearchResult
 
         asyncio.run(ctx.sources.load())
-        crawler = ctx.sources.create_crawler(link)
+        crawler = ctx.sources.init_crawler(link)
         setattr(crawler, 'can_use_browser', False)  # disable browser in search
 
         for item in crawler.search_novel(query):
