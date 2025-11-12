@@ -433,33 +433,40 @@ class JobService:
                 .limit(1)
             ).first()
 
-    def _pending(self, skip_job_ids: Iterable[str]) -> Optional[Job]:
+    def _pending(self, skip_job_ids: Iterable[str], artifact=False) -> Optional[Job]:
         with ctx.db.session() as sess:
-            return sess.exec(
-                select(Job)
-                .outerjoin(job_alias, col(job_alias.id) == Job.depends_on)
-                .where(col(Job.id).not_in(skip_job_ids))
-                .where(
-                    or_(
-                        Job.status == JobStatus.PENDING,
-                        and_(
-                            Job.status == JobStatus.RUNNING,
-                            Job.done == 0,
-                        )
+            stmt = select(Job)
+
+            stmt = stmt.outerjoin(job_alias, col(job_alias.id) == Job.depends_on)
+            stmt = stmt.where(
+                or_(
+                    col(Job.depends_on).is_(None),
+                    col(job_alias.is_done).is_(true())
+                )
+            )
+
+            stmt = stmt.where(
+                or_(
+                    Job.status == JobStatus.PENDING,
+                    and_(
+                        Job.status == JobStatus.RUNNING,
+                        Job.done == 0,
                     )
-                )
-                .where(
-                    or_(
-                        col(Job.depends_on).is_(None),
-                        col(job_alias.is_done).is_(true())
-                    )
-                )
-                .order_by(
-                    desc(Job.priority),
-                    asc(Job.created_at),
-                )
-                .limit(1)
-            ).first()
+                ),
+            )
+
+            if artifact:
+                stmt = stmt.where(Job.type == JobType.ARTIFACT)
+            else:
+                stmt = stmt.where(Job.type != JobType.ARTIFACT)
+                stmt = stmt.where(col(Job.id).not_in(skip_job_ids))
+
+            stmt = stmt.order_by(
+                desc(Job.priority),
+                asc(Job.created_at),
+            )
+
+            return sess.exec(stmt.limit(1)).first()
 
     def _update(self, sess: Session, job_id: str, **values) -> None:
         sess.exec(

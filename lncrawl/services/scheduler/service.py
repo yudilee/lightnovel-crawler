@@ -6,7 +6,7 @@ from ...context import ctx
 from ...exceptions import AbortedException
 from ...utils.event_lock import EventLock
 from .cleaner import run_cleaner
-from .runner import run_pending
+from .runner import run_artifacts, run_crawlers
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +31,9 @@ class JobScheduler:
             return
         self._signal = Event()
         self._thread(run_cleaner, ctx.config.crawler.cleaner_cooldown)
+        self._thread(run_artifacts, ctx.config.crawler.runner_cooldown)
         for _ in range(ctx.config.crawler.runner_concurrency):
-            self._thread(run_pending, ctx.config.crawler.runner_cooldown)
+            self._thread(run_crawlers, ctx.config.crawler.runner_cooldown)
         logger.info("Scheduler started")
 
     def stop(self):

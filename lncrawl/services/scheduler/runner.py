@@ -16,9 +16,10 @@ __lock = EventLock()
 __queue: Set[str] = set()
 
 
-def run_pending(signal: Event):
+def __run(signal: Event, artifact: bool):
     with __lock.using(signal):
-        job = ctx.jobs._pending(__queue)
+        job = None
+        job = ctx.jobs._pending(__queue, artifact)
         if not job:
             return
         __queue.add(job.id)
@@ -28,6 +29,14 @@ def run_pending(signal: Event):
     finally:
         with __lock.using(signal):
             __queue.remove(job.id)
+
+
+def run_artifacts(signal: Event):
+    __run(signal, artifact=True)
+
+
+def run_crawlers(signal: Event):
+    __run(signal, artifact=False)
 
 
 class JobRunner:
