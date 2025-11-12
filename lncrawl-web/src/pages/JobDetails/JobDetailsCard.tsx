@@ -50,7 +50,12 @@ export const JobDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
         )}
         {!!job.is_running && (
           <Tag icon={<ClockCircleOutlined spin />} color="default">
-            <b>Elapsed:</b> {formatDuration(Date.now() - job.started_at)}
+            <b>Elapsed:</b> {formatDuration(Date.now() - job.started_at!)}
+          </Tag>
+        )}
+        {!!job.is_running && job.eta && (
+          <Tag icon={<HourglassFilled />} color="default">
+            <b>ETA:</b> {formatDuration(job.eta)}
           </Tag>
         )}
         {!!job.is_done && (
@@ -60,12 +65,12 @@ export const JobDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
         )}
         {!!job.is_done && (
           <Tag icon={<HourglassFilled />} color="default">
-            <b>Runtime:</b> {formatDuration(job.finished_at - job.started_at)}
+            <b>Runtime:</b> {formatDuration(job.finished_at! - job.started_at!)}
           </Tag>
         )}
       </Flex>
 
-      {Boolean(job.error) && (
+      {job.error ? (
         <pre
           style={{
             maxHeight: 300,
@@ -85,7 +90,7 @@ export const JobDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
               .join('<br/>'),
           }}
         />
-      )}
+      ) : null}
 
       <Flex justify="end" align="center" gap={'10px'} style={{ marginTop: 15 }}>
         <JobActionButtons job={job} />

@@ -4,6 +4,7 @@ from pydantic import computed_field
 from sqlmodel import BigInteger, Boolean, Field, Index
 
 from ._base import BaseTable
+from ..utils.time_utils import current_timestamp
 from .enums import JobPriority, JobStatus, JobType
 
 
@@ -73,12 +74,6 @@ class Job(BaseTable, table=True):
 
     @computed_field  # type: ignore[misc]
     @property
-    def progress(self) -> int:
-        '''Progress percetage (value is between 0 to 100)'''
-        return (100 * self.done) // self.total
-
-    @computed_field  # type: ignore[misc]
-    @property
     def is_running(self) -> int:
         '''Whether the job is currently running'''
         return self.status == JobStatus.RUNNING
@@ -88,3 +83,19 @@ class Job(BaseTable, table=True):
     def is_pending(self) -> int:
         '''Whether the job is currently pending'''
         return self.status == JobStatus.PENDING
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def progress(self) -> int:
+        '''Progress percetage (value is between 0 to 100)'''
+        return (100 * self.done) // self.total
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def eta(self) -> Optional[float]:
+        '''Estimated remaining time in milliseconds'''
+        if not (self.started_at and self.progress):
+            return None
+        remains = 100 - self.progress
+        elapsed = current_timestamp() - self.started_at
+        return (elapsed * remains) / self.progress

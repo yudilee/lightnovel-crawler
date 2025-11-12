@@ -456,6 +456,7 @@ class JobService:
                 )
                 .order_by(
                     desc(Job.priority),
+                    desc(Job.total),
                     asc(Job.created_at),
                 )
                 .limit(1)

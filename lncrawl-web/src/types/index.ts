@@ -48,13 +48,14 @@ export interface Job {
   is_running: boolean;
   is_pending: boolean;
 
-  error: string;
-  started_at: number;
-  finished_at: number;
+  error?: string;
+  started_at?: number;
+  finished_at?: number;
 
   done: number;
   total: number;
   progress: number;
+  eta?: number;
 
   extra: {
     url?: string;
