@@ -12,7 +12,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from threading import Event, Lock
+from threading import Event
 from typing import Any, Dict, List
 from urllib.parse import quote_plus, unquote_plus
 
@@ -248,7 +248,6 @@ def process_info(info: CrawlerInfo):
 logger.info("Loading crawlers")
 futures = []
 visited = set()
-logger_lock = Lock()
 taskman = TaskManager(20)
 for info in ctx.sources.load_crawlers(*sorted(SOURCES_FOLDER.glob("**/*.py"))):
     if info.id in visited:

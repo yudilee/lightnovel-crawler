@@ -96,6 +96,9 @@ class CrawlerService:
             sess.add(novel)
             sess.commit()
 
+        print(len(crawler.volumes))
+        print(len(crawler.chapters))
+
         # add or update tags
         ctx.tags.insert(novel.tags)
 

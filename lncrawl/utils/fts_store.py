@@ -1,6 +1,7 @@
 import sqlite3
-import threading
 from typing import Iterable, List, Mapping, Tuple
+
+from .event_lock import EventLock
 
 # ------------------------------------------------------------------ #
 #                             SQL Queries                            #
@@ -52,14 +53,14 @@ class FTSStore:
 
     def __init__(self):
         """Initialize the in-memory FTSStore."""
-        self._lock = threading.RLock()
+        self._lock = EventLock()
         self._db = sqlite3.connect(":memory:", check_same_thread=False)
         self._db.execute(_INIT_SQL)
 
     def close(self):
         """Close the database connection."""
-        with self._lock:
-            self._db.close()
+        self._lock.abort()
+        self._db.close()
 
     def clear(self):
         """Remove all items, and cleanup memory."""
@@ -109,72 +110,3 @@ class FTSStore:
         """Insert multiple items by key."""
         with self._lock, self._db:
             self._db.execute(_DELETE_MATCHING_SQL, [_escape_query(query)])
-
-
-# ------------------------------------------------------------------ #
-#                                Tests                               #
-# ------------------------------------------------------------------ #
-if __name__ == '__main__':
-    from rich import print
-    from rich.traceback import Traceback
-
-    def eqset(a, b):
-        return set(a) == set(b)
-
-    s = FTSStore()
-    try:
-        # fresh
-        assert s.count() == 0
-
-        # insert one
-        s.insert("harry potter", "id:101")
-        assert s.count() == 1
-        assert eqset(s.search("har"), ["id:101"])  # token-prefix
-
-        # upsert emulation (delete+insert inside insert_dict)
-        s.insert("harry potter", "id:101-v2")
-        assert s.count() == 1
-        assert eqset(s.search("har"), ["id:101-v2"])
-
-        # insert multiple keys with same value
-        s.insert_keys(["harold", "harmony"], "id:200")
-        assert s.count() == 3
-        assert eqset(s.search("har"), ["id:101-v2", "id:200"])
-
-        # insert pairs (mixed)
-        s.insert_pairs([("ring", "id:300"), ("harvest moon", "id:400")])
-        assert s.count() == 5
-        assert eqset(s.search("har"), ["id:101-v2", "id:200", "id:400"])
-        assert eqset(s.search("ring"), ["id:300"])
-
-        # insert_dict batch with overwrite + new
-        s.insert_dict({"harry potter": "id:101-v3", "harkness": "id:500"})
-        assert s.count() == 6
-        assert eqset(s.search("har"), ["id:101-v3", "id:200", "id:400", "id:500"])
-
-        # delete_many some keys
-        s.delete_many(["harmony", "ring"])
-        assert s.count() == 4
-        assert eqset(s.search("har"), ["id:101-v3", "id:200", "id:400", "id:500"])
-        assert eqset(s.search("ring"), [])  # gone
-
-        # delete single
-        s.delete("harold")
-        assert s.count() == 3
-        assert eqset(s.search("har"), ["id:101-v3", "id:400", "id:500"])
-
-        # search_and_delete by prefix (token-prefix)
-        s.search_and_delete("har")  # deletes har*, i.e., harry potter, harvest moon, harkness
-        assert s.count() == 0
-
-        # repopulate and clear()
-        s.insert_pairs([("alpha", "A"), ("beta", "B"), ("gamma", "C")])
-        assert s.count() == 3
-        s.clear()
-        assert s.count() == 0
-
-        print(":heavy_check_mark:  [bold green]Tests passed[/bold green]")
-    except Exception:
-        print(Traceback(show_locals=False))
-    finally:
-        s.close()

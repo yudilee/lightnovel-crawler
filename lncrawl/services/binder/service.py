@@ -1,13 +1,13 @@
 import logging
 import shutil
 from functools import cached_property
-from threading import Event, Lock
+from threading import Event
 from typing import Callable, Dict, Optional, Set
 
 from ...context import ctx
 from ...dao import Artifact
 from ...dao.enums import OutputFormat
-from ...exceptions import ServerError, ServerErrors
+from ...exceptions import ServerErrors
 from ...utils.file_tools import safe_filename
 from .calibre import convert_epub
 from .epub import make_epub
@@ -40,7 +40,6 @@ archive_maker: Dict[OutputFormat, Callable[..., None]] = {
 
 class BinderService:
     def __init__(self):
-        self.lock = Lock()
         pass
 
     @cached_property
@@ -77,9 +76,10 @@ class BinderService:
             format=format,
             file_name=file_name,
         )
+
         working_dir = ctx.config.app.output_path / 'tmp' / artifact.id
         try:
-            shutil.rmtree(working_dir, ignore_errors=True)
+            shutil.rmtree(working_dir, True)
             working_dir.mkdir(parents=True)
             make(
                 working_dir,
@@ -87,14 +87,9 @@ class BinderService:
                 artifact=artifact,
                 depends_on=depends_on
             )
-            with self.lock, ctx.db.session() as sess:
+            with ctx.db.session() as sess:
                 sess.add(artifact)
                 sess.commit()
                 return artifact
-        except ServerError as e:
-            raise e.with_extra(artifact.format)
-        except Exception as e:
-            logger.error(f'Create artifact failed: {file_name}', exc_info=True)
-            raise ServerErrors.failed_creating_artifact.with_extra(artifact.format) from e
         finally:
-            shutil.rmtree(working_dir, ignore_errors=True)
+            shutil.rmtree(working_dir, True)

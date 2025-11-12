@@ -27,6 +27,7 @@ class Chapter(BaseTable, table=True):
         default=None,
         foreign_key="volumes.id",
         ondelete='SET NULL',
+        nullable=True,
     )
 
     url: str = Field(

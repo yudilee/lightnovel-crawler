@@ -2,25 +2,19 @@ import logging
 import shlex
 import subprocess
 from pathlib import Path
-from threading import Event, Lock
+from threading import Event
 
 from ...context import ctx
 from ...dao import Artifact
 from ...dao.enums import OutputFormat
 from ...exceptions import AbortedException, ServerErrors
+from ...utils.event_lock import EventLock
 
 logger = logging.getLogger(__name__)
 
-__lock = Lock()
+__lock = EventLock()
 __is_available = None
 __wait_timeout = 0.1
-
-
-def __acquire(signal: Event):
-    while not signal.is_set():
-        if __lock.acquire(timeout=__wait_timeout):
-            return
-    raise AbortedException()
 
 
 def __ebook_convert(*args, signal=Event()) -> bool:
@@ -28,27 +22,22 @@ def __ebook_convert(*args, signal=Event()) -> bool:
     Calls `ebook-convert` with given args
     Visit https://manual.calibre-ebook.com/generated/en/ebook-convert.html for argument list.
     """
-    try:
-        __acquire(signal)  # run only one at a time
+    with __lock.using(signal), subprocess.Popen(
+        args=['ebook-convert'] + [str(a) for a in args],
+        stderr=subprocess.STDOUT if ctx.logger.is_warn else subprocess.DEVNULL,
+        stdout=subprocess.STDOUT if ctx.logger.is_debug else subprocess.DEVNULL,
+    ) as p:
+        logger.debug(shlex.join(p.args))  # type:ignore
 
-        with subprocess.Popen(
-            args=['ebook-convert'] + [str(a) for a in args],
-            stderr=subprocess.STDOUT if ctx.logger.is_warn else subprocess.DEVNULL,
-            stdout=subprocess.STDOUT if ctx.logger.is_debug else subprocess.DEVNULL,
-        ) as p:
-            logger.debug(shlex.join(p.args))  # type:ignore
+        while p.poll() is None:
+            if signal.is_set():
+                raise AbortedException()
+            signal.wait(__wait_timeout)
 
-            while p.poll() is None:
-                if signal.is_set():
-                    raise AbortedException()
-                signal.wait(__wait_timeout)
+        if p.poll() != 0:
+            raise ServerErrors.ebook_convert_error
 
-            if p.poll() != 0:
-                raise ServerErrors.ebook_convert_error
-
-            return True
-    finally:
-        __lock.release()
+        return True
 
 
 def is_calibre_available() -> bool:

@@ -163,40 +163,33 @@ class ChapterService:
                 title_updates = {}
                 volume_updates = {}
                 for s in to_update:
-                    row = existing[s]
-                    rid = row.id
+                    r = existing[s]
                     url = wanted[s].url
                     title = wanted[s].title
                     vol_id = vol_id_map.get(wanted[s].volume)
-                    if row.url != url:
-                        url_updates[rid] = url
-                    if row.title != title:
-                        title_updates[rid] = title
-                    if row.volume_id != vol_id:
-                        volume_updates[rid] = vol_id
+                    if r.url != url:
+                        url_updates[r.id] = url
+                    if r.title != title:
+                        title_updates[r.id] = title
+                    if r.volume_id != vol_id:
+                        volume_updates[r.id] = vol_id
                 if url_updates:
                     sess.exec(
                         sa_update(Chapter)
                         .where(col(Chapter.id).in_(url_updates.keys()))
-                        .values(
-                            url=case(url_updates, value=Chapter.id),
-                        )
+                        .values(url=case(url_updates, value=Chapter.id))
                     )
                 if title_updates:
                     sess.exec(
                         sa_update(Chapter)
                         .where(col(Chapter.id).in_(title_updates.keys()))
-                        .values(
-                            title=case(title_updates, value=Chapter.id),
-                        )
+                        .values(title=case(title_updates, value=Chapter.id))
                     )
                 if volume_updates:
                     sess.exec(
                         sa_update(Chapter)
                         .where(col(Chapter.id).in_(volume_updates.keys()))
-                        .values(
-                            volume_id=case(volume_updates, value=Chapter.id),
-                        )
+                        .values(volume_id=case(volume_updates, value=Chapter.id))
                     )
 
             if to_delete:
