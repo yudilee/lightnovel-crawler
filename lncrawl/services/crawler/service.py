@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 from threading import Event
 from typing import Optional, Union
 
@@ -103,16 +102,14 @@ class CrawlerService:
         # add or update volumes
         ctx.volumes.sync(novel.id, crawler.volumes)
 
-        # add or update volumes
+        # add or update chapters
         ctx.chapters.sync(novel.id, crawler.chapters)
 
         # download cover
         download_cover(crawler, ctx.files.resolve(novel.cover_file))
 
         # update output path time
-        novel_path = ctx.files.resolve(f'novels/{novel.id}')
-        if novel_path.is_dir():
-            os.utime(novel_path)
+        ctx.files.utime(f'novels/{novel.id}')
 
         return novel
 

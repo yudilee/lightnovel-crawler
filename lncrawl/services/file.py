@@ -68,3 +68,8 @@ class FileService:
         if compress or is_compressed(data):
             data = text_compress(data)
         return self.save(file_path, data)
+
+    def utime(self, file: StrPath) -> None:
+        path = self.resolve(file)
+        if path.exists():
+            os.utime(path)

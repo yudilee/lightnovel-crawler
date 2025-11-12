@@ -28,10 +28,12 @@ def __format_volume(crawler: Crawler, vol_id_map: Dict[int, int]):
             vol if isinstance(vol, Volume) else Volume(**vol)
             for vol in sorted(crawler.volumes, key=lambda x: x.id)
         ]
+        next_id = crawler.volumes[-1].id + 1
+        crawler.volumes.append(Volume(id=next_id, title='Others'))
     else:
+        setattr(crawler, 'use_custom_volumes', True)
         vol_count = math.ceil(len(crawler.chapters) / DEFAULT_CHAPTER_PER_VOLUME)
-        for i in range(1, vol_count + 1):
-            crawler.volumes.append(Volume(id=i))
+        crawler.volumes = [Volume(id=i + 1) for i in range(vol_count)]
 
     for index, item in enumerate(crawler.volumes):
         vol_id_map[item.id] = index
@@ -42,6 +44,7 @@ def __format_volume(crawler: Crawler, vol_id_map: Dict[int, int]):
 
 
 def __format_chapters(crawler: Crawler, vol_id_map: Dict[int, int]):
+    use_custom = getattr(crawler, 'use_custom_volumes', False)
     crawler.chapters = [
         chap if isinstance(chap, Chapter) else Chapter(**chap)
         for chap in sorted(crawler.chapters, key=lambda x: x.id)
@@ -51,29 +54,22 @@ def __format_chapters(crawler: Crawler, vol_id_map: Dict[int, int]):
         item.extra['crawler_version'] = getattr(crawler, 'version')
         item.title = __format_title(item.title) or f'Chapter {item.id}'
 
-        if item.volume:
-            vol_index = vol_id_map.get(item.volume)
-        else:
-            default_vol = 1 + (index // DEFAULT_CHAPTER_PER_VOLUME)
-            vol_index = vol_id_map.get(default_vol)
-
-        if vol_index is None:
-            item.volume = None
-        else:
-            volume = crawler.volumes[vol_index]
-            item.volume = volume.id
-            volume.chapter_count += 1
+        if use_custom or item.volume is None:
+            item.volume = 1 + (index // DEFAULT_CHAPTER_PER_VOLUME)
+        vol_index = vol_id_map.get(item.volume)
+        volume = crawler.volumes[vol_index or -1]
+        volume.chapter_count += 1
+        item.volume = volume.id
 
 
 def format_novel(crawler: Crawler):
-    crawler.novel_title = __format_title(crawler.novel_title)
-    crawler.novel_author = __format_title(crawler.novel_author)
-
     vol_id_map: Dict[int, int] = {}
     __format_volume(crawler, vol_id_map)
     __format_chapters(crawler, vol_id_map)
-
     crawler.volumes = [x for x in crawler.volumes if x.chapter_count]
+
+    crawler.novel_title = __format_title(crawler.novel_title)
+    crawler.novel_author = __format_title(crawler.novel_author)
     crawler.novel_tags = list(filter(None, map(normalize, set(crawler.novel_tags))))
 
 
