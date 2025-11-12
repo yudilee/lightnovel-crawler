@@ -1,8 +1,9 @@
 from typing import List
 
-from fastapi import APIRouter, Path, Query
+from fastapi import APIRouter, Path, Query, Depends
 
 from ...context import ctx
+from ..security import ensure_admin
 from ...dao import Artifact, Chapter, Novel, Volume
 from ..models.pagination import Paginated
 
@@ -54,7 +55,11 @@ async def get_novel_artifacts(
     return ctx.artifacts.list_latest(novel_id=novel_id)
 
 
-@router.delete("/{novel_id}", summary='Removes a novel')
+@router.delete(
+    "/{novel_id}",
+    summary='Removes a novel',
+    dependencies=[Depends(ensure_admin)]
+)
 def delete_novel(
     novel_id: str = Path(),
 ) -> bool:

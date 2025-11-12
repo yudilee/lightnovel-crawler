@@ -43,7 +43,15 @@ class JobRunner:
             return self._artifact_batch()
         if self.job.type == JobType.ARTIFACT:
             return self._artifact()
-        return self.__set_failed(f'Job type is not supported: {self.job.type}')
+        return self.__set_done(f'Job type is not supported: {self.job.type}')
+
+    # ------------------------------------------------------------------ #
+    #                               Helpers                              #
+    # ------------------------------------------------------------------ #
+
+    def __refresh(self):
+        with ctx.db.session() as sess:
+            self.job = sess.get_one(Job, self.job.id)
 
     def __set_running(self) -> None:
         with ctx.db.session() as sess:
@@ -57,30 +65,26 @@ class JobRunner:
             sess.commit()
             self.job.started_at = now
             self.job.status = JobStatus.RUNNING
+        self.__send_mail()
 
-    def __increment(self, step: int = 1) -> bool:
+    def __increment(self) -> bool:
         with ctx.db.session() as sess:
-            ctx.jobs._increment_up(sess, self.job.id, step)
+            ctx.jobs._increment_up(sess, self.job.id)
             sess.commit()
-            self.job = sess.get_one(Job, self.job.id)
+        self.__refresh()
         self.__send_mail()
         return True
 
-    def __set_success(self) -> bool:
+    def __set_done(self, error: str = '') -> bool:
         with ctx.db.session() as sess:
-            ctx.jobs._success(sess, self.job.id)
+            if error:
+                ctx.jobs._fail(sess, self.job.id, error)
+            else:
+                ctx.jobs._success(sess, self.job.id)
             sess.commit()
-            self.job = sess.get_one(Job, self.job.id)
+        self.__refresh()
         self.__send_mail()
-        return True
-
-    def __set_failed(self, reason: str) -> bool:
-        with ctx.db.session() as sess:
-            ctx.jobs._failed(sess, self.job.id, reason)
-            sess.commit()
-            self.job = sess.get_one(Job, self.job.id)
-        self.__send_mail()
-        return False
+        return not error
 
     def __set_extra(self, **values: Any) -> None:
         extra = dict(**self.job.extra)
@@ -103,11 +107,15 @@ class JobRunner:
         if self.job.type == JobType.FULL_NOVEL:
             ctx.mail.send_full_novel_job_success(self.user, self.job)
 
+    # ------------------------------------------------------------------ #
+    #                             Job Runners                            #
+    # ------------------------------------------------------------------ #
+
     def _novel_batch(self) -> bool:
         try:
             urls = self.job.extra.get('urls', [])
             if not urls:
-                return self.__set_success()
+                return self.__set_done()
 
             self.__set_running()
 
@@ -117,13 +125,13 @@ class JobRunner:
 
             return self.__increment()
         except Exception as e:
-            return self.__set_failed(f'Failed to create jobs. {repr(e)}')
+            return self.__set_done(f'Failed to create requests. {repr(e)}')
 
     def _novel(self) -> bool:
         try:
             url = self.job.extra.get('url')
             if not url:
-                return self.__set_failed('No novel url')
+                return self.__set_done('No novel url')
 
             self.__set_running()
 
@@ -131,11 +139,11 @@ class JobRunner:
             self.__set_extra(novel_id=novel.id)
 
             if self.job.type != JobType.FULL_NOVEL:
-                return self.__set_success()
+                return self.__set_done()
 
             volumes = ctx.volumes.list(novel_id=novel.id)
             if not volumes:
-                return self.__set_success()
+                return self.__set_done()
 
             last_job_id = None
             for volume in volumes:
@@ -156,13 +164,13 @@ class JobRunner:
 
             return self.__increment()
         except Exception as e:
-            return self.__set_failed(f'Failed to fetch novel. {repr(e)}')
+            return self.__set_done(f'Failed to fetch novel. {repr(e)}')
 
     def _volume_batch(self) -> bool:
         try:
             volume_ids = self.job.extra.get('volume_ids', [])
             if not volume_ids:
-                return self.__set_success()
+                return self.__set_done()
 
             self.__set_running()
 
@@ -171,13 +179,13 @@ class JobRunner:
 
             return self.__increment()
         except Exception as e:
-            return self.__set_failed(f'Failed to create jobs. {repr(e)}')
+            return self.__set_done(f'Failed to create requests. {repr(e)}')
 
     def _volume(self) -> bool:
         try:
             volume_id = self.job.extra.get('volume_id')
             if not volume_id:
-                return self.__set_failed('No volume id')
+                return self.__set_done('No volume id')
 
             self.__set_running()
 
@@ -187,13 +195,13 @@ class JobRunner:
 
             return self.__increment()
         except Exception as e:
-            return self.__set_failed(f'Failed to create jobs. {repr(e)}')
+            return self.__set_done(f'Failed to create requests. {repr(e)}')
 
     def _chapter_batch(self) -> bool:
         try:
             chapter_ids = self.job.extra.get('chapter_ids')
             if not chapter_ids:
-                return self.__set_success()
+                return self.__set_done()
 
             self.__set_running()
 
@@ -202,36 +210,36 @@ class JobRunner:
 
             return self.__increment()
         except Exception as e:
-            return self.__set_failed(f'Failed to create jobs. {repr(e)}')
+            return self.__set_done(f'Failed to create requests. {repr(e)}')
 
     def _chapter(self) -> bool:
         try:
             chapter_id = self.job.extra.get('chapter_id')
             if not chapter_id:
-                return self.__set_failed('No chapter id')
+                return self.__set_done('No chapter id')
 
             self.__set_running()
 
             chapter = ctx.crawler.fetch_chapter(chapter_id, self.signal)
             if not chapter.is_available:
-                return self.__set_failed('Failed to fetch contents')
+                return self.__set_done('Failed to fetch contents')
 
             images = ctx.images.list(chapter_id=chapter.id, is_crawled=False)
             if not images:
-                return self.__set_success()
+                return self.__set_done()
 
             for image in images:
                 ctx.jobs.fetch_image(self.user, image.id, parent_id=self.job.id)
 
             return self.__increment()
         except Exception as e:
-            return self.__set_failed(f'Failed to fetch chapter. {repr(e)}')
+            return self.__set_done(f'Failed to fetch chapter. {repr(e)}')
 
     def _image_batch(self) -> bool:
         try:
             image_ids = self.job.extra.get('image_ids')
             if not image_ids:
-                return self.__set_success()
+                return self.__set_done()
 
             self.__set_running()
 
@@ -240,33 +248,33 @@ class JobRunner:
 
             return self.__increment()
         except Exception as e:
-            return self.__set_failed(f'Failed to create jobs. {repr(e)}')
+            return self.__set_done(f'Failed to create requests. {repr(e)}')
 
     def _image(self) -> bool:
         try:
             image_id = self.job.extra.get('image_id')
             if not image_id:
-                return self.__set_failed('No image id')
+                return self.__set_done('No image id')
 
             self.__set_running()
 
             image = ctx.crawler.fetch_image(image_id, self.signal)
             if not image.is_available:
-                return self.__set_failed('Failed to download image')
+                return self.__set_done('Failed to download image')
 
-            return self.__set_success()
+            return self.__set_done()
         except Exception as e:
-            return self.__set_failed(f'Failed to fetch image. {repr(e)}')
+            return self.__set_done(f'Failed to fetch image. {repr(e)}')
 
     def _artifact_batch(self) -> bool:
         try:
             novel_id = self.job.extra.get('novel_id')
             if not novel_id:
-                return self.__set_failed('No novel id')
+                return self.__set_done('No novel id')
 
             formats = self.job.extra.get('formats')
             if not formats:
-                return self.__set_success()
+                return self.__set_done()
 
             self.__set_running()
 
@@ -275,7 +283,7 @@ class JobRunner:
             if need_epub:
                 formats.add(OutputFormat.epub)
             if not formats:
-                return self.__set_success()
+                return self.__set_done()
 
             epub_job_id = None
             for format in (formats - need_epub):
@@ -300,20 +308,20 @@ class JobRunner:
 
             return self.__increment()
         except Exception as e:
-            return self.__set_failed(f'Failed to create jobs. {repr(e)}')
+            return self.__set_done(f'Failed to create requests. {repr(e)}')
 
     def _artifact(self) -> bool:
         try:
             novel_id = self.job.extra.get('novel_id')
             if not novel_id:
-                return self.__set_failed('No novel id')
+                return self.__set_done('No novel id')
 
             format = self.job.extra.get('format')
             if not format:
-                return self.__set_failed('No output format')
+                return self.__set_done('No output format')
 
             if format not in set(OutputFormat):
-                return self.__set_failed(f'Invalid format: {format}')
+                return self.__set_done(f'Invalid format: {format}')
 
             self.__set_running()
 
@@ -331,12 +339,12 @@ class JobRunner:
                 signal=self.signal,
             )
             if not artifact.is_available:
-                return self.__set_failed('Failed to make artifact')
+                return self.__set_done('Failed to make artifact')
 
             self.__set_extra(
                 artifact_id=artifact.id,
                 novel_title=novel_title
             )
-            return self.__set_success()
+            return self.__set_done()
         except Exception as e:
-            return self.__set_failed(f'Failed to make artifact. {repr(e)}')
+            return self.__set_done(f'Failed to make artifact. {repr(e)}')

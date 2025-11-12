@@ -45,7 +45,8 @@ def delete_job(
     user: User = Security(ensure_user),
     job_id: str = Path(),
 ) -> bool:
-    ctx.jobs.delete(user, job_id)
+    ctx.jobs.verify_access(user, job_id)
+    ctx.jobs.delete(job_id)
     return True
 
 
@@ -61,7 +62,9 @@ def cancel_job(
     user: User = Security(ensure_user),
     job_id: str = Path(),
 ) -> bool:
-    ctx.jobs.cancel(user, job_id)
+    user_id = ctx.jobs.verify_access(user, job_id)
+    who = 'user' if user.id == user_id else 'admin'
+    ctx.jobs.cancel(job_id, who)
     return True
 
 
