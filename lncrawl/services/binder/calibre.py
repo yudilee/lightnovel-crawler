@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 __lock = EventLock()
 __is_available = None
-__wait_timeout = 0.1
+__wait_timeout = 1
 
 
 def __ebook_convert(*args, signal=Event()) -> bool:
@@ -31,6 +31,8 @@ def __ebook_convert(*args, signal=Event()) -> bool:
 
         while p.poll() is None:
             if signal.is_set():
+                p.terminate()
+                p.kill()
                 raise AbortedException()
             signal.wait(__wait_timeout)
 

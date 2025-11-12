@@ -1,6 +1,7 @@
 import logging
+from functools import cached_property
 from threading import Event
-from typing import Any, Optional, Set
+from typing import Any, Dict, Optional
 
 from ...context import ctx
 from ...dao import Job
@@ -12,38 +13,44 @@ from ...utils.time_utils import current_timestamp
 
 logger = logging.getLogger(__name__)
 
-__lock = EventLock()
-__queue: Set[str] = set()
-
-
-def __run(signal: Event, artifact: bool):
-    with __lock.using(signal):
-        job = None
-        job = ctx.jobs._pending(__queue, artifact)
-        if not job:
-            return
-        __queue.add(job.id)
-
-    try:
-        JobRunner(job, signal).process()
-    finally:
-        with __lock.using(signal):
-            __queue.remove(job.id)
-
-
-def run_artifacts(signal: Event):
-    __run(signal, artifact=True)
-
-
-def run_crawlers(signal: Event):
-    __run(signal, artifact=False)
+_lock = EventLock()
+_queue: Dict[str, Event] = {}
 
 
 class JobRunner:
     def __init__(self, job: Job, signal=Event()) -> None:
         self.job = job
         self.signal = signal
-        self.user = ctx.users.get(self.job.user_id)
+
+    @cached_property
+    def user(self):
+        return ctx.users.get(self.job.user_id)
+
+    @staticmethod
+    def run(signal: Event, artifact: bool):
+        with _lock.using(signal):
+            job = ctx.jobs._pending(artifact, _queue.keys())
+            if not job:
+                return
+            _queue[job.id] = Event()
+
+        try:
+            JobRunner(job, _queue[job.id]).process()
+        finally:
+            with _lock.using(signal):
+                if job.id in _queue:
+                    _queue.pop(job.id).set()
+
+    @staticmethod
+    def cancel(job_id: str):
+        if job_id in _queue:
+            _queue.pop(job_id).set()
+
+    @staticmethod
+    def cancel_all():
+        for signal in _queue.values():
+            signal.set()
+        _queue.clear()
 
     def process(self) -> bool:
         logger.info(f'Processing [b]{self.job.type.name}[/b]: {self.job.id}')

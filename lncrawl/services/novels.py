@@ -1,5 +1,5 @@
 import shutil
-from typing import Any, List
+from typing import Any, List, Optional
 
 from sqlmodel import and_, desc, func, select
 
@@ -70,3 +70,10 @@ class NovelService:
             sess.delete(novel)
             sess.commit()
             return True
+
+    def find_by_url(self, novel_url: str) -> Optional[Novel]:
+        with ctx.db.session() as sess:
+            return sess.exec(
+                select(Novel)
+                .where(Novel.url == novel_url)
+            ).first()

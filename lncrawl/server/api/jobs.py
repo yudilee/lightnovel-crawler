@@ -46,6 +46,7 @@ def delete_job(
     job_id: str = Path(),
 ) -> bool:
     ctx.jobs.verify_access(user, job_id)
+    ctx.scheduler.stop_job(job_id)
     ctx.jobs.delete(job_id)
     return True
 
@@ -64,6 +65,7 @@ def cancel_job(
 ) -> bool:
     user_id = ctx.jobs.verify_access(user, job_id)
     who = 'user' if user.id == user_id else 'admin'
+    ctx.scheduler.stop_job(job_id)
     ctx.jobs.cancel(job_id, who)
     return True
 
@@ -87,7 +89,8 @@ def fetch_novel(
     user: User = Security(ensure_user),
     body: FetchNovelRequest = Body(),
 ) -> Job:
-    return ctx.jobs.fetch_novel(user, body.url.encoded_string(), full=body.full)
+    url = body.url.encoded_string()
+    return ctx.jobs.fetch_novel(user, url, full=body.full)
 
 
 @router.post("/create/fetch-volumes", summary='Create a job to fetch all chapter contents for the volumes')

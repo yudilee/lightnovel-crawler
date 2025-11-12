@@ -8,7 +8,7 @@ from ebooklib import epub
 from ...assets.epub import epub_chapter_xhtml, epub_cover_xhtml, epub_style_css
 from ...context import ctx
 from ...dao import Artifact, Chapter, Novel, Volume
-from ...exceptions import ServerErrors
+from ...exceptions import AbortedException
 
 logger = logging.getLogger(__name__)
 
@@ -180,10 +180,10 @@ def make_epub(
 
     # add volumes and chapters pages
     if signal.is_set():
-        raise ServerErrors.canceled_by_signal
+        raise AbortedException()
     for volume in ctx.volumes.list(novel_id=artifact.novel_id):
         if signal.is_set():
-            raise ServerErrors.canceled_by_signal
+            raise AbortedException()
 
         volume_item = build_volume(volume)
         book.add_item(volume_item)
@@ -209,7 +209,7 @@ def make_epub(
 
     # add images
     if signal.is_set():
-        raise ServerErrors.canceled_by_signal
+        raise AbortedException()
     for image in ctx.images.list(novel_id=artifact.novel_id):
         if not image.is_available:
             continue

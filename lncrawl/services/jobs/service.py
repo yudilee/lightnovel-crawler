@@ -174,6 +174,9 @@ class JobService:
         data.update({
             'url': url
         })
+        novel = ctx.novels.find_by_url(url)
+        if novel:
+            data['novel_id'] = novel.id
         return self._create(
             user=user,
             data=data,
@@ -433,7 +436,7 @@ class JobService:
                 .limit(1)
             ).first()
 
-    def _pending(self, skip_job_ids: Iterable[str], artifact: bool) -> Optional[Job]:
+    def _pending(self, artifact: bool, skip_job_ids: Iterable[str]) -> Optional[Job]:
         with ctx.db.session() as sess:
             stmt = select(Job)
 

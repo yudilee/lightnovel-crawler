@@ -5,10 +5,22 @@ from typing import Callable, List, Set
 from ...context import ctx
 from ...exceptions import AbortedException
 from ...utils.event_lock import EventLock
-from .cleaner import run_cleaner
-from .runner import run_artifacts, run_crawlers
+from .cleaner import Cleaner
+from .runner import JobRunner
 
 logger = logging.getLogger(__name__)
+
+
+def run_cleaner(signal=Event()) -> None:
+    Cleaner.run(signal)
+
+
+def run_jobs(signal: Event):
+    JobRunner.run(signal, False)
+
+
+def run_artifact_maker(signal: Event):
+    JobRunner.run(signal, True)
 
 
 class JobScheduler:
@@ -31,19 +43,23 @@ class JobScheduler:
             return
         self._signal = Event()
         self._thread(run_cleaner, ctx.config.crawler.cleaner_cooldown)
-        self._thread(run_artifacts, ctx.config.crawler.runner_cooldown)
         for _ in range(ctx.config.crawler.runner_concurrency):
-            self._thread(run_crawlers, ctx.config.crawler.runner_cooldown)
+            self._thread(run_jobs, ctx.config.crawler.runner_cooldown)
+        self._thread(run_artifact_maker, ctx.config.crawler.runner_cooldown)
         logger.info("Scheduler started")
 
     def stop(self):
         if not self.running:
             return
         self._signal.set()
+        JobRunner.cancel_all()
         for t in self._threads:
             t.join()
         self._threads.clear()
         logger.info("Scheduler stoppped")
+
+    def stop_job(self, job_id: str):
+        JobRunner.cancel(job_id)
 
     def _thread(self, run: Callable[[Event], None], interval: int) -> None:
         t = Thread(

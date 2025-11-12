@@ -6,7 +6,7 @@ from threading import Event
 
 from ...context import ctx
 from ...dao import Artifact
-from ...exceptions import ServerErrors
+from ...exceptions import AbortedException
 
 logger = logging.getLogger(__name__)
 
@@ -26,14 +26,14 @@ def make_json(
 
     with zipfile.ZipFile(tmp_file, "w", zipfile.ZIP_DEFLATED) as zipf:
         if signal.is_set():
-            raise ServerErrors.canceled_by_signal
+            raise AbortedException()
         for volume in ctx.volumes.list(artifact.novel_id):
             vol_data = volume.model_dump()
             vol_data['chapters'] = []
             novel_data['volumes'].append(vol_data)
 
             if signal.is_set():
-                raise ServerErrors.canceled_by_signal
+                raise AbortedException()
             for chapter in ctx.chapters.list(volume_id=volume.id):
                 chap_data = chapter.model_dump()
                 vol_data['chapters'].append(chap_data)
@@ -46,14 +46,14 @@ def make_json(
                     zipf.writestr(chapter_file, content_json.encode())
 
         if signal.is_set():
-            raise ServerErrors.canceled_by_signal
+            raise AbortedException()
         for image in ctx.images.list(novel_id=artifact.novel_id):
             if image.is_available:
                 content = ctx.files.load(image.image_file)
                 zipf.writestr(f'images/{image.id}.jpg', content)
 
         if signal.is_set():
-            raise ServerErrors.canceled_by_signal
+            raise AbortedException()
         if novel.cover_available:
             content = ctx.files.load(novel.cover_file)
             zipf.writestr('cover.jpg', content)
