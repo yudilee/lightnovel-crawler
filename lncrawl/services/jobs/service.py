@@ -433,7 +433,7 @@ class JobService:
                 .limit(1)
             ).first()
 
-    def _pending(self, skip_job_ids: Iterable[str], artifact=False) -> Optional[Job]:
+    def _pending(self, skip_job_ids: Iterable[str], artifact: bool) -> Optional[Job]:
         with ctx.db.session() as sess:
             stmt = select(Job)
 

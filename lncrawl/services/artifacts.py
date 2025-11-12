@@ -73,7 +73,6 @@ class ArtifactService:
                 select(Artifact)
                 .where(Artifact.job_id == depends_on_job_id)
             ).first()
-            print(depends_on_job_id, artifact)
             if not artifact or not artifact.is_available:
                 raise ServerErrors.no_epub_file
             return artifact
