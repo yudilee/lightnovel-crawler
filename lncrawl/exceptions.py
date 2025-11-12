@@ -124,6 +124,7 @@ class ServerErrors:
     can_not_delete_self = ServerError(403, 'You are not allowed to delete your own account')
 
     invalid_url = ServerError(422, "Invalid URL")
+    invalid_input = ServerError(422, "Invalid input")
     no_chapters_to_download = ServerError(422, 'No chapters to download')
     no_volumes_to_download = ServerError(422, 'No volumes to download')
     no_images_to_download = ServerError(422, 'No images to download')

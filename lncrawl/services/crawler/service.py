@@ -1,18 +1,14 @@
-import json
 import logging
 from threading import Event
-from typing import Optional, Union
+from typing import Union
 
 from pydantic import HttpUrl
 from sqlmodel import select
 
 from ...context import ctx
 from ...dao import Chapter, ChapterImage, Novel
-from ...dao.enums import SecretType
 from ...exceptions import ServerErrors
 from ...models import Chapter as ChapterModel
-from ...utils.url_tools import extract_host
-from .dto import LoginData
 from .utils import download_cover, download_image, format_novel
 
 logger = logging.getLogger(__name__)
@@ -22,35 +18,18 @@ class CrawlerService:
     def __init__(self) -> None:
         pass
 
-    def save_login(self, url: str, login: LoginData) -> None:
-        host = extract_host(url)
-        if not host:
-            raise ServerErrors.invalid_url
-        value = json.dumps([login.username, login.password], ensure_ascii=False)
-        ctx.secrets.add(SecretType.LOGIN, host, value)
-
-    def get_login(self, url: str) -> Optional[LoginData]:
-        host = extract_host(url)
-        if not host:
-            raise ServerErrors.invalid_url
-        value = ctx.secrets.get_random_value(host)
-        if not value:
-            return None
-        [username, password] = json.loads(value)
-        return LoginData(username=username, password=password)
-
-    def get_crawler(self, novel_url: str):
-        crawler = ctx.sources.create_crawler(novel_url)
+    def get_crawler(self, user_id: str, novel_url: str):
+        crawler = ctx.sources.init_crawler(novel_url)
         can_login = getattr(crawler, "can_login", False)
         logged_in = getattr(crawler, "__logged_in__", False)
         if can_login and not logged_in:
-            login = self.get_login(novel_url)
+            login = ctx.secrets.get_login(user_id, novel_url)
             if login:
                 crawler.login(login.username, login.password)
                 setattr(crawler, "__logged_in__", True)
         return crawler
 
-    def fetch_novel(self, url: Union[str, HttpUrl], signal=Event()) -> Novel:
+    def fetch_novel(self, user_id: str, url: Union[str, HttpUrl], signal=Event()) -> Novel:
         if isinstance(url, str):
             url = HttpUrl(url)
 
@@ -58,7 +37,7 @@ class CrawlerService:
         if not url.host:
             raise ServerErrors.invalid_url
         novel_url = url.encoded_string()
-        crawler = self.get_crawler(novel_url)
+        crawler = self.get_crawler(user_id, novel_url)
         crawler_version = getattr(crawler, 'version')
         crawler.scraper.signal = signal
 
@@ -96,9 +75,6 @@ class CrawlerService:
             sess.add(novel)
             sess.commit()
 
-        print(len(crawler.volumes))
-        print(len(crawler.chapters))
-
         # add or update tags
         ctx.tags.insert(novel.tags)
 
@@ -116,7 +92,7 @@ class CrawlerService:
 
         return novel
 
-    def fetch_chapter(self, chapter_id: str, signal=Event()) -> Chapter:
+    def fetch_chapter(self, user_id: str, chapter_id: str, signal=Event()) -> Chapter:
         chapter = ctx.chapters.get(chapter_id)
 
         # get crawler
@@ -124,7 +100,7 @@ class CrawlerService:
         if not url.host:
             raise ServerErrors.invalid_url
         novel_url = ctx.novels.get(chapter.novel_id).url
-        crawler = self.get_crawler(novel_url)
+        crawler = self.get_crawler(user_id, novel_url)
         crawler_version = getattr(crawler, 'version')
         crawler.scraper.signal = signal
 
@@ -157,7 +133,7 @@ class CrawlerService:
 
         return chapter
 
-    def fetch_image(self, image_id: str, signal=Event()) -> ChapterImage:
+    def fetch_image(self, user_id: str, image_id: str, signal=Event()) -> ChapterImage:
         image = ctx.images.get(image_id)
 
         # get crawler
@@ -165,7 +141,7 @@ class CrawlerService:
         if not url.host:
             raise ServerErrors.invalid_url
         novel_url = ctx.novels.get(image.novel_id).url
-        crawler = self.get_crawler(novel_url)
+        crawler = self.get_crawler(user_id, novel_url)
         crawler_version = getattr(crawler, 'version')
         crawler.scraper.signal = signal
 

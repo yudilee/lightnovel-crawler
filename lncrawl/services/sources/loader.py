@@ -1,5 +1,4 @@
 import logging
-from functools import lru_cache
 from pathlib import Path
 from threading import Event
 from typing import Dict, List, Type
@@ -169,9 +168,8 @@ class SourceLoader:
 
         return self.crawlers[host]
 
-    @lru_cache
-    def create_crawler(self, url: str) -> Crawler:
-        logger.info(f"Creating crawler instance for {url}")
+    def init_crawler(self, url: str) -> Crawler:
+        logger.debug(f"Creating crawler instance for {url}")
         crawler = self.get_crawler(url)()
         crawler.home_url = extract_base(url)
         crawler.novel_url = url

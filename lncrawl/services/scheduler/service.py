@@ -1,20 +1,18 @@
 import logging
 from threading import Event, Thread
-from typing import List, Set
+from typing import Callable, List, Set
 
 from ...context import ctx
+from ...exceptions import AbortedException
 from ...utils.event_lock import EventLock
-from ...utils.time_utils import current_timestamp
 from .cleaner import run_cleaner
-from .runner import JobRunner
+from .runner import run_pending
 
 logger = logging.getLogger(__name__)
 
 
 class JobScheduler:
     def __init__(self) -> None:
-        self.start_ts: int = 0
-        self.last_cleanup_ts: int = 0
         self._threads: List[Thread] = []
         self._queue: Set[str] = set()
         self._lock = EventLock()
@@ -32,14 +30,9 @@ class JobScheduler:
         if self.running:
             return
         self._signal = Event()
-        self.start_ts = current_timestamp()
+        self._thread(run_cleaner, ctx.config.crawler.cleaner_cooldown)
         for _ in range(ctx.config.crawler.runner_concurrency):
-            t = Thread(
-                target=self.run,
-                daemon=True,
-            )
-            t.start()
-            self._threads.append(t)
+            self._thread(run_pending, ctx.config.crawler.runner_cooldown)
         logger.info("Scheduler started")
 
     def stop(self):
@@ -51,44 +44,25 @@ class JobScheduler:
         self._threads.clear()
         logger.info("Scheduler stoppped")
 
-    def run(self):
+    def _thread(self, run: Callable[[Event], None], interval: int) -> None:
+        t = Thread(
+            target=self._loop,
+            args=[run, interval],
+            daemon=True,  # does not block exit
+        )
+        t.start()
+        self._threads.append(t)
+
+    def _loop(self, run: Callable[[Event], None], interval: int) -> None:
         while self.running:
             try:
-                self._signal.wait(ctx.config.crawler.runner_cooldown)
-                self.__cleaner()
-                self.__job()
+                self._signal.wait(interval)
+                if self._signal.is_set():
+                    return
+                run(self._signal)
             except KeyboardInterrupt:
                 self._signal.set()
+            except AbortedException:
+                return
             except Exception:
-                logger.error('Runner error', stack_info=True)
-
-    def __job(self):
-        with self._lock.using(self._signal):
-            job = ctx.jobs._pending(self._queue)
-            if not job:
-                return
-            self._queue.add(job.id)
-
-        try:
-            JobRunner(job, self._signal).process()
-        finally:
-            with self._lock.using(self._signal):
-                self._queue.remove(job.id)
-
-    def __cleaner(self):
-        job_id = 'cleaner'
-
-        with self._lock.using(self._signal):
-            if job_id in self._queue:
-                return
-            timeout = ctx.config.crawler.cleaner_cooldown * 1000
-            if current_timestamp() - self.last_cleanup_ts < timeout:
-                return
-            self._queue.add(job_id)
-
-        try:
-            run_cleaner(self._signal)
-        finally:
-            with self._lock.using(self._signal):
-                self._queue.remove(job_id)
-                self.last_cleanup_ts = current_timestamp()
+                logger.error('Unexpected error in scheduler', stack_info=True)

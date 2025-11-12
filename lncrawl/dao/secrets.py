@@ -1,17 +1,18 @@
-from sqlmodel import Field, LargeBinary
+from sqlmodel import BigInteger, Field, LargeBinary, SQLModel
 
-from ._base import BaseTable
-from .enums import SecretType
+from ..utils.time_utils import current_timestamp
 
 
-class Secret(BaseTable, table=True):
+class Secret(SQLModel, table=True):
     __tablename__ = 'secrets'  # type: ignore
 
-    type: SecretType = Field(
-        default=SecretType.TEXT,
-        description="Secret type"
+    user_id: str = Field(
+        index=True,
+        foreign_key="users.id",
+        ondelete='CASCADE'
     )
     name: str = Field(
+        primary_key=True,
         index=True,
         nullable=False,
         max_length=255,
@@ -21,4 +22,9 @@ class Secret(BaseTable, table=True):
         exclude=True,
         sa_type=LargeBinary,
         description="Encrypted secret value"
+    )
+    created_at: int = Field(
+        index=True,
+        default_factory=current_timestamp,
+        sa_type=BigInteger
     )

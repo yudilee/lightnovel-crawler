@@ -207,19 +207,10 @@ class AppConfig(_Section):
     def history_limit_per_user(self, v: Optional[int]) -> None:
         self._set("history_limit_per_user", v)
 
-    @property
-    def secret_key(self) -> str:
-        return self._get("secret_key", self._secret)
-
-    @secret_key.setter
-    def secret_key(self, v: Optional[str]) -> None:
-        self._set("secret_key", v)
 
 # ------------------------------------------------------------------ #
 #                          Database Section                          #
 # ------------------------------------------------------------------ #
-
-
 class DatabaseConfig(_Section):
     section = "database"
 
@@ -310,7 +301,7 @@ class CrawlerConfig(_Section):
     @property
     def cleaner_cooldown(self) -> int:
         '''Cleaner job cooldown in seconds'''
-        return self._get("cleaner_cooldown", lambda: 6 * 3600)
+        return self._get("cleaner_cooldown", 30 * 60)
 
     @cleaner_cooldown.setter
     def cleaner_cooldown(self, v: Optional[int]) -> None:

@@ -1,15 +1,33 @@
 import logging
 from threading import Event
-from typing import Any, Optional
+from typing import Any, Optional, Set
 
 from ...context import ctx
 from ...dao import Job
-from ...dao.enums import JobStatus, JobType, OutputFormat, UserRole
+from ...dao.enums import JobStatus, JobType, OutputFormat
 from ...dao.tier import ENABLED_FORMATS
 from ...exceptions import AbortedException, ServerError
+from ...utils.event_lock import EventLock
 from ...utils.time_utils import current_timestamp
 
 logger = logging.getLogger(__name__)
+
+__lock = EventLock()
+__queue: Set[str] = set()
+
+
+def run_pending(signal: Event):
+    with __lock.using(signal):
+        job = ctx.jobs._pending(__queue)
+        if not job:
+            return
+        __queue.add(job.id)
+
+    try:
+        JobRunner(job, signal).process()
+    finally:
+        with __lock.using(signal):
+            __queue.remove(job.id)
 
 
 class JobRunner:
@@ -19,7 +37,7 @@ class JobRunner:
         self.user = ctx.users.get(self.job.user_id)
 
     def process(self) -> bool:
-        logger.info(f'Processing: {self.job.id}, type: {self.job.type.name}')
+        logger.info(f'Processing [b]{self.job.type.name}[/b]: {self.job.id}')
         if self.job.type == JobType.FULL_NOVEL_BATCH:
             return self._novel_batch()
         if self.job.type == JobType.NOVEL_BATCH:
@@ -44,7 +62,7 @@ class JobRunner:
             return self._artifact_batch()
         if self.job.type == JobType.ARTIFACT:
             return self._artifact()
-        return self.__set_done(f'Job type is not supported: {self.job.type}')
+        return self.__set_done(f'Job type is not supported: [b]{self.job.type}[/b]')
 
     # ------------------------------------------------------------------ #
     #                               Helpers                              #
@@ -76,16 +94,19 @@ class JobRunner:
         self.__send_mail()
         return True
 
-    def __set_done(self, error: str = '', err_source: Optional[Exception] = None) -> bool:
+    def __set_done(
+        self,
+        error: str = '',
+        err_source: Optional[Exception] = None
+    ) -> bool:
+        if error and err_source:
+            error = (
+                ServerError(500, error)
+                .with_traceback(err_source.__traceback__)
+                .format(True)
+            )
         with ctx.db.session() as sess:
             if error:
-                if err_source:
-                    error = (
-                        ServerError(500, error)
-                        .with_traceback(err_source.__traceback__)
-                        .format(self.user.role != UserRole.USER)
-                    )
-                logger.warning(error)
                 ctx.jobs._fail(sess, self.job.id, error.strip())
             else:
                 ctx.jobs._success(sess, self.job.id)
@@ -133,7 +154,7 @@ class JobRunner:
                 self.__set_running()
 
             full = self.job.type == JobType.FULL_NOVEL_BATCH
-            for url in urls:
+            for url in sorted(urls):
                 ctx.jobs.fetch_novel(
                     self.user,
                     url,
@@ -158,7 +179,11 @@ class JobRunner:
             else:
                 self.__set_running()
 
-            novel = ctx.crawler.fetch_novel(url, self.signal)
+            novel = ctx.crawler.fetch_novel(
+                self.user.id,
+                url,
+                self.signal,
+            )
             self.__set_extra(novel_id=novel.id)
 
             if self.job.type != JobType.FULL_NOVEL:
@@ -286,7 +311,11 @@ class JobRunner:
             else:
                 self.__set_running()
 
-            chapter = ctx.crawler.fetch_chapter(chapter_id, self.signal)
+            chapter = ctx.crawler.fetch_chapter(
+                self.user.id,
+                chapter_id,
+                self.signal,
+            )
             if not chapter.is_available:
                 return self.__set_done('Failed to fetch contents')
 
@@ -348,7 +377,11 @@ class JobRunner:
             if not self.job.is_running:
                 self.__set_running()
 
-            image = ctx.crawler.fetch_image(image_id, self.signal)
+            image = ctx.crawler.fetch_image(
+                self.user.id,
+                image_id,
+                self.signal,
+            )
             if not image.is_available:
                 return self.__set_done('Failed to download image')
 
@@ -384,7 +417,7 @@ class JobRunner:
             if not formats:
                 return self.__set_done()
 
-            for format in (formats - need_epub - added_format):
+            for format in sorted(formats - need_epub - added_format):
                 job = ctx.jobs.make_artifact(
                     self.user,
                     novel_id,
@@ -398,7 +431,7 @@ class JobRunner:
             if not epub_job_id:
                 return self.__set_done('Failed to create epub request')
 
-            for format in (need_epub - added_format):
+            for format in sorted(need_epub - added_format):
                 job = ctx.jobs.make_artifact(
                     self.user,
                     novel_id,

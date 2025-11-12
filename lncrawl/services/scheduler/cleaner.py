@@ -2,29 +2,10 @@ import logging
 import shutil
 from threading import Event
 
-from sqlmodel import col
-from sqlalchemy import delete as sa_delete
-
 from ...context import ctx
-from ...dao import Job
-from ...dao.enums import JobStatus
 from ...utils.file_tools import folder_size, format_size
-from ...utils.time_utils import current_timestamp
 
 logger = logging.getLogger(__name__)
-
-
-def __delete_canceled() -> None:
-    cutoff = current_timestamp() - 5 * 24 * 3600 * 1000
-    with ctx.db.session() as sess:
-        result = sess.exec(
-            sa_delete(Job)
-            .where(col(Job.status) == JobStatus.CANCELED)
-            .where(col(Job.created_at) < cutoff)
-        )
-        sess.commit()
-        if result.rowcount:
-            logger.info(f'Deleted {result.rowcount} canceled jobs')
 
 
 def __free_disk_size(signal: Event):
@@ -63,15 +44,7 @@ def __free_disk_size(signal: Event):
 
 
 def run_cleaner(signal=Event()) -> None:
-    logger.info("=== Cleanup begin ===")
     try:
-        __delete_canceled()
-        if signal.is_set():
-            return
-
         __free_disk_size(signal)
     except Exception:
         logger.error("Cleanup failed", exc_info=True)
-
-    finally:
-        logger.info("=== Cleanup end ===")

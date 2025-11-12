@@ -50,11 +50,6 @@ class JobPriority(IntEnum):
     HIGH = 2
 
 
-class SecretType(IntEnum):
-    TEXT = 0
-    LOGIN = 1
-
-
 class OutputFormat(str, Enum):
     json = "json"
     epub = "epub"
