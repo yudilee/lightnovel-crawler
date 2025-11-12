@@ -1,9 +1,7 @@
-import { UserAvatar } from '@/components/Tags/gravatar';
-import {
-  UserRoleTag,
-  UserStatusTag,
-  UserTierTag,
-} from '@/components/Tags/users';
+import { UserAvatar } from '@/components/Tags/UserAvatar';
+import { UserRoleTag } from '@/components/Tags/UserRoleTag';
+import { UserStatusTag } from '@/components/Tags/UserStatusTag';
+import { UserTierTag } from '@/components/Tags/UserTierTag';
 import type { User } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { formatDate, formatFromNow } from '@/utils/time';

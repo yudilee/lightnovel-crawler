@@ -15,7 +15,7 @@ import {
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { UserAvatar } from '../Tags/gravatar';
+import { UserAvatar } from '../Tags/UserAvatar';
 
 export const UserInfoCard: React.FC<any> = () => {
   const [messageApi, contextHolder] = message.useMessage();

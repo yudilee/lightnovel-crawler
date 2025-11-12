@@ -41,8 +41,8 @@ export const JobProgressLine: React.FC<
       size={['100%', 12]}
       {...props}
       type="line"
-      percent={job.progress || 0}
       status={getProgressStatus(job)}
+      percent={Math.round(job.progress || 0)}
       strokeColor={{ from: '#108ee9', to: '#87d068' }}
     />
   );

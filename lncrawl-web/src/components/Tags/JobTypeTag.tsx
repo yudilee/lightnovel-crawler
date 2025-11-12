@@ -1,71 +1,13 @@
-import { JobPriority, JobStatus, JobType } from '@/types';
+import { JobType } from '@/types';
 import {
   AppstoreOutlined,
   BookOutlined,
-  CheckOutlined,
-  CloseOutlined,
   FileTextOutlined,
   FolderOutlined,
-  HourglassOutlined,
-  LoadingOutlined,
   PictureOutlined,
   ReadOutlined,
-  ThunderboltOutlined,
-  WarningOutlined,
 } from '@ant-design/icons';
 import { Tag } from 'antd';
-
-export const JobPriorityTag: React.FC<{ value: JobPriority }> = ({ value }) => {
-  switch (value) {
-    case JobPriority.LOW:
-      return <Tag icon={<ThunderboltOutlined />}>Low Priority</Tag>;
-    case JobPriority.NORMAL:
-      return (
-        <Tag icon={<ThunderboltOutlined />} color="gold">
-          Normal Priority
-        </Tag>
-      );
-    case JobPriority.HIGH:
-      return (
-        <Tag icon={<ThunderboltOutlined />} color="volcano">
-          <b>High Priority</b>
-        </Tag>
-      );
-  }
-};
-
-export const JobStatusTag: React.FC<{ value: JobStatus }> = ({ value }) => {
-  switch (value) {
-    case JobStatus.PENDING:
-      return <Tag icon={<HourglassOutlined />}>Pending</Tag>;
-    case JobStatus.RUNNING:
-      return (
-        <Tag icon={<LoadingOutlined spin />} color="cyan">
-          Running
-        </Tag>
-      );
-    case JobStatus.SUCCESS:
-      return (
-        <Tag icon={<CheckOutlined />} color="orange">
-          Success
-        </Tag>
-      );
-    case JobStatus.CANCELED:
-      return (
-        <Tag icon={<CloseOutlined />} color="red">
-          Canceled
-        </Tag>
-      );
-    case JobStatus.FAILED:
-      return (
-        <Tag icon={<WarningOutlined />} color="red">
-          Failed
-        </Tag>
-      );
-    default:
-      return null;
-  }
-};
 
 export const JobTypeTag: React.FC<{ value: JobType }> = ({ value }) => {
   function single(icon: any, name: string) {

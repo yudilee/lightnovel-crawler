@@ -1,5 +1,6 @@
-import { UserAvatar } from '@/components/Tags/gravatar';
-import { UserRoleTag, UserTierTag } from '@/components/Tags/users';
+import { UserAvatar } from '@/components/Tags/UserAvatar';
+import { UserRoleTag } from '@/components/Tags/UserRoleTag';
+import { UserTierTag } from '@/components/Tags/UserTierTag';
 import { store } from '@/store';
 import { Auth } from '@/store/_auth';
 import type { User } from '@/types';

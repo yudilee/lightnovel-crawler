@@ -1,15 +1,10 @@
-import {
-  JobPriorityTag,
-  JobStatusTag,
-  JobTypeTag,
-} from '@/components/Tags/jobs';
+import { JobEtaTimeTag } from '@/components/Tags/JobEtaTimeTag';
+import { JobPriorityTag } from '@/components/Tags/JobPriorityTag';
+import { JobStatusTag } from '@/components/Tags/JobStatusTag';
+import { JobTypeTag } from '@/components/Tags/JobTypeTag';
 import type { Job } from '@/types';
 import { formatDate, formatDuration } from '@/utils/time';
-import {
-  ClockCircleFilled,
-  ClockCircleOutlined,
-  HourglassFilled,
-} from '@ant-design/icons';
+import { ClockCircleFilled, ClockCircleOutlined } from '@ant-design/icons';
 import { Card, Flex, Grid, Tag, Typography } from 'antd';
 import { JobActionButtons } from '../JobList/JobActionButtons';
 import { JobProgressLine } from '../JobList/JobProgessBar';
@@ -53,19 +48,10 @@ export const JobDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
             <b>Elapsed:</b> {formatDuration(Date.now() - job.started_at!)}
           </Tag>
         )}
-        {!!job.is_running && job.eta && (
-          <Tag icon={<HourglassFilled />} color="default">
-            <b>ETA:</b> {formatDuration(job.eta)}
-          </Tag>
-        )}
+        <JobEtaTimeTag job={job} />
         {!!job.is_done && (
           <Tag icon={<ClockCircleFilled />} color="default">
             <b>Completed:</b> {formatDate(job.finished_at)}
-          </Tag>
-        )}
-        {!!job.is_done && (
-          <Tag icon={<HourglassFilled />} color="default">
-            <b>Runtime:</b> {formatDuration(job.finished_at! - job.started_at!)}
           </Tag>
         )}
       </Flex>

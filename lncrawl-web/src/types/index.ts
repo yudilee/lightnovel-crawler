@@ -55,7 +55,6 @@ export interface Job {
   done: number;
   total: number;
   progress: number;
-  eta?: number;
 
   extra: {
     url?: string;

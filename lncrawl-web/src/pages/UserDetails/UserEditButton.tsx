@@ -1,4 +1,5 @@
-import { UserRoleTag, UserTierTag } from '@/components/Tags/users';
+import { UserRoleTag } from '@/components/Tags/UserRoleTag';
+import { UserTierTag } from '@/components/Tags/UserTierTag';
 import { UserRole, UserTier, type User } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { EditOutlined, SaveOutlined } from '@ant-design/icons';

@@ -1,15 +1,19 @@
-import { type ReadHistory, type Volume } from '@/types';
+import { type Job, type ReadHistory, type Volume } from '@/types';
 import { stringifyError } from '@/utils/errors';
-import { Card, Collapse, message, Typography } from 'antd';
+import { DownloadOutlined } from '@ant-design/icons';
+import { Button, Card, Collapse, message, Space, Typography } from 'antd';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { VolumeDetailsCard } from './VolumeDetailsCard';
 
 export const VolumeListCard: React.FC<{
   novelId: string;
   inner?: boolean;
 }> = ({ novelId, inner }) => {
+  const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
+
   const [volumes, setVolumes] = useState<Volume[]>([]);
   const [history, setHistory] = useState<ReadHistory>({});
 
@@ -47,6 +51,19 @@ export const VolumeListCard: React.FC<{
     fetchReadHistory(novelId);
   }, [novelId, messageApi]);
 
+  const createVolumeJob = async (e: React.MouseEvent, id: string) => {
+    try {
+      e.stopPropagation();
+      e.preventDefault();
+      const result = await axios.post<Job>(`/api/job/create/fetch-volumes`, {
+        volumes: [id],
+      });
+      navigate(`/job/${result.data.id}`);
+    } catch (err) {
+      messageApi.error(stringifyError(err));
+    }
+  };
+
   return (
     <Card
       type={inner ? 'inner' : undefined}
@@ -69,12 +86,25 @@ export const VolumeListCard: React.FC<{
             <VolumeDetailsCard inner volume={volume} history={history} />
           ),
           extra: (
-            <Typography.Text
-              type="secondary"
-              style={{ fontSize: '12px', whiteSpace: 'nowrap' }}
-            >
-              {Intl.NumberFormat('en').format(volume.chapter_count)} chapters
-            </Typography.Text>
+            <Space size="small">
+              <Typography.Text
+                type="secondary"
+                style={{ fontSize: '12px', whiteSpace: 'nowrap' }}
+              >
+                {Intl.NumberFormat('en').format(volume.chapter_count)} chapters
+              </Typography.Text>
+
+              <Button
+                size="small"
+                shape="round"
+                type="primary"
+                style={{ width: 75 }}
+                icon={<DownloadOutlined />}
+                onClick={(e) => createVolumeJob(e, volume.id)}
+              >
+                Get
+              </Button>
+            </Space>
           ),
           styles: {
             body: { padding: 0 },

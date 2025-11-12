@@ -87,11 +87,15 @@ def build_volume(volume: Volume) -> epub.EpubHtml:
 
 
 def build_chapter(chapter: Chapter) -> epub.EpubHtml:
+    if chapter.is_available:
+        text = ctx.files.load_text(chapter.content_file)
+    else:
+        text = '<p><em>No content available</em></p>'
     content = RE_WHITESPACE.sub('', f"""
     <div id="chapter">
         <h4 style="opacity: 0.8">#{chapter.serial}</h4>
         <h1>{chapter.title}</h1>
-        {ctx.files.load_text(chapter.content_file)}
+        {text}
     </div>
     """)
     item = epub.EpubHtml(

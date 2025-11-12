@@ -1,4 +1,5 @@
-import { JobStatusTag, JobTypeTag } from '@/components/Tags/jobs';
+import { JobStatusTag } from '@/components/Tags/JobStatusTag';
+import { JobTypeTag } from '@/components/Tags/JobTypeTag';
 import { type Job } from '@/types';
 import { formatDate } from '@/utils/time';
 import { ClockCircleOutlined } from '@ant-design/icons';
@@ -37,11 +38,11 @@ export const JobListItemCard: React.FC<{
             </Typography.Text>
 
             <Space wrap style={{ marginTop: 5 }}>
+              <JobStatusTag value={job.status} />
               <JobTypeTag value={job.type} />
               <Tag icon={<ClockCircleOutlined />} color="default">
                 {formatDate(job.created_at)}
               </Tag>
-              <JobStatusTag value={job.status} />
             </Space>
 
             {!lg && <JobProgressLine job={job} style={{ marginTop: 10 }} />}

@@ -1,4 +1,4 @@
-import { UserRole, UserTier } from '@/types';
+import { UserTier } from '@/types';
 import { CrownFilled, SmileOutlined, StarFilled } from '@ant-design/icons';
 import { Tag } from 'antd';
 
@@ -21,17 +21,4 @@ export const UserTierTag: React.FC<{ value?: UserTier }> = ({ value }) => {
     default:
       return null;
   }
-};
-
-export const UserStatusTag: React.FC<{ value?: boolean }> = ({ value }) => {
-  return (
-    <Tag color={value ? 'green' : 'cyan'}>{value ? 'Active' : 'Inactive'}</Tag>
-  );
-};
-
-export const UserRoleTag: React.FC<{ value?: UserRole }> = ({ value }) => {
-  if (!value) return null;
-  return (
-    <Tag color={value === 'admin' ? 'red' : 'blue'}>{value.toUpperCase()}</Tag>
-  );
 };
