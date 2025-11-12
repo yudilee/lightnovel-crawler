@@ -1,5 +1,6 @@
 import logging
-from typing import Optional
+import traceback
+from typing import Any, Optional
 from urllib.error import URLError
 
 from fastapi import FastAPI, HTTPException, Request
@@ -8,7 +9,18 @@ from PIL import UnidentifiedImageError
 from requests.exceptions import RequestException
 from urllib3.exceptions import HTTPError
 
-from .cloudscraper.exceptions import CloudflareException
+from .cloudscraper.exceptions import AbortedException, CloudflareException
+
+__all__ = [
+    'LNException',
+    'ServerError',
+    'ServerErrors',
+    'AbortedException',
+    'RetryErrorGroup',
+    'ScraperErrorGroup',
+    'FallbackToBrowser',
+    'attach_exception_handlers',
+]
 
 
 class LNException(Exception):
@@ -42,9 +54,27 @@ class ServerError(HTTPException, LNException):
         self.extra: Optional[str] = None
         super().__init__(status, *args, **kwargs)
 
-    def with_extra(self, extra: str) -> 'ServerError':
-        self.extra = extra
+    def with_extra(self, extra: Any) -> 'ServerError':
+        self.extra = str(extra).strip()
         return self
+
+    def __str__(self) -> str:
+        error = f'Error({self.status_code}): {self.detail}'
+        if self.extra:
+            error += f' [{self.extra}]'
+        return error
+
+    def format(self, with_stack=False) -> str:
+        stack = ''
+        if with_stack:
+            lines = traceback.format_exception(
+                type(self),
+                self,
+                self.__traceback__,
+                chain=True,
+            )
+            stack = ''.join(lines)
+        return f"{self}\n{stack}".strip()
 
     def to_response(self):
         return JSONResponse(
@@ -125,6 +155,8 @@ class ServerErrors:
     canceled_by_signal = ServerError(500, "Canceled by signal")
     calibre_exe_not_found = ServerError(500, "No calibre executables")
     no_epub_file = ServerError(500, "No EPub file found")
+    acquire_lock = ServerError(500, "Failed to acquire lock")
+    ebook_convert_error = ServerError(500, "Failed running ebook-convert")
     failed_creating_artifact = ServerError(500, "Failed to create artifact")
     format_not_available = ServerError(500, "The output format is not available")
     host_rejected = ServerError(500, 'The requested domain is rejected')
