@@ -31,7 +31,6 @@ def __format_volume(crawler: Crawler, vol_id_map: Dict[int, int]):
         next_id = crawler.volumes[-1].id + 1
         crawler.volumes.append(Volume(id=next_id, title='Others'))
     else:
-        setattr(crawler, 'use_custom_volumes', True)
         vol_count = math.ceil(len(crawler.chapters) / DEFAULT_CHAPTER_PER_VOLUME)
         crawler.volumes = [Volume(id=i + 1) for i in range(vol_count)]
 
@@ -44,7 +43,6 @@ def __format_volume(crawler: Crawler, vol_id_map: Dict[int, int]):
 
 
 def __format_chapters(crawler: Crawler, vol_id_map: Dict[int, int]):
-    use_custom = getattr(crawler, 'use_custom_volumes', False)
     crawler.chapters = [
         chap if isinstance(chap, Chapter) else Chapter(**chap)
         for chap in sorted(crawler.chapters, key=lambda x: x.id)
@@ -54,10 +52,14 @@ def __format_chapters(crawler: Crawler, vol_id_map: Dict[int, int]):
         item.extra['crawler_version'] = getattr(crawler, 'version')
         item.title = __format_title(item.title) or f'Chapter {item.id}'
 
-        if use_custom or item.volume is None:
-            item.volume = 1 + (index // DEFAULT_CHAPTER_PER_VOLUME)
-        vol_index = vol_id_map.get(item.volume)
-        volume = crawler.volumes[vol_index or -1]
+        default_vol = 1 + (index // DEFAULT_CHAPTER_PER_VOLUME)
+        vol_index = vol_id_map.get(item.volume or default_vol)
+        if vol_index is None:
+            vol_index = vol_id_map.get(default_vol)
+        if vol_index is None:
+            vol_index = -1
+
+        volume = crawler.volumes[vol_index]
         volume.chapter_count += 1
         item.volume = volume.id
 
