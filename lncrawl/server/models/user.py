@@ -20,14 +20,19 @@ class LoginResponse(TokenResponse):
 
 
 class SignupRequest(BaseModel):
+    referrer: str = Field(description="Referrer token")
     email: EmailStr = Field(description="User Email")
     password: str = Field(description="User password")
     name: Optional[str] = Field(default=None, description="Full name")
 
 
-class CreateRequest(SignupRequest):
+class CreateRequest(BaseModel):
+    email: EmailStr = Field(description="User Email")
+    password: str = Field(description="User password")
+    name: Optional[str] = Field(default=None, description="Full name")
     role: UserRole = Field(default=UserRole.USER, description="User role")
     tier: UserTier = Field(default=UserTier.BASIC, description="User tier")
+    referrer_id: Optional[str] = Field(default=None, description="Referrer user id")
 
 
 class UpdateRequest(BaseModel):

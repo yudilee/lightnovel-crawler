@@ -1,5 +1,8 @@
+import base64
+import hashlib
 import logging
 import secrets
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
@@ -13,7 +16,9 @@ from ..dao.enums import UserRole, UserTier
 from ..exceptions import ServerErrors
 from ..server.models.pagination import Paginated
 from ..server.models.user import (CreateRequest, LoginRequest,
-                                  PasswordUpdateRequest, UpdateRequest)
+                                  PasswordUpdateRequest, SignupRequest,
+                                  UpdateRequest)
+from ..utils.time_utils import current_timestamp
 
 logger = logging.getLogger(__name__)
 
@@ -80,16 +85,17 @@ class UserService:
         self,
         user: User,
         expiry_minutes: Optional[int] = None,
+        **payload,
     ) -> str:
         payload = {
-            'uid': user.id,
+            'sub': user.id,
             'scopes': [user.role, user.tier],
         }
         return self.encode_token(payload, expiry_minutes)
 
     def verify_token(self, token: str, required_scopes: List[str] = []) -> User:
         payload = self.decode_token(token)
-        user_id = payload.get('uid')
+        user_id = payload.get('sub')
         token_scopes = payload.get('scopes', [])
         if not user_id:
             raise ServerErrors.unauthorized
@@ -174,6 +180,7 @@ class UserService:
                 email=body.email,
                 role=body.role,
                 tier=body.tier,
+                referrer_id=body.referrer_id,
                 password=self._hash(body.password),
             )
             sess.add(user)
@@ -234,8 +241,9 @@ class UserService:
 
         otp = str(secrets.randbelow(1000000)).zfill(6)
         ctx.mail.send_otp(email, otp)
+
         return self.encode_token({
-            'otp': otp,
+            'otp': self._hash(otp),
             'email': email,
         }, 5)
 
@@ -245,9 +253,9 @@ class UserService:
         if not email:
             raise ServerErrors.not_found
 
-        actual_otp = payload.get('otp')
-        if actual_otp != input_otp:
-            raise ServerErrors.unauthorized
+        hashed_otp = payload.get('otp')
+        if not self._check(input_otp, hashed_otp):
+            raise ServerErrors.wrong_otp
 
         with ctx.db.session() as sess:
             row = VerifiedEmail(email=email)
@@ -262,9 +270,57 @@ class UserService:
                 raise ServerErrors.no_such_user
             if not user.is_active:
                 raise ServerErrors.inactive_user
-            token = self.generate_token(user, 5)
+
+        token = self.generate_token(user, 5)
+        if not ctx.users.is_verified(email):
+            raise ServerErrors.email_not_verified
 
         base_url = ctx.config.server.base_url
-        link = f'{base_url}/reset-password?token={token}&email={user.email}'
-
+        link = f'{base_url}/reset-password?token={token}'
         ctx.mail.send_reset_password_link(email, link)
+
+    def generate_user_token(self, user: User) -> str:
+        time = current_timestamp().to_bytes(8, 'little')
+        user_id = uuid.UUID(user.id).bytes
+        data = time + user_id
+
+        key = ctx.secrets.secret_key
+        ex_key = hashlib.blake2b(key, digest_size=len(data)).digest()
+        encrypted = bytes(x ^ y for x, y in zip(data, ex_key))
+
+        encoded = base64.urlsafe_b64encode(encrypted)
+        return encoded.decode('ascii')
+
+    def verify_user_token(self, token: str) -> User:
+        try:
+            encoded = token.encode('ascii')
+            encrypted = base64.urlsafe_b64decode(encoded)
+
+            key = ctx.secrets.secret_key
+            ex_key = hashlib.blake2b(key, digest_size=len(encrypted)).digest()
+            data = bytes(x ^ y for x, y in zip(encrypted, ex_key))
+
+            time = int.from_bytes(data[:8], 'little')
+            user_id = str(uuid.UUID(bytes=data[8:]))
+        except Exception as e:
+            logger.exception('token verify')
+            raise ServerErrors.token_invalid from e
+
+        exp = ctx.config.server.token_expiry * 60 * 1000
+        if time + exp < current_timestamp():
+            raise ServerErrors.token_expired
+
+        user = self.get(user_id)
+        if not user.is_active:
+            raise ServerErrors.inactive_user
+        return user
+
+    def signup(self, body: SignupRequest):
+        referrer = self.verify_user_token(body.referrer)
+        request = CreateRequest(
+            name=body.name,
+            email=body.email,
+            password=body.password,
+            referrer_id=referrer.id,
+        )
+        return self.create(request)

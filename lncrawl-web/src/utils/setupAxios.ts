@@ -19,5 +19,6 @@ export function setupAxios() {
     if (error.response?.status === 401) {
       store.dispatch(Auth.action.clearAuth());
     }
+    throw error;
   });
 }

@@ -10,6 +10,13 @@ from .enums import UserRole, UserTier
 class User(BaseTable, table=True):
     __tablename__ = 'users'  # type: ignore
 
+    referrer_id: Optional[str] = Field(
+        default=None,
+        foreign_key="users.id",
+        ondelete='CASCADE',
+        nullable=True,
+    )
+
     password: str = Field(
         description="Hashed password",
         exclude=True

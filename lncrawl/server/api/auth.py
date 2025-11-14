@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Body, Form, Security
+from fastapi import APIRouter, Body, Form, Query, Security
 
 from ...context import ctx
 from ...dao import User
-from ..models.user import (CreateRequest, ForgotPasswordRequest, LoginRequest,
-                           LoginResponse, NameUpdateRequest,
-                           PasswordUpdateRequest, ResetPasswordRequest,
-                           SignupRequest, TokenResponse, UpdateRequest)
+from ..models.user import (ForgotPasswordRequest, LoginRequest, LoginResponse,
+                           NameUpdateRequest, PasswordUpdateRequest,
+                           ResetPasswordRequest, SignupRequest, TokenResponse,
+                           UpdateRequest)
 from ..security import ensure_user
 
 # The root router
@@ -36,12 +36,7 @@ def signup(
         description='The signup request',
     ),
 ) -> LoginResponse:
-    request = CreateRequest(
-        password=body.password,
-        email=body.email,
-        name=body.name,
-    )
-    user = ctx.users.create(request)
+    user = ctx.users.signup(body)
     token = ctx.users.generate_token(user)
     is_verified = ctx.users.is_verified(user.email)
     return LoginResponse(
@@ -92,7 +87,6 @@ def reset_password_with_token(
 ) -> bool:
     request = UpdateRequest(password=body.password)
     ctx.users.update(user.id, request)
-    ctx.users.set_verified(user.email)
     return True
 
 
@@ -104,10 +98,25 @@ def send_otp(
     return TokenResponse(token=token)
 
 
-@router.post('/me/verify-otp', summary='Get if current user email is verified')
+@router.post('/verify-otp', summary='Get if current user email is verified')
 def verify_otp(
     otp: str = Form(),
     token: str = Form(),
 ) -> bool:
     ctx.users.verify_otp(token, otp)
-    return True
+    return ctx.users.get()
+
+
+@router.post('/me/create-token', summary='Generate a user token')
+def generate_user_token(
+    user: User = Security(ensure_user),
+) -> TokenResponse:
+    token = ctx.users.generate_user_token(user)
+    return TokenResponse(token=token)
+
+
+@router.get('/verify-token', summary='Verify a user token')
+def verify_user_token(
+    token: str = Query(description='User token')
+) -> User:
+    return ctx.users.verify_user_token(token)

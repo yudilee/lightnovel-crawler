@@ -70,7 +70,7 @@ export const UserInfoCard: React.FC<any> = () => {
         return;
       }
       await axios.post(
-        `/api/auth/me/verify-otp`,
+        `/api/auth/verify-otp`,
         new URLSearchParams({ otp, token }).toString(),
         {
           headers: {

@@ -8,6 +8,7 @@ import { formatDate, formatFromNow } from '@/utils/time';
 import {
   CalendarOutlined,
   CrownOutlined,
+  KeyOutlined,
   LockOutlined,
   MailOutlined,
   SafetyCertificateOutlined,
@@ -16,6 +17,7 @@ import {
 import { Descriptions, Divider, Grid, Space, Typography } from 'antd';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
+import { ProfileGenerateTokenButton } from './ProfileGenerateTokenButton';
 import { ProfileNameChangeButton } from './ProfileNameChangeButton';
 import { ProfilePasswordChangeButton } from './ProfilePasswordChangeButton';
 
@@ -108,6 +110,16 @@ export const UserProfilePage: React.FC<any> = () => {
           }
         >
           <ProfilePasswordChangeButton />
+        </Descriptions.Item>
+
+        <Descriptions.Item
+          label={
+            <Space>
+              <KeyOutlined /> Token
+            </Space>
+          }
+        >
+          <ProfileGenerateTokenButton />
         </Descriptions.Item>
       </Descriptions>
     </div>

@@ -14,10 +14,12 @@ import { UserListPage } from './UserList';
 import { UserProfilePage } from './UserProfilePage';
 import { ForgotPasswordPage } from './ForgotPassword';
 import { ResetPasswordPage } from './ResetPassword';
+import { AuthLayout } from '@/components/Layout/auth';
 
 export const AUTH_ROUTES: RouteObject[] = [
   {
     path: '/',
+    element: <AuthLayout />,
     children: [
       {
         path: '',

@@ -37,11 +37,13 @@ class SecretService:
             sess.commit()
         return value
 
-    def _decrypt(self, value: bytes) -> str:
-        return text_decrypt(value, self.secret_key).decode()
+    def _decrypt(self, value: bytes) -> bytes:
+        return text_decrypt(value, self.secret_key)
 
-    def _encrypt(self, value: str) -> bytes:
-        return text_encrypt(value.encode(), self.secret_key)
+    def _encrypt(self, value: bytes) -> bytes:
+        if isinstance(value, str):
+            value = value.encode()
+        return text_encrypt(value, self.secret_key)
 
     def list(
         self,
@@ -94,7 +96,7 @@ class SecretService:
             secret = Secret(
                 name=name,
                 user_id=user_id,
-                value=self._encrypt(value),
+                value=self._encrypt(value.encode()),
             )
             sess.add(secret)
             sess.commit()
@@ -122,7 +124,7 @@ class SecretService:
     def get_value(self, user_id: str, name: str) -> Optional[str]:
         try:
             secret = self.get(user_id, name)
-            return self._decrypt(secret.value)
+            return self._decrypt(secret.value).decode()
         except Exception:
             return None
 
