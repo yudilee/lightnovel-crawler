@@ -45,6 +45,8 @@ class JobRunner:
     def cancel(job_id: str):
         if job_id in _queue:
             _queue.pop(job_id).set()
+        for job_id in ctx.jobs.get_children_ids(job_id):
+            JobRunner.cancel(job_id)
 
     @staticmethod
     def cancel_all():

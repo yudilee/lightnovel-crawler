@@ -108,6 +108,11 @@ class JobService:
             raise ServerErrors.forbidden
         return user_id
 
+    def get_children_ids(self, parent_job_id: str) -> Iterable[str]:
+        with ctx.db.session() as sess:
+            stmt = select(Job.id).where(Job.parent_job_id == parent_job_id)
+            return sess.exec(stmt).all()
+
     def get_children(self, parent_job_id: str) -> Iterable[Job]:
         with ctx.db.session() as sess:
             stmt = select(Job).where(Job.parent_job_id == parent_job_id)
