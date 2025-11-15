@@ -1,4 +1,4 @@
-import type { LoginResponse, User } from '@/types';
+import type { LoginResponse, NotificationItem, User } from '@/types';
 import { UserRole } from '@/types/enums';
 import { parseJwt } from '@/utils/jwt';
 import type { PayloadAction } from '@reduxjs/toolkit';
@@ -37,7 +37,7 @@ export const AuthSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.emailVerified = action.payload.is_verified;
-      state.tokenExpiresAt = 1000 * parseJwt(state.token).exp;
+      state.tokenExpiresAt = 1000 * parseJwt(state.token)!.exp;
       axios.defaults.headers.common.Authorization = `Bearer ${state.token}`;
     },
     setUser(state, action: PayloadAction<User>) {
@@ -51,6 +51,17 @@ export const AuthSlice = createSlice({
     },
     setEmailVerified(state) {
       state.emailVerified = true;
+    },
+    updateEmailAlertConfig(
+      state,
+      action: PayloadAction<Record<NotificationItem, boolean>>
+    ) {
+      if (!state.user) return;
+      state.user.extra ||= {};
+      state.user.extra.email_alerts = {
+        ...state.user.extra.email_alerts,
+        ...action.payload,
+      };
     },
   },
 });
@@ -82,7 +93,11 @@ const selectAuthorization = createSelector(
 );
 const selectEmailVerified = createSelector(
   selectAuth, //
-  (auth) => auth.emailVerified
+  (auth) => Boolean(auth.emailVerified)
+);
+const selectEmailAlertConfig = createSelector(
+  selectUser, //
+  (user) => user?.extra.email_alerts
 );
 
 export const Auth = {
@@ -94,6 +109,7 @@ export const Auth = {
     authToken: selectToken,
     isVerified: selectEmailVerified,
     authorization: selectAuthorization,
+    emailAlerts: selectEmailAlertConfig,
   },
 };
 

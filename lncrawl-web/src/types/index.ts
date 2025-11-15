@@ -2,6 +2,7 @@ import type {
   JobPriority,
   JobStatus,
   JobType,
+  NotificationItem,
   OutputFormat,
   UserRole,
   UserTier,
@@ -11,13 +12,18 @@ export * from './enums';
 
 export interface User {
   id: string;
+  created_at: number;
+  updated_at: number;
+
   name: string;
   email: string;
   role: UserRole;
   tier: UserTier;
   is_active: boolean;
-  created_at: number;
-  updated_at: number;
+
+  extra: {
+    email_alerts?: Record<NotificationItem, boolean>;
+  };
 }
 
 export interface LoginResponse {

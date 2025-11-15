@@ -3,7 +3,9 @@ import {
   ControlOutlined,
   DeploymentUnitOutlined,
   FileDoneOutlined,
+  SettingOutlined,
   TeamOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import { type MenuProps } from 'antd';
 import { UserInfoCard } from './UserInfo';
@@ -31,12 +33,22 @@ export const buildMenu = (isAdmin: boolean): MenuProps['items'] => [
     icon: <BookOutlined />,
   },
   {
+    key: '/meta/sources',
+    label: 'Crawlers',
+    icon: <FileDoneOutlined />,
+  },
+  {
     type: 'divider',
   },
   {
-    key: '/meta/sources',
-    label: 'Supported Sources',
-    icon: <FileDoneOutlined />,
+    key: '/profile',
+    label: 'Profile',
+    icon: <UserOutlined />,
+  },
+  {
+    key: '/settings',
+    label: 'Settings',
+    icon: <SettingOutlined />,
   },
   {
     type: 'divider',

@@ -44,15 +44,3 @@ def get_artifact(
     artifact_id: str = Path(),
 ) -> Artifact:
     return ctx.artifacts.get(artifact_id)
-
-
-@router.get(
-    "/latest",
-    summary='Returns the latest artifact',
-    dependencies=[Security(ensure_user)],
-)
-def get_latest(
-    novel_id: str = Query(),
-    format: OutputFormat = Query(),
-) -> Optional[Artifact]:
-    return ctx.artifacts.get_latest(novel_id, format)

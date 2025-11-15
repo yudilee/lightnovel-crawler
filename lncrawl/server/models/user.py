@@ -1,8 +1,9 @@
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
-from ...dao.user import User, UserRole, UserTier
+from ...dao import User
+from ...dao.enums import NotificationItem, UserRole, UserTier
 
 
 class LoginRequest(BaseModel):
@@ -41,6 +42,7 @@ class UpdateRequest(BaseModel):
     role: Optional[UserRole] = Field(default=None, description="User role")
     is_active: Optional[bool] = Field(default=None, description="Active status")
     tier: Optional[UserTier] = Field(default=None, description="User tier")
+    extra: Optional[Dict[str, Any]] = Field(default=None, description='Extra field')
 
 
 class PasswordUpdateRequest(BaseModel):
@@ -58,3 +60,7 @@ class ForgotPasswordRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     password: Optional[str] = Field(default=None, description="User password")
+
+
+class PutNotificationRequest(BaseModel):
+    email_alerts: Dict[NotificationItem, bool] = Field(description='Notification config')

@@ -104,7 +104,7 @@ def verify_otp(
     token: str = Form(),
 ) -> bool:
     ctx.users.verify_otp(token, otp)
-    return ctx.users.get()
+    return True
 
 
 @router.post('/me/create-token', summary='Generate a user token')

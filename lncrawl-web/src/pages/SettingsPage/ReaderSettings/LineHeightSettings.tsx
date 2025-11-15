@@ -3,7 +3,7 @@ import { Reader } from '@/store/_reader';
 import { LineHeightOutlined } from '@ant-design/icons';
 import { Slider } from 'antd';
 import { useSelector } from 'react-redux';
-import type { ReaderSettingsItem } from '.';
+import type { ReaderSettingsItem } from './types';
 
 export const ReaderLineHeightSettings: ReaderSettingsItem = {
   label: 'Line Height',

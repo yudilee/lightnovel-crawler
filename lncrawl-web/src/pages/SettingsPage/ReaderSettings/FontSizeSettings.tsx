@@ -7,7 +7,7 @@ import {
 } from '@ant-design/icons';
 import { Button, Divider, Flex, Typography } from 'antd';
 import { useSelector } from 'react-redux';
-import type { ReaderSettingsItem } from '.';
+import type { ReaderSettingsItem } from './types';
 
 export const ReaderFontSizeSettings: ReaderSettingsItem = {
   label: 'Font Size',

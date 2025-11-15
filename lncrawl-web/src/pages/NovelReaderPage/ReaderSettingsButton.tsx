@@ -1,7 +1,7 @@
+import { ReaderSettings } from '@/pages/SettingsPage/ReaderSettings';
 import { SettingOutlined } from '@ant-design/icons';
-import { Button, Descriptions, Grid, Modal, Space } from 'antd';
+import { Button, Grid, Modal } from 'antd';
 import { useState } from 'react';
-import { readerSettingsItems } from './settings';
 
 export const ReaderSettingsButton: React.FC<any> = () => {
   const { sm } = Grid.useBreakpoint();
@@ -31,21 +31,7 @@ export const ReaderSettingsButton: React.FC<any> = () => {
           content: { padding: sm ? 20 : '15px 10px' },
         }}
       >
-        <Descriptions
-          bordered
-          column={1}
-          size="small"
-          layout={sm ? 'horizontal' : 'vertical'}
-          items={readerSettingsItems.map((item) => ({
-            label: (
-              <Space>
-                {item.icon}
-                {item.label}
-              </Space>
-            ),
-            children: <item.component />,
-          }))}
-        />
+        <ReaderSettings />
       </Modal>
     </>
   );

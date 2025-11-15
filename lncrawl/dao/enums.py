@@ -68,3 +68,13 @@ class OutputFormat(str, Enum):
 
     def __str__(self) -> str:
         return self.value
+
+
+class NotificationItem(IntEnum):
+    JOB_RUNNING = 10
+    JOB_SUCCESS = 20
+    JOB_FAILURE = 30
+    JOB_CANCELED = 40
+    NOVEL_SUCCESS = 50
+    ARTIFACT_SUCCESS = 60
+    FULL_NOVEL_SUCCESS = 70

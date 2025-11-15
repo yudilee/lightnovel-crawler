@@ -12,7 +12,7 @@ from sqlmodel import and_, asc, col, func, or_, select
 
 from ..context import ctx
 from ..dao import User, VerifiedEmail
-from ..dao.enums import UserRole, UserTier
+from ..dao.enums import NotificationItem, UserRole, UserTier
 from ..exceptions import ServerErrors
 from ..server.models.pagination import Paginated
 from ..server.models.user import (CreateRequest, LoginRequest,
@@ -182,6 +182,11 @@ class UserService:
                 tier=body.tier,
                 referrer_id=body.referrer_id,
                 password=self._hash(body.password),
+                extra=dict(
+                    email_alerts={
+                        NotificationItem.FULL_NOVEL_SUCCESS: True
+                    },
+                )
             )
             sess.add(user)
             sess.commit()
@@ -204,6 +209,8 @@ class UserService:
                 user.tier = body.tier
             if body.is_active is not None:
                 user.is_active = body.is_active
+            if body.extra is not None:
+                user.extra.update(body.extra)
 
             sess.commit()
 
@@ -253,7 +260,7 @@ class UserService:
         if not email:
             raise ServerErrors.not_found
 
-        hashed_otp = payload.get('otp')
+        hashed_otp = payload.get('otp') or ''
         if not self._check(input_otp, hashed_otp):
             raise ServerErrors.wrong_otp
 

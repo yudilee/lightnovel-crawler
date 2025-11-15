@@ -1,20 +1,21 @@
 import { MainLayout } from '@/components/Layout';
 import { Navigate, type RouteObject } from 'react-router-dom';
 
+import { AuthLayout } from '@/components/Layout/auth';
+import { ForgotPasswordPage } from './ForgotPassword';
 import { JobDetailsPage } from './JobDetails';
-import { MainPage } from './MainPage';
 import { LoginPage } from './Login';
+import { MainPage } from './MainPage';
 import { NovelDetailsPage } from './NovelDetails';
 import { NovelListPage } from './NovelList';
 import { NovelReaderPage } from './NovelReaderPage';
+import { ResetPasswordPage } from './ResetPassword';
+import { SettingsPage } from './SettingsPage';
 import { SignupPage } from './Signup';
 import { SupportedSourcesPage } from './SupportedSources';
 import { UserDetailsPage } from './UserDetails';
 import { UserListPage } from './UserList';
 import { UserProfilePage } from './UserProfilePage';
-import { ForgotPasswordPage } from './ForgotPassword';
-import { ResetPasswordPage } from './ResetPassword';
-import { AuthLayout } from '@/components/Layout/auth';
 
 export const AUTH_ROUTES: RouteObject[] = [
   {
@@ -78,6 +79,10 @@ export const USER_ROUTES: RouteObject[] = [
             element: <SupportedSourcesPage />,
           },
         ],
+      },
+      {
+        path: 'settings',
+        element: <SettingsPage />,
       },
     ],
   },

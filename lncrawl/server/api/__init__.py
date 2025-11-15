@@ -9,6 +9,7 @@ from .history import router as history
 from .jobs import router as job
 from .meta import router as metadata
 from .novels import router as novel
+from .settings import router as settings
 from .users import router as user
 from .volumes import router as volume
 
@@ -25,6 +26,13 @@ router.include_router(
     prefix='/user',
     tags=['Users'],
     dependencies=[Depends(ensure_admin)],
+)
+
+router.include_router(
+    settings,
+    prefix='/settings',
+    tags=['Settings'],
+    dependencies=[Security(ensure_user)],
 )
 
 router.include_router(

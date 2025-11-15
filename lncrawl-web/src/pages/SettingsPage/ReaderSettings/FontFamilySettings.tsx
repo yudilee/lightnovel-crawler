@@ -5,7 +5,7 @@ import { FontColorsOutlined } from '@ant-design/icons';
 import { Select } from 'antd';
 import { startCase } from 'lodash';
 import { useSelector } from 'react-redux';
-import type { ReaderSettingsItem } from '.';
+import type { ReaderSettingsItem } from './types';
 
 export const ReaderFontFamilySettings: ReaderSettingsItem = {
   label: 'Font Family',

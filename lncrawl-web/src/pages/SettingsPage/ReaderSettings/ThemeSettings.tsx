@@ -5,7 +5,7 @@ import { BgColorsOutlined, CheckOutlined } from '@ant-design/icons';
 import { Avatar, Flex, Popover } from 'antd';
 import { isEqual, startCase } from 'lodash';
 import { useSelector } from 'react-redux';
-import type { ReaderSettingsItem } from '.';
+import type { ReaderSettingsItem } from './types';
 
 export const ReaderThemeSettings: ReaderSettingsItem = {
   label: 'Theme',
@@ -22,7 +22,11 @@ export const ReaderThemeSettings: ReaderSettingsItem = {
         {Object.entries(ReaderTheme).map(([name, value]) => (
           <Popover content={startCase(name)}>
             <Avatar
-              style={{ ...value, cursor: 'pointer' }}
+              style={{
+                ...value,
+                cursor: 'pointer',
+                border: `2px solid ${value.color}`,
+              }}
               onClick={() => updateTheme(value)}
               icon={isEqual(theme, value) && <CheckOutlined />}
             />
