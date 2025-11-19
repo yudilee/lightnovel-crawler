@@ -165,7 +165,7 @@ export const JobDetailsPage: React.FC<any> = () => {
       {artifact && <ArtifactListCard artifacts={[artifact]} />}
 
       <JobListPage
-        key={job.id}
+        key={job.id + job.is_done}
         parentJobId={job.id}
         disableFilters
         autoRefresh={!job.is_done}

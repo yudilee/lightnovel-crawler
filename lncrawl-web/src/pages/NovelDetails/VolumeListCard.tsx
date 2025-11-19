@@ -51,12 +51,12 @@ export const VolumeListCard: React.FC<{
     fetchReadHistory(novelId);
   }, [novelId, messageApi]);
 
-  const createVolumeJob = async (e: React.MouseEvent, id: string) => {
+  const createVolumeJob = async (e: React.MouseEvent, volumes: string[]) => {
     try {
       e.stopPropagation();
       e.preventDefault();
       const result = await axios.post<Job>(`/api/job/create/fetch-volumes`, {
-        volumes: [id],
+        volumes,
       });
       navigate(`/job/${result.data.id}`);
     } catch (err) {
@@ -74,6 +74,22 @@ export const VolumeListCard: React.FC<{
         body: { padding: 10 },
         title: { fontSize: 22 },
       }}
+      extra={
+        <Button
+          size="small"
+          shape="round"
+          style={{ width: 90 }}
+          icon={<DownloadOutlined />}
+          onClick={(e) =>
+            createVolumeJob(
+              e,
+              volumes.map((v) => v.id)
+            )
+          }
+        >
+          Get All
+        </Button>
+      }
     >
       {contextHolder}
 
@@ -97,10 +113,9 @@ export const VolumeListCard: React.FC<{
               <Button
                 size="small"
                 shape="round"
-                type="primary"
                 style={{ width: 75 }}
                 icon={<DownloadOutlined />}
-                onClick={(e) => createVolumeJob(e, volume.id)}
+                onClick={(e) => createVolumeJob(e, [volume.id])}
               >
                 Get
               </Button>
