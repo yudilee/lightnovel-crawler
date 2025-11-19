@@ -432,6 +432,7 @@ class JobRunner:
             need_epub = formats & ctx.binder.depends_on_epub
             if need_epub:
                 formats.add(OutputFormat.epub)
+
             if not formats:
                 return self.__set_done()
 
@@ -445,18 +446,19 @@ class JobRunner:
                 )
                 format_job_map[format] = job.id
 
-            epub_job_id = format_job_map[OutputFormat.epub]
-            if not epub_job_id:
-                return self.__set_done('Failed to create epub request')
+            if need_epub:
+                epub_job_id = format_job_map.get(OutputFormat.epub)
+                if not epub_job_id:
+                    return self.__set_done('Failed to create epub request')
 
-            for format in sorted(need_epub - added_format):
-                job = ctx.jobs.make_artifact(
-                    self.user,
-                    novel_id,
-                    format,
-                    parent_id=self.job.id,
-                    depends_on=epub_job_id,
-                )
+                for format in sorted(need_epub - added_format):
+                    job = ctx.jobs.make_artifact(
+                        self.user,
+                        novel_id,
+                        format,
+                        parent_id=self.job.id,
+                        depends_on=epub_job_id,
+                    )
 
             return self.__increment()
         except Exception as e:
