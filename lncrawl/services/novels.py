@@ -1,7 +1,7 @@
 import shutil
 from typing import Any, List, Optional
 
-from sqlmodel import and_, desc, func, select
+from sqlmodel import and_, desc, col, func, select
 
 from ..context import ctx
 from ..dao import Novel
@@ -25,12 +25,10 @@ class NovelService:
 
             # Apply filters
             conditions: List[Any] = []
-            conditions.append(Novel.title != '...')
-            conditions.append(Novel.title != '')
 
             if search:
                 q = f"%{search.lower()}%"
-                conditions.append(func.lower(Novel.title).like(q))
+                conditions.append(col(Novel.title).ilike(q))
 
             if conditions:
                 cnd = and_(*conditions)
