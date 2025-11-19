@@ -3,29 +3,29 @@ import { Outlet } from 'react-router-dom';
 
 export const AuthLayout: React.FC<any> = () => {
   return (
-    <Layout
-      style={{
-        padding: '10px',
-        overflow: 'hidden',
-        height: 'calc(100vh - 40px)',
-      }}
-    >
+    <Layout style={{ padding: '10px', height: '100vh' }}>
       <Layout.Content style={{ overflow: 'auto' }}>
         <Flex
+          wrap
           align="center"
           justify="center"
           style={{ width: '100%', height: '100%' }}
         >
           <Card
+            style={{ width: '400px' }}
             title={
               <Space
-                direction="vertical"
                 align="center"
+                direction="vertical"
                 style={{ padding: '15px', width: '100%' }}
               >
                 <Avatar
                   src="/lncrawl.svg"
-                  style={{ width: '96px', height: '96px' }}
+                  style={{
+                    width: '96px',
+                    height: '96px',
+                    borderRadius: 0,
+                  }}
                 />
                 <Typography.Title
                   type="success"
@@ -36,7 +36,6 @@ export const AuthLayout: React.FC<any> = () => {
                 </Typography.Title>
               </Space>
             }
-            style={{ width: '400px' }}
           >
             <Outlet />
           </Card>

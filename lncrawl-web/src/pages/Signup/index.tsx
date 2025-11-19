@@ -1,7 +1,7 @@
 import { store } from '@/store';
 import { Auth } from '@/store/_auth';
 import { stringifyError } from '@/utils/errors';
-import { LoginOutlined } from '@ant-design/icons';
+import { LeftOutlined, LoginOutlined } from '@ant-design/icons';
 import { Alert, Button, Divider, Flex, Form, Input, Typography } from 'antd';
 import FormItem from 'antd/es/form/FormItem';
 import axios from 'axios';
@@ -81,6 +81,11 @@ export const SignupPage: React.FC<any> = () => {
         />
       </Form.Item>
 
+      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+        Registration is now referral-only. If you want to refer someone, you can
+        find your referral token on your Profile page.
+      </Typography.Text>
+
       {Boolean(error) && (
         <Alert
           type="warning"
@@ -104,7 +109,9 @@ export const SignupPage: React.FC<any> = () => {
 
       <Divider />
       <Flex justify="center">
-        <Typography.Link href="/login">Use existing account</Typography.Link>
+        <Typography.Link href="/login">
+          <LeftOutlined /> Back to login
+        </Typography.Link>
       </Flex>
     </Form>
   );
