@@ -9,6 +9,8 @@ import { Card, Flex, Grid, Tag, Typography } from 'antd';
 import { JobActionButtons } from '../JobList/JobActionButtons';
 import { JobProgressLine } from '../JobList/JobProgessBar';
 import { JobTitleText } from './JobTitleText';
+import { useSelector } from 'react-redux';
+import { Auth } from '@/store/_auth';
 
 export const JobDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
   const { lg } = Grid.useBreakpoint();
@@ -56,31 +58,43 @@ export const JobDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
         )}
       </Flex>
 
-      {job.error ? (
-        <pre
-          style={{
-            maxHeight: 300,
-            margin: '15px 0',
-            padding: '10px 20px',
-            whiteSpace: 'nowrap',
-            overflow: 'auto',
-            borderRadius: 10,
-            color: '#f63',
-            border: '1px solid #f63',
-          }}
-          dangerouslySetInnerHTML={{
-            __html: job.error
-              .split('\n')
-              .filter(Boolean)
-              .map((line) => line.replace(/^\s+/, '&nbsp;'))
-              .join('<br/>'),
-          }}
-        />
-      ) : null}
+      <JobErrorDetailsCard job={job} />
 
       <Flex justify="end" align="center" gap={'10px'} style={{ marginTop: 15 }}>
         <JobActionButtons job={job} />
       </Flex>
     </Card>
+  );
+};
+
+export const JobErrorDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
+  const isAdmin = useSelector(Auth.select.isAdmin);
+
+  if (!job.error) {
+    return null;
+  }
+
+  const lines = job.error
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => line.replace(/^\s+/, '&nbsp;'));
+
+  const error = isAdmin ? lines.join('<br/>') : lines[lines.length - 1];
+
+  return (
+    <pre
+      style={{
+        fontSize: '0.775rem',
+        maxHeight: 300,
+        margin: '15px 0',
+        padding: '10px 20px',
+        whiteSpace: 'nowrap',
+        overflow: 'auto',
+        color: '#f8f749',
+        border: '1px solid #f8f749',
+        background: '#f8f74910',
+      }}
+      dangerouslySetInnerHTML={{ __html: error }}
+    />
   );
 };
