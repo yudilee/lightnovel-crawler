@@ -86,37 +86,6 @@ def __save_image(img: Image, file: Path) -> None:
     img.save(str(file.as_posix()), "JPEG", optimized=True)
 
 
-def download_cover(crawler: Crawler, cover_file: Path):
-    url = crawler.novel_cover
-    if not url:
-        return
-
-    if cover_file.is_file():
-        os.utime(cover_file)
-        return
-
-    try:
-        img = crawler.download_image(url)
-        __save_image(img, cover_file)
-        logger.info(f'Cover saved: {url} -> {cover_file}')
-        return
-    except Exception as e:
-        logger.error(
-            f"Failed to download cover: {repr(e)}",
-            stack_info=ctx.logger.is_debug,
-        )
-
-    try:
-        img = generate_cover_image()
-        __save_image(img, cover_file)
-        logger.info(f'Cover generated: {cover_file}')
-    except Exception as e:
-        logger.error(
-            f"Failed to generate cover: {repr(e)}",
-            stack_info=ctx.logger.is_debug,
-        )
-
-
 def download_image(crawler: Crawler, url: str, image_file: Path):
     if not url:
         return
@@ -132,5 +101,36 @@ def download_image(crawler: Crawler, url: str, image_file: Path):
     except Exception as e:
         logger.error(
             f"Failed to download image: {repr(e)}",
+            stack_info=ctx.logger.is_debug,
+        )
+
+
+def download_cover(crawler: Crawler, cover_file: Path):
+    url = crawler.novel_cover
+    if not url:
+        return
+
+    try:
+        img = crawler.download_image(url)
+        __save_image(img, cover_file)
+        logger.info(f'Cover saved: {url} -> {cover_file}')
+        return
+    except Exception as e:
+        logger.error(
+            f"Failed to download cover: {repr(e)}",
+            stack_info=ctx.logger.is_debug,
+        )
+
+    if cover_file.is_file():
+        os.utime(cover_file)
+        return
+
+    try:
+        img = generate_cover_image()
+        __save_image(img, cover_file)
+        logger.info(f'Cover generated: {cover_file}')
+    except Exception as e:
+        logger.error(
+            f"Failed to generate cover: {repr(e)}",
             stack_info=ctx.logger.is_debug,
         )
