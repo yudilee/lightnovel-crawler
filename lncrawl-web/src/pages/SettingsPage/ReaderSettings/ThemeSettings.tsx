@@ -20,7 +20,7 @@ export const ReaderThemeSettings: ReaderSettingsItem = {
     return (
       <Flex wrap gap={10}>
         {Object.entries(ReaderTheme).map(([name, value]) => (
-          <Popover content={startCase(name)}>
+          <Popover key={name} content={startCase(name)}>
             <Avatar
               style={{
                 ...value,

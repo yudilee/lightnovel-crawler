@@ -1,25 +1,43 @@
-import './reader.scss';
+import './fonts.scss';
+import './index.scss';
 
+import { store } from '@/store';
 import { Auth } from '@/store/_auth';
 import { Reader } from '@/store/_reader';
 import type { ReadChapter } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { formatFromNow } from '@/utils/time';
-import {
-  Button,
-  Card,
-  Divider,
-  Empty,
-  Flex,
-  Result,
-  Spin,
-  Typography,
-} from 'antd';
+import { Button, Flex, Result, Spin } from 'antd';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Link, useParams } from 'react-router-dom';
-import { ReaderNavBar } from './ReaderNavBar';
+import { useParams } from 'react-router-dom';
+import { ReaderVerticalLayout } from './ReaderLayoutVertical';
+
+const cache = new Map<string, Promise<ReadChapter>>();
+
+async function fetchChapter(id: string) {
+  const { data } = await axios.get<ReadChapter>(`/api/chapter/${id}/read`);
+  if (data.content) {
+    data.content = `
+      <h1 style="margin-bottom: 0">${data.chapter.title}</h1>
+      <div style="font-size: 12px; opacity: 0.8; margin-bottom: 25px">
+        ${data.chapter.serial} of ${data.novel.chapter_count}
+        <span> | </span>
+        Updated ${formatFromNow(data.chapter.updated_at)}
+      </div>
+      ${data.content}
+    `;
+  }
+  return data;
+}
+
+function fetchChapterCached(id: string): Promise<ReadChapter> {
+  if (!cache.has(id)) {
+    cache.set(id, fetchChapter(id));
+  }
+  return cache.get(id)!;
+}
 
 export const NovelReaderPage: React.FC<any> = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,34 +48,42 @@ export const NovelReaderPage: React.FC<any> = () => {
   const [error, setError] = useState<string>();
   const [data, setData] = useState<ReadChapter>();
 
-  const theme = useSelector(Reader.select.theme);
-  const fontSize = useSelector(Reader.select.fontSize);
-  const lineHeight = useSelector(Reader.select.lineHeight);
-  const fontFamily = useSelector(Reader.select.fontFamily);
-
   useEffect(() => {
-    const fetchChapter = async (id: string) => {
-      setError(undefined);
-      try {
-        const { data: chapter } = await axios.get<ReadChapter>(
-          `/api/chapter/${id}/read`
-        );
-        setData(chapter);
-      } catch (err: any) {
-        setError(stringifyError(err));
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (id) {
-      fetchChapter(id);
+      setError(undefined);
+      fetchChapterCached(id)
+        .then(setData)
+        .catch((err) => setError(stringifyError(err)))
+        .finally(() => setLoading(false));
     }
   }, [id, token, refreshId]);
 
+  useEffect(() => {
+    if (data?.next_id) {
+      fetchChapterCached(data.next_id);
+    }
+  }, [data?.next_id]);
+
+  useEffect(() => {
+    if (data?.previous_id) {
+      fetchChapterCached(data.previous_id);
+    }
+  }, [data?.previous_id]);
+
+  useEffect(() => {
+    store.dispatch(Reader.action.setSepakPosition(0));
+    const fid = requestAnimationFrame(() => {
+      const mainEl = document.querySelector('main');
+      if (mainEl) {
+        mainEl.scrollTop = 0;
+      }
+    });
+    return () => cancelAnimationFrame(fid);
+  }, [data]);
+
   if (loading) {
     return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
+      <Flex align="center" justify="center" style={{ height: '100vh' }}>
         <Spin size="large" style={{ marginTop: 100 }} />
       </Flex>
     );
@@ -65,7 +91,7 @@ export const NovelReaderPage: React.FC<any> = () => {
 
   if (error || !data || !id) {
     return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
+      <Flex align="center" justify="center" style={{ height: '100vh' }}>
         <Result
           status="error"
           title="Failed to load chapter content"
@@ -78,50 +104,5 @@ export const NovelReaderPage: React.FC<any> = () => {
     );
   }
 
-  return (
-    <Flex
-      vertical
-      className="novel-reader"
-      style={{ fontSize, lineHeight, fontFamily, ...theme }}
-    >
-      <div style={{ textAlign: 'center' }}>
-        <Typography.Title level={4} style={{ margin: 0, color: '#F16C6F' }}>
-          {data.novel.authors}
-        </Typography.Title>
-        <Typography.Title level={1} style={{ margin: 0 }}>
-          <Link to={`/novel/${data.novel.id}`} style={{ color: '#8484F4' }}>
-            {data.novel.title}
-          </Link>
-        </Typography.Title>
-      </div>
-
-      <Divider size="middle" />
-      <ReaderNavBar data={data} />
-
-      <h1 style={{ marginBottom: 0 }}>{data.chapter.title}</h1>
-      <Typography.Text style={{ fontSize: 12, color: 'inherit', opacity: 0.8 }}>
-        {data.chapter.serial} of {data.novel.chapter_count}
-        <Divider type="vertical" style={{ background: theme.color }} />
-        Updated {formatFromNow(data.chapter.updated_at)}
-      </Typography.Text>
-
-      {data.content ? (
-        <div
-          dangerouslySetInnerHTML={{
-            __html: data.content,
-          }}
-          style={{ margin: '25px 0' }}
-        />
-      ) : (
-        <Card style={{ margin: '25px 0' }}>
-          <Empty
-            description="No contents available"
-            style={{ padding: 'calc(50vh - 300px) 0' }}
-          />
-        </Card>
-      )}
-
-      <ReaderNavBar data={data} />
-    </Flex>
-  );
+  return <ReaderVerticalLayout data={data} />;
 };

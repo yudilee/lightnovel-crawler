@@ -12,12 +12,12 @@ import { UserInfoCard } from './UserInfo';
 
 export const buildMenu = (isAdmin: boolean): MenuProps['items'] => [
   {
-    key: '/profile',
+    type: 'group',
+    label: <UserInfoCard />,
     style: {
       background: 'none',
       height: 'fit-content',
     },
-    label: <UserInfoCard />,
   },
   {
     type: 'divider',

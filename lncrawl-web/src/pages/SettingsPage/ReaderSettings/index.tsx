@@ -7,6 +7,7 @@ import type { ReaderSettingsItem } from './types';
 import { ReaderVoiceSettings } from './VoiceSettings';
 
 const items: ReaderSettingsItem[] = [
+  // ReaderLayoutSettings,
   ReaderThemeSettings,
   ReaderFontFamilySettings,
   ReaderFontSizeSettings,

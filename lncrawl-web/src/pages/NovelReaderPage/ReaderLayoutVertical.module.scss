@@ -1,0 +1,29 @@
+.layout {
+  padding: 25px;
+
+  .content {
+    margin: 5px auto;
+    max-width: 85ch;
+
+    &.speaking {
+      user-select: none;
+
+      & > * {
+        cursor: pointer;
+      }
+      & > [data-speak='true'] {
+        border-radius: 5px;
+        outline-offset: 7px;
+        outline: 1px solid rgba(241, 108, 111, 0.5);
+      }
+    }
+  }
+
+  &.mobile {
+    padding: 15px;
+
+    .content {
+      margin-bottom: 50px;
+    }
+  }
+}

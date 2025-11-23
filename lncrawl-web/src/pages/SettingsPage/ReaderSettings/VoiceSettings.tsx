@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import type { ReaderSettingsItem } from './types';
 
-function getVoices(): Promise<SpeechSynthesisVoice[]> {
+export function getVoices(): Promise<SpeechSynthesisVoice[]> {
   return new Promise((resolve) => {
     if (!window.speechSynthesis) {
       return resolve([]);

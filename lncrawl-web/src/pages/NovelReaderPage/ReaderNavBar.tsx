@@ -1,55 +1,137 @@
+import cx from 'classnames';
+import styles from './ReaderNavBar.module.scss';
+
+import { store } from '@/store';
+import { Reader } from '@/store/_reader';
 import type { ReadChapter } from '@/types';
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import { Button, Flex, Grid } from 'antd';
+import {
+  BorderOutlined,
+  LeftOutlined,
+  RightOutlined,
+  SoundOutlined,
+  StepBackwardOutlined,
+  StepForwardOutlined,
+} from '@ant-design/icons';
+import { Flex, Grid } from 'antd';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { ReaderSettingsButton } from './ReaderSettingsButton';
-import { ReaderTextToSpeechButton } from './ReaderSpeakButton';
 
 export const ReaderNavBar: React.FC<{
   data: ReadChapter;
 }> = ({ data }) => {
-  const navigate = useNavigate();
-  const { sm } = Grid.useBreakpoint();
+  const { md } = Grid.useBreakpoint();
+  const theme = useSelector(Reader.select.theme);
+  const speaking = useSelector(Reader.select.speaking);
+
   return (
     <Flex
       align="center"
       justify="center"
       style={{
-        margin: 7,
-        boxShadow: `5px solid #000`,
+        color: theme.color,
+        background: md ? theme.background : theme.background + 'e5',
       }}
+      className={cx(styles.readerNavBar, { [styles.mobile]: !md })}
     >
-      <Button
-        size="large"
-        shape="round"
-        disabled={!data.previous_id}
-        onClick={() => navigate(`/read/${data.previous_id}`)}
-        style={{
-          borderTopRightRadius: 0,
-          borderBottomRightRadius: 0,
-        }}
+      {speaking ? <SpeechNavs data={data} /> : <GeneralNavs data={data} />}
+    </Flex>
+  );
+};
+
+const GeneralNavs: React.FC<{
+  data: ReadChapter;
+}> = ({ data }) => {
+  const navigate = useNavigate();
+  const { sm } = Grid.useBreakpoint();
+
+  const startSpeaking = () => {
+    window.speechSynthesis.cancel();
+    store.dispatch(Reader.action.setSpeaking(true));
+  };
+
+  const goPrevious = () => {
+    if (data.previous_id) {
+      navigate(`/read/${data.previous_id}`);
+    }
+  };
+
+  const goNext = () => {
+    if (data.next_id) {
+      navigate(`/read/${data.next_id}`);
+    }
+  };
+
+  return (
+    <>
+      <div
+        onClick={goPrevious}
+        className={cx(styles.item, {
+          [styles.disabled]: !data.previous_id,
+        })}
       >
         <LeftOutlined />
         {sm && ' Previous'}
-      </Button>
+      </div>
 
-      <ReaderTextToSpeechButton />
-      {/* <ReaderContentsButton novelId={data.novel.id} /> */}
-      <ReaderSettingsButton data={data} />
+      <div className={styles.item} onClick={startSpeaking}>
+        <SoundOutlined />
+        {sm && 'Read'}
+      </div>
 
-      <Button
-        size="large"
-        shape="round"
-        disabled={!data.next_id}
-        onClick={() => navigate(`/read/${data.next_id}`)}
-        style={{
-          borderTopLeftRadius: 0,
-          borderBottomLeftRadius: 0,
-        }}
+      <ReaderSettingsButton className={styles.item} />
+
+      <div
+        onClick={goNext}
+        className={cx(styles.item, {
+          [styles.disabled]: !data.next_id,
+        })}
       >
         {sm && 'Next '}
         <RightOutlined />
-      </Button>
-    </Flex>
+      </div>
+    </>
+  );
+};
+
+const SpeechNavs: React.FC<{
+  data: ReadChapter;
+}> = () => {
+  const { sm } = Grid.useBreakpoint();
+  const position = useSelector(Reader.select.speakPosition);
+
+  const stopSpeaking = () => {
+    store.dispatch(Reader.action.setSpeaking(false));
+    window.speechSynthesis.cancel();
+  };
+
+  const moveBackward = () => {
+    store.dispatch(Reader.action.setSepakPosition(position - 1));
+  };
+
+  const moveForward = () => {
+    store.dispatch(Reader.action.setSepakPosition(position + 1));
+  };
+
+  return (
+    <>
+      <div
+        onClick={moveBackward}
+        className={cx(styles.item, {
+          [styles.disabled]: position === 0,
+        })}
+      >
+        <StepBackwardOutlined />
+        {sm && 'Backward'}
+      </div>
+      <div className={styles.item} onClick={stopSpeaking}>
+        <BorderOutlined />
+        {sm && 'Stop'}
+      </div>
+      <div className={styles.item} onClick={moveForward}>
+        <StepForwardOutlined />
+        {sm && 'Forward'}
+      </div>
+    </>
   );
 };

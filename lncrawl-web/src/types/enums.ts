@@ -99,3 +99,9 @@ export const NotificationItem = {
 };
 export type NotificationItem =
   (typeof NotificationItem)[keyof typeof NotificationItem];
+
+export const ReaderLayout = {
+  horizontal: 'horizontal',
+  vertical: 'vertical',
+};
+export type ReaderLayout = (typeof ReaderLayout)[keyof typeof ReaderLayout];

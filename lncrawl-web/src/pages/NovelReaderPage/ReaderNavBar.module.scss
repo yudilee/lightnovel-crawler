@@ -1,0 +1,64 @@
+.readerNavBar {
+  user-select: none;
+  border-radius: 20px;
+  overflow: hidden;
+  margin: 0 auto;
+  width: fit-content;
+  line-height: 1em;
+  box-shadow: 0 0 7px rgba(241, 108, 111, 0.3);
+  z-index: 5;
+  position: sticky;
+  top: 0;
+
+  & > .item {
+    cursor: pointer;
+    font-size: 0.875em;
+    font-weight: 500;
+    border-radius: 0;
+    border: 0.5px solid rgba(241, 108, 111, 0.3);
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    padding: 12px 14px;
+    opacity: 0.9;
+
+    svg {
+      display: inline-block;
+      margin-left: 5px;
+      margin-right: 5px;
+    }
+
+    &:first-child {
+      border-left-width: 1;
+      border-top-left-radius: 20px;
+      border-bottom-left-radius: 20px;
+    }
+    &:last-child {
+      border-right-width: 1;
+      border-top-right-radius: 20px;
+      border-bottom-right-radius: 20px;
+    }
+
+    &.disabled {
+      cursor: default;
+      pointer-events: none;
+      box-shadow: inset 0 0 5px rgba(241, 108, 111, 0.2);
+      opacity: 0.65;
+    }
+
+    &:hover:not(.disabled) {
+      opacity: 1;
+    }
+
+    &:active:not(.disabled) {
+      box-shadow: inset 0 0 5px rgba(241, 108, 111, 0.2);
+    }
+  }
+
+  &.mobile {
+    box-shadow: 0 0 8px rgba(241, 108, 111, 0.35);
+
+    & > .item {
+      padding: 11px;
+    }
+  }
+}

@@ -55,12 +55,12 @@ export const MainLayout: React.FC<{
       >
         <div
           style={{
-            maxWidth: 1200,
             margin: '0 auto',
-            minHeight: 'calc(100% - 25px)',
             transition: 'all 0.2s ease-in-out',
+            maxWidth: noPadding ? undefined : 1200,
             opacity: overlay && !collapsed ? '0.5' : undefined,
             pointerEvents: overlay && !collapsed ? 'none' : undefined,
+            minHeight: noPadding ? 'calc(100% - 10px)' : 'calc(100% - 25px)',
           }}
         >
           {!md && (
