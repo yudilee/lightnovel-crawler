@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+from typing import Optional
 from urllib.parse import urlencode
 
 from bs4 import BeautifulSoup, Tag
@@ -70,5 +71,5 @@ class ReadLightNovelsNet(SearchableSoupTemplate, ChapterOnlySoupTemplate):
             url=self.absolute_url(tag["value"]),
         )
 
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         return soup.select_one(".chapter-content")

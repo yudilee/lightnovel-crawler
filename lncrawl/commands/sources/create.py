@@ -202,7 +202,7 @@ def _prompt_openai_key() -> str:
 def _generate_stub(name: str, base_url: str, features: List[Feature]):
     content = '''# -*- coding: utf-8 -*-
 import logging
-from typing import Generator
+from typing import Generator, Optional
 
 from bs4 import BeautifulSoup, Tag
 '''
@@ -285,8 +285,8 @@ logger = logging.getLogger(__name__)
         # Parse and return the novel title
         #
         # Example:
-        # tag = soup.select_one(".post-title")
-        # assert tag, 'No title tag'
+        # tag = soup.select_one("h1")
+        # assert tag, 'No novel title tag'
         # return tag.get_text(strip=True)
         raise NotImplementedError()
 
@@ -379,7 +379,7 @@ logger = logging.getLogger(__name__)
 '''
 
     content += '''
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         # Select the tag containing the chapter content text
         #
         # Example:

@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
 import re
-import json
-from typing import Generator
+from typing import Generator, Optional
+from urllib.parse import quote_plus, urljoin
 
 from bs4 import BeautifulSoup, Tag
 
 from lncrawl.models import Chapter, SearchResult
 from lncrawl.templates.browser.searchable import SearchableBrowserTemplate
-
-from urllib.parse import urljoin, quote_plus
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +120,7 @@ class RanobeLibCrawler(SearchableBrowserTemplate):
         self.visit(chapter.url)
         self.browser.wait("#arrticle")
 
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         return soup.select_one("div#arrticle")
 
     def extract_page_data(self, soup: BeautifulSoup) -> dict:

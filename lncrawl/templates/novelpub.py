@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import Generator
+from typing import Generator, Optional
 
 from bs4 import BeautifulSoup, Tag
 
@@ -37,10 +37,14 @@ class NovelPubTemplate(SearchableBrowserTemplate, ChapterOnlyBrowserTemplate):
         self.visit(f"{self.home_url}search")
         self.browser.wait("#inputContent")
         inp = self.browser.find("#inputContent")
+        if not inp:
+            return
         inp.send_keys(query)
         self.browser.wait("#novelListBase ul, #novelListBase center")
-        soup = self.browser.find("#novelListBase").as_tag()
-        yield from soup.select(".novel-list .novel-item a")
+        base = self.browser.find("#novelListBase")
+        if not base:
+            return
+        yield from base.as_tag().select(".novel-list .novel-item a")
 
     def select_search_items(self, query: str) -> Generator[Tag, None, None]:
         soup = self.get_soup(f"{self.home_url}search")
@@ -132,13 +136,14 @@ class NovelPubTemplate(SearchableBrowserTemplate, ChapterOnlyBrowserTemplate):
             self.browser.visit(next_link)
             self.browser.wait("ul.chapter-list li")
             chapter_list = self.browser.find("ul.chapter-list")
+            if not chapter_list:
+                return
             yield from chapter_list.as_tag().select("li a")
             try:
-                next = self.browser.find('.PagedList-skipToNext a[rel="next"]')
-                link = next.get_attribute("href")
-                if not link:
+                next = self.browser.find('.PagedList-skipToNext a[href][rel="next"]')
+                if not next:
                     break
-                next_link = link
+                next_link = str(next.get_attribute("href"))
             except Exception:
                 break
 
@@ -151,11 +156,9 @@ class NovelPubTemplate(SearchableBrowserTemplate, ChapterOnlyBrowserTemplate):
             url=self.absolute_url(tag["href"]),
         )
 
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         self.browser.wait(".chapter-content")
-        body = soup.select_one(".chapter-content")
-        assert body
-        return body
+        return soup.select_one(".chapter-content")
 
     def visit_chapter_page_in_browser(self, chapter: Chapter) -> None:
         """Open the Chapter URL in the browser"""

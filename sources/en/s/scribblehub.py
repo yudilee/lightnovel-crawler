@@ -2,17 +2,14 @@
 
 import logging
 import re
-
-from typing import Generator, Union
+from typing import Generator, Optional, Union
+from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup, Tag
 
+from lncrawl.exceptions import FallbackToBrowser, LNException
 from lncrawl.models import Chapter, SearchResult, Volume
 from lncrawl.templates.browser.searchable import SearchableBrowserTemplate
-from lncrawl.exceptions import FallbackToBrowser, LNException
-
-# from urllib.parse import urljoin, quote_plus
-from urllib.parse import urljoin
 
 logger = logging.getLogger(__name__)
 
@@ -149,5 +146,5 @@ class ScribbleHubCrawler(SearchableBrowserTemplate):
         self.visit(chapter.url)
         self.browser.wait("main#main")
 
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         return soup.select_one("#chp_raw")

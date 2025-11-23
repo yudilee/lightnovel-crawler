@@ -1,7 +1,7 @@
 import logging
 import re
 import time
-from typing import Mapping
+from typing import Mapping, Optional
 from urllib.parse import urlencode, urlparse
 
 from bs4 import BeautifulSoup, Tag
@@ -158,7 +158,7 @@ class NovelupdatesCrawler(SearchableBrowserTemplate, ChapterOnlyBrowserTemplate)
         chapter.url = self.browser.current_url
         return self.parse_chapter_body(chapter, self.browser.html)
 
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         return super().select_chapter_body(soup)
 
     def parse_chapter_body(self, chapter: Chapter, text: str) -> str:

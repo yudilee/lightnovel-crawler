@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from typing import Generator, Union
+from typing import Generator, Optional, Union
 
 from bs4 import BeautifulSoup, Tag
 
@@ -74,5 +74,5 @@ class NovelsOnline(GeneralBrowserTemplate):
         self.visit(chapter.url)
         self.browser.wait(".container--content")
 
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         return soup.select_one("#contentall")

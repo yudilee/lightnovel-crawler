@@ -88,7 +88,7 @@ class NovelFullTemplate(SearchableSoupTemplate, ChapterOnlySoupTemplate):
 
     def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
         contents = soup.select_one("#chr-content, #chapter-content")
-        assert contents
+        assert contents, 'No chapter contents'
         for ads in contents.select("div"):
             ads.extract()
         return contents

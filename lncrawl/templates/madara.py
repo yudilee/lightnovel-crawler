@@ -1,11 +1,12 @@
 import logging
+from typing import Optional
 from urllib.parse import urlencode
 
 from bs4 import BeautifulSoup, Tag
 
 from lncrawl.models import Chapter, SearchResult
-from lncrawl.templates.soup.searchable import SearchableSoupTemplate
 from lncrawl.templates.browser.chapter_only import ChapterOnlyBrowserTemplate
+from lncrawl.templates.soup.searchable import SearchableSoupTemplate
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +108,5 @@ class MadaraTemplate(SearchableSoupTemplate, ChapterOnlyBrowserTemplate):
             url=self.absolute_url(tag["href"]),
         )
 
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
-        body = soup.select_one("div.reading-content")
-        assert body
-        return body
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
+        return soup.select_one("div.reading-content")

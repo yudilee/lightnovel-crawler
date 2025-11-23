@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import unicodedata
+from typing import Any, List, Optional
 
 from bs4 import BeautifulSoup, Tag
 
@@ -77,6 +78,7 @@ class FreeWebNovelCrawler(SearchableSoupTemplate, ChapterOnlySoupTemplate):
             return self.absolute_url(tag["data-src"])
         if tag.has_attr("src"):
             return self.absolute_url(tag["src"])
+        return ''
 
     def parse_authors(self, soup: BeautifulSoup):
         for a in soup.select(".m-imgtxt a[href*='/authors/']"):
@@ -97,27 +99,31 @@ class FreeWebNovelCrawler(SearchableSoupTemplate, ChapterOnlySoupTemplate):
     def normalize_text(self, text: str) -> str:
         return unicodedata.normalize("NFKC", text)
 
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         body_tag = soup.select_one(".m-read")
+        if not body_tag:
+            return None
+
         # style element on page that hides usually last paragraph which contains randomised self-promo text
         has_promo = soup.find("style", text=re.compile("p:nth-last-child\\(\\d\\)"))
-        if body_tag:
-            normalized_body = self.normalize_text(str(body_tag))
-            normalized_soup = BeautifulSoup(normalized_body, "html.parser")
-            if has_promo:
-                selectors = []
-                style_content = has_promo.get_text(strip=True)
-                rules = re.findall(r"([^{]+)\{[^}]*\}", style_content)
-                for rule in rules:
-                    selectors.extend(
-                        selector
-                        for selector in rule.split(",")
-                        if not re.search(r"p:nth-last-child\(\d+\)", selector.strip())
-                    )
-                selectors = list(filter(None, set(selectors)))
+        if not has_promo:
+            return None
 
-                for promo_selector in selectors:
-                    random_self_promo = normalized_soup.select(promo_selector)
-                    [tag.decompose() for tag in random_self_promo]
-            return normalized_soup.select_one(".txt")
-        return body_tag.select_one(".txt")
+        selectors: List[Any] = []
+        style_content = has_promo.get_text(strip=True)
+        rules = re.findall(r"([^{]+)\{[^}]*\}", style_content)
+        for rule in rules:
+            selectors.extend(
+                selector
+                for selector in rule.split(",")
+                if not re.search(r"p:nth-last-child\(\d+\)", selector.strip())
+            )
+        selectors = list(filter(None, set(selectors)))
+
+        normalized_body = self.normalize_text(str(body_tag))
+        normalized_soup = BeautifulSoup(normalized_body, "html.parser")
+        for promo_selector in selectors:
+            random_self_promo = normalized_soup.select(promo_selector)
+            for tag in random_self_promo:
+                tag.decompose()
+        return normalized_soup.select_one(".txt")

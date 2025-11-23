@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+from typing import Generator, Optional
 
-from typing import Generator
 from bs4 import BeautifulSoup, Tag
+
 from lncrawl.templates.novelpub import NovelPubTemplate
 
 
@@ -36,6 +37,6 @@ class PandaNovelCo(NovelPubTemplate):
                 next_link = False
 
     # .chapter-content -> #content
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         self.browser.wait("#content")
         return soup.select_one("#content")

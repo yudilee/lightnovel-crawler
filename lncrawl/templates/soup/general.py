@@ -82,10 +82,12 @@ class GeneralSoupTemplate(CrawlerTemplate):
     def download_chapter_body(self, chapter: Chapter) -> str:
         soup = self.get_soup(chapter.url)
         body = self.select_chapter_body(soup)
+        if not body:
+            raise LNException('No chapter contents')
         return self.parse_chapter_body(body)
 
     @abstractmethod
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         """Select the tag containing the chapter text"""
         raise NotImplementedError()
 

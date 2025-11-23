@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+from typing import Optional
 
 from bs4 import BeautifulSoup, Tag
 
@@ -28,5 +29,5 @@ class NovelNextCrawler(NovelFullTemplate):
             }
         )
 
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         return soup.select_one("#chr-content, #chapter-content")

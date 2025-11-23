@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Generator, Optional
 from urllib.parse import urlencode
 
 from bs4 import BeautifulSoup, Tag
@@ -96,10 +96,8 @@ class MangaStreamTemplate(SearchableBrowserTemplate, OptionalVolumeBrowserTempla
             url=self.absolute_url(tag["href"]),
         )
 
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
-        body = soup.select_one("#readernovel, #readerarea, .entry-content")
-        assert body
-        return body
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
+        return soup.select_one("#readernovel, #readerarea, .entry-content")
 
     def visit_chapter_page_in_browser(self, chapter: Chapter) -> None:
         self.visit(chapter.url)

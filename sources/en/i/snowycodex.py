@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+from typing import Generator, Optional
 
 from bs4 import BeautifulSoup, Tag
 
@@ -40,11 +41,14 @@ class SnowyCodexCrawler(ChapterOnlyBrowserTemplate):
             return self.absolute_url(tag["data-src"])
         elif tag.has_attr("src"):
             return self.absolute_url(tag["src"])
+        return ''
 
-    def parse_authors(self, soup: BeautifulSoup):
-        tag = soup.find("strong", string="Author:")
-        assert isinstance(tag, Tag)
-        yield tag.next_sibling.text.strip()
+    def parse_authors(self, soup: BeautifulSoup) -> Generator[str, None, None]:
+        tag = soup.find("strong", string="Author:")  # type:ignore
+        if isinstance(tag, Tag):
+            next = tag.find_next_sibling()
+            if next:
+                yield next.get_text(strip=True)
 
     def select_chapter_tags(self, soup: BeautifulSoup):
         yield from soup.select(".entry-content a[href*='/chapter']")
@@ -56,5 +60,5 @@ class SnowyCodexCrawler(ChapterOnlyBrowserTemplate):
             url=self.absolute_url(tag["href"]),
         )
 
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         return soup.select_one(".entry-content")

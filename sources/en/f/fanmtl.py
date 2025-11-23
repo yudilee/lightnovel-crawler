@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
-from typing import Generator
-from urllib.parse import urlparse, parse_qs
+from typing import Generator, Optional
+from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
@@ -58,5 +58,5 @@ class FanMTLCrawler(ChapterOnlyBrowserTemplate):
             title=tag.select_one(".chapter-title").text.strip(),
         )
 
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         return soup.select_one("#chapter-article .chapter-content")

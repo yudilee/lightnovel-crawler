@@ -3,7 +3,7 @@ from typing import Generator, Optional, Union
 
 from bs4 import Tag
 
-from ...exceptions import FallbackToBrowser
+from ...exceptions import FallbackToBrowser, LNException
 from ...models import Chapter, Volume
 from ..soup.general import GeneralSoupTemplate
 from .basic import BasicBrowserTemplate
@@ -114,17 +114,21 @@ class GeneralBrowserTemplate(BasicBrowserTemplate, GeneralSoupTemplate):
     def download_chapter_body_in_soup(self, chapter: Chapter) -> str:
         soup = self.get_soup(chapter.url)
         body = self.select_chapter_body(soup)
+        if not body:
+            raise FallbackToBrowser()
         return self.parse_chapter_body(body)
 
     def download_chapter_body_in_browser(self, chapter: Chapter) -> str:
         self.visit_chapter_page_in_browser(chapter)
         body = self.select_chapter_body_in_browser()
+        if not body:
+            raise LNException('No chapter contents')
         return self.parse_chapter_body(body)
 
     def visit_chapter_page_in_browser(self, chapter: Chapter) -> None:
         """Open the Chapter URL in the browser"""
         self.visit(chapter.url)
 
-    def select_chapter_body_in_browser(self) -> Tag:
+    def select_chapter_body_in_browser(self) -> Optional[Tag]:
         """Select the tag containing the chapter text in the browser"""
         return self.select_chapter_body(self.browser.soup)

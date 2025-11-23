@@ -1,5 +1,5 @@
 import logging
-from typing import Generator
+from typing import Generator, Optional
 
 from bs4 import BeautifulSoup, Tag
 
@@ -67,7 +67,7 @@ class NovelmaniaComBrCrawler(ChapterWithVolumeSoupTemplate):
             url=self.absolute_url(tag["href"]),
         )
 
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         body = soup.select_one("#chapter-content")
         assert body, "No chapter body"
         return body

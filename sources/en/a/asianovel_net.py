@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
-from typing import Generator
+from typing import Generator, Optional
 from urllib.parse import urlencode
 
 from bs4 import BeautifulSoup, Tag
@@ -84,5 +84,5 @@ class AsiaNovelNetCrawler(SearchableSoupTemplate, ChapterOnlySoupTemplate):
             url=self.absolute_url(tag["href"]),
         )
 
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         return soup.select_one("section#chapter-content")

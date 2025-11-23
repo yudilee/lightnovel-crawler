@@ -1,7 +1,8 @@
 import logging
-from typing import Generator
+from typing import Generator, Optional
 
 from bs4 import BeautifulSoup, Tag
+
 from lncrawl.models import Chapter
 from lncrawl.templates.browser.chapter_only import ChapterOnlyBrowserTemplate
 
@@ -53,7 +54,7 @@ class ReLibraryCrawler(ChapterOnlyBrowserTemplate):
             url=self.absolute_url(tag["href"]),
         )
 
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         return soup.select_one(".entry-content")
 
     def parse_chapter_body(self, chapter: Chapter, text: str) -> str:

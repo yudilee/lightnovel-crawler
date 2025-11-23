@@ -10,13 +10,14 @@ Put your source file inside the language folder. The `en` folder has too many
 files, therefore it is grouped using the first letter of the domain name.
 """
 import logging
-from typing import Generator
+from typing import Generator, Optional
 
 from bs4 import BeautifulSoup, Tag
 
 from lncrawl.models import Chapter, SearchResult, Volume
+from lncrawl.templates.browser.optional_volume import \
+    OptionalVolumeBrowserTemplate
 from lncrawl.templates.browser.searchable import SearchableBrowserTemplate
-from lncrawl.templates.browser.optional_volume import OptionalVolumeBrowserTemplate
 
 logger = logging.getLogger(__name__)
 
@@ -184,11 +185,11 @@ class MyCrawlerName(SearchableBrowserTemplate, OptionalVolumeBrowserTemplate):
         )
 
     # TODO: [OPTIONAL] Select the tag containing the chapter text in the browser
-    def select_chapter_body_in_browser(self) -> Tag:
+    def select_chapter_body_in_browser(self) -> Optional[Tag]:
         return self.select_chapter_body(self.browser.soup)
 
     # TODO: [REQUIRED] Select the tag containing the chapter text
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
         # The soup here is the result of `self.get_soup(chapter.url)`
         #
         # Example: return soup.select_one(".m-read .txt")

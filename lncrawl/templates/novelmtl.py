@@ -1,14 +1,14 @@
 import time
 from concurrent.futures import Future
-from typing import List
+from typing import List, Optional
 from urllib.parse import parse_qs, urlencode, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
 from lncrawl.exceptions import LNException
 from lncrawl.models import Chapter, SearchResult
-from lncrawl.templates.browser.searchable import SearchableBrowserTemplate
 from lncrawl.templates.browser.chapter_only import ChapterOnlyBrowserTemplate
+from lncrawl.templates.browser.searchable import SearchableBrowserTemplate
 
 
 class NovelMTLTemplate(SearchableBrowserTemplate, ChapterOnlyBrowserTemplate):
@@ -97,14 +97,12 @@ class NovelMTLTemplate(SearchableBrowserTemplate, ChapterOnlyBrowserTemplate):
 
     def parse_chapter_item(self, tag: Tag, id: int) -> Chapter:
         title = tag.select_one(".chapter-title")
-        assert title
+        assert title, 'No chapter title'
         return Chapter(
             id=id,
             url=self.absolute_url(tag["href"]),
             title=title.get_text(strip=True),
         )
 
-    def select_chapter_body(self, soup: BeautifulSoup) -> Tag:
-        body = soup.select_one(".chapter-content")
-        assert body
-        return body
+    def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
+        return soup.select_one(".chapter-content")
