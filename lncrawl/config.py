@@ -207,6 +207,15 @@ class AppConfig(_Section):
     def history_limit_per_user(self, v: Optional[int]) -> None:
         self._set("history_limit_per_user", v)
 
+    @property
+    def openai_key(self) -> Optional[str]:
+        '''Number of items to store per user'''
+        return self._get("openai_api_key", None)
+
+    @openai_key.setter
+    def openai_key(self, v: Optional[str]) -> None:
+        self._set("openai_api_key", v)
+
 
 # ------------------------------------------------------------------ #
 #                          Database Section                          #
