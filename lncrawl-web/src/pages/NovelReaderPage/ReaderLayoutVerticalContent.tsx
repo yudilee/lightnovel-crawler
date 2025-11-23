@@ -57,7 +57,7 @@ function useSpeechSynthesis(
     const node = el.children[position];
 
     const text = node.textContent;
-    if (!text.length) {
+    if (!text?.length) {
       store.dispatch(Reader.action.setSepakPosition(position + 1));
       return;
     }

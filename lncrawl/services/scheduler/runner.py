@@ -3,11 +3,13 @@ from functools import cached_property
 from threading import Event
 from typing import Any, Dict, Optional
 
+import traceback
+
 from ...context import ctx
 from ...dao import Job
 from ...dao.enums import JobStatus, JobType, OutputFormat
 from ...dao.tier import ENABLED_FORMATS
-from ...exceptions import AbortedException, ServerError
+from ...exceptions import AbortedException
 from ...utils.event_lock import EventLock
 from ...utils.time_utils import current_timestamp
 
@@ -55,7 +57,7 @@ class JobRunner:
         _queue.clear()
 
     def process(self) -> bool:
-        logger.info(f'Processing [b]{self.job.type.name}[/b]: {self.job.id}')
+        logger.debug(f'Processing [b]{self.job.type.name}[/b]: {self.job.id}')
         if self.job.type == JobType.FULL_NOVEL_BATCH:
             return self._novel_batch()
         if self.job.type == JobType.NOVEL_BATCH:
@@ -118,11 +120,14 @@ class JobRunner:
         err_source: Optional[Exception] = None
     ) -> bool:
         if error and err_source:
-            error = (
-                ServerError(500, error)
-                .with_traceback(err_source.__traceback__)
-                .format(True)
+            lines = traceback.format_exception(
+                type(err_source),
+                value=err_source,
+                tb=err_source.__traceback__,
+                chain=True,
             )
+            lines += ['', error]
+            error = ''.join(lines)
         with ctx.db.session() as sess:
             if error:
                 ctx.jobs._fail(sess, self.job.id, error.strip())

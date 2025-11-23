@@ -82,6 +82,7 @@ export const NovelDetailsCard: React.FC<{
               objectFit: 'cover',
               borderRadius: 8,
               width: 'auto',
+              maxWidth: '225px',
               height: '300px',
             }}
           />
