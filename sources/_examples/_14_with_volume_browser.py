@@ -15,7 +15,8 @@ from typing import Generator
 from bs4 import BeautifulSoup, Tag
 
 from lncrawl.models import Chapter, Volume
-from lncrawl.templates.browser.with_volume import ChapterWithVolumeBrowserTemplate
+from lncrawl.templates.browser.with_volume import \
+    ChapterWithVolumeBrowserTemplate
 
 logger = logging.getLogger(__name__)
 
@@ -129,13 +130,11 @@ class MyCrawlerName(ChapterWithVolumeBrowserTemplate):
         )
 
     # TODO: [OPTIONAL] Select chapter list item tags from volume tag and page soup when in browser
-    def select_chapter_tags_in_browser(
-        self, tag: Tag, vol: Volume
-    ) -> Generator[Tag, None, None]:
-        return self.select_chapter_tags(tag, vol)
+    def select_chapter_tags_in_browser(self, tag: Tag, vol: Volume) -> Generator[Tag, None, None]:
+        return self.select_chapter_tags(tag, vol, self.browser.soup)
 
     # TODO: [REQUIRED] Select chapter list item tags from volume tag and page soup
-    def select_chapter_tags(self, tag: Tag, vol: Volume) -> Generator[Tag, None, None]:
+    def select_chapter_tags(self, tag: Tag, vol: Volume, soup: BeautifulSoup) -> Generator[Tag, None, None]:
         # The tag here comes from `self.select_volume_tags`
         # The vol here comes from `self.parse_volume_item`
         #

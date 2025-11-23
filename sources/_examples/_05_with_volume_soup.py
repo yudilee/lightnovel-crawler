@@ -97,7 +97,7 @@ class MyCrawlerName(ChapterWithVolumeSoupTemplate):
         )
 
     # TODO: [REQUIRED] Select chapter list item tags from volume tag and page soup
-    def select_chapter_tags(self, tag: Tag, vol: Volume) -> Generator[Tag, None, None]:
+    def select_chapter_tags(self, tag: Tag, vol: Volume, soup: BeautifulSoup) -> Generator[Tag, None, None]:
         # The tag here comes from `self.select_volume_tags`
         # The vol here comes from `self.parse_volume_item`
         #

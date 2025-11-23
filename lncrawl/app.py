@@ -32,12 +32,12 @@ app = typer.Typer(
 
 # Register subcommands
 app.add_typer(version)
+app.add_typer(sources, name='sources')
 app.add_typer(crawl)
 app.add_typer(search)
 app.add_typer(server)
 app.add_typer(discord)
 app.add_typer(telegram)
-app.add_typer(sources, name='sources')
 
 
 # Define main command
