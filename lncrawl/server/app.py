@@ -18,7 +18,7 @@ app = FastAPI(
     version=get_version(),
     title="Lightnovel Crawler",
     description="Download novels from online sources and generate e-books",
-    on_startup=[ctx.setup],
+    on_startup=[ctx.setup, ctx.scheduler.start],
     on_shutdown=[ctx.destroy],
 )
 

@@ -9,7 +9,7 @@ from ...dao import Artifact
 from ...dao.enums import OutputFormat
 from ...exceptions import ServerErrors
 from ...utils.file_tools import safe_filename
-from .calibre import convert_epub
+from .calibre import convert_epub, is_calibre_available
 from .epub import make_epub
 from .json import make_json
 from .text import make_text
@@ -50,6 +50,13 @@ class BinderService:
             if v == convert_epub
         ])
 
+    @cached_property
+    def available_formats(self) -> Set[OutputFormat]:
+        all_formats = set(OutputFormat)
+        if is_calibre_available():
+            return all_formats
+        return all_formats - self.depends_on_epub
+
     def make_artifact(
         self,
         novel_id: str,
@@ -57,7 +64,7 @@ class BinderService:
         format: OutputFormat,
         job_id: Optional[str] = None,
         user_id: Optional[str] = None,
-        depends_on: Optional[str] = None,
+        epub: Optional[Artifact] = None,
         signal=Event(),
     ) -> Artifact:
         make = archive_maker[format]
@@ -85,7 +92,7 @@ class BinderService:
                 working_dir,
                 signal=signal,
                 artifact=artifact,
-                depends_on=depends_on
+                epub=epub
             )
             with ctx.db.session() as sess:
                 sess.add(artifact)

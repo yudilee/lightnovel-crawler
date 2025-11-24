@@ -21,14 +21,26 @@ class ChapterImageService:
     ) -> List[ChapterImage]:
         with ctx.db.session() as sess:
             stmt = select(ChapterImage)
-
             if novel_id:
                 stmt = stmt.where(ChapterImage.novel_id == novel_id)
             if chapter_id:
                 stmt = stmt.where(ChapterImage.chapter_id == chapter_id)
             if is_crawled:
                 stmt = stmt.where(col(ChapterImage.is_done).is_(True))
+            items = sess.exec(stmt).all()
+            return list(items)
 
+    def list_ids(
+        self,
+        novel_id: Optional[str] = None,
+        chapter_id: Optional[str] = None,
+    ) -> List[str]:
+        with ctx.db.session() as sess:
+            stmt = select(ChapterImage.id)
+            if novel_id:
+                stmt = stmt.where(ChapterImage.novel_id == novel_id)
+            if chapter_id:
+                stmt = stmt.where(ChapterImage.chapter_id == chapter_id)
             items = sess.exec(stmt).all()
             return list(items)
 

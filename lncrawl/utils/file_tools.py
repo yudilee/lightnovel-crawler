@@ -1,11 +1,12 @@
 import logging
+import os
 import re
 import shlex
 import subprocess
 from pathlib import Path
 from typing import Union
 
-from lncrawl.utils.platforms import Platform
+from .platforms import Platform
 
 logger = logging.getLogger(__name__)
 
@@ -70,3 +71,14 @@ def safe_filename(name: str) -> str:
     name = __re_invalid_name.sub(' ', name)
     name = name.strip(" .")[:255]
     return name or "untitled"
+
+
+def open_folder(folder_path: Union[str, Path]) -> None:
+    if Platform.windows:
+        os.system(f'explorer.exe "{folder_path}"')
+    elif Platform.wsl:
+        os.system(f'cd "{folder_path}" && explorer.exe .')
+    elif Platform.linux:
+        os.system(f'xdg-open "{folder_path}"')
+    elif Platform.mac:
+        os.system(f'open "{folder_path}"')

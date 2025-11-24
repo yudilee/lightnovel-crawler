@@ -3,6 +3,7 @@ import shlex
 import subprocess
 from pathlib import Path
 from threading import Event
+from typing import Optional
 
 from ...context import ctx
 from ...dao import Artifact
@@ -56,11 +57,12 @@ def is_calibre_available() -> bool:
 def convert_epub(
     working_dir: Path,
     artifact: Artifact,
-    depends_on: str,
     signal=Event(),
+    epub: Optional[Artifact] = None,
 ) -> None:
-    epub = ctx.artifacts.get_epub(depends_on)
     out_file = ctx.files.resolve(artifact.output_file)
+    if not epub:
+        raise ServerErrors.no_epub_file
 
     tmp_file = working_dir / out_file.name
     novel = ctx.novels.get(artifact.novel_id)

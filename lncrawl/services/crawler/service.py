@@ -1,11 +1,12 @@
 import logging
 from threading import Event
-from typing import Union
+from typing import Optional, Union
 
 from pydantic import HttpUrl
 from sqlmodel import select
 
 from ...context import ctx
+from ...core.crawler import Crawler
 from ...dao import Chapter, ChapterImage, Novel
 from ...exceptions import ServerErrors
 from ...models import Chapter as ChapterModel
@@ -29,15 +30,23 @@ class CrawlerService:
                 setattr(crawler, "__logged_in__", True)
         return crawler
 
-    def fetch_novel(self, user_id: str, url: Union[str, HttpUrl], signal=Event()) -> Novel:
+    def fetch_novel(
+        self,
+        user_id: str,
+        url: Union[str, HttpUrl],
+        signal=Event(),
+        crawler: Optional[Crawler] = None
+    ) -> Novel:
+        # validate url
         if isinstance(url, str):
             url = HttpUrl(url)
+        if not url.host:
+            raise ServerErrors.invalid_url.with_extra(url)
+        novel_url = url.encoded_string()
 
         # get crawler
-        if not url.host:
-            raise ServerErrors.invalid_url
-        novel_url = url.encoded_string()
-        crawler = self.get_crawler(user_id, novel_url)
+        if crawler is None:
+            crawler = self.get_crawler(user_id, novel_url)
         crawler_version = getattr(crawler, 'version')
         crawler.scraper.signal = signal
 
@@ -92,15 +101,22 @@ class CrawlerService:
 
         return novel
 
-    def fetch_chapter(self, user_id: str, chapter_id: str, signal=Event()) -> Chapter:
+    def fetch_chapter(
+        self,
+        user_id: str,
+        chapter_id: str,
+        signal=Event(),
+        crawler: Optional[Crawler] = None,
+    ) -> Chapter:
         chapter = ctx.chapters.get(chapter_id)
-
-        # get crawler
         url = HttpUrl(chapter.url)
         if not url.host:
             raise ServerErrors.invalid_url
-        novel_url = ctx.novels.get(chapter.novel_id).url
-        crawler = self.get_crawler(user_id, novel_url)
+
+        # get crawler
+        if crawler is None:
+            novel_url = ctx.novels.get(chapter.novel_id).url
+            crawler = self.get_crawler(user_id, novel_url)
         crawler_version = getattr(crawler, 'version')
         crawler.scraper.signal = signal
 
@@ -133,15 +149,22 @@ class CrawlerService:
 
         return chapter
 
-    def fetch_image(self, user_id: str, image_id: str, signal=Event()) -> ChapterImage:
+    def fetch_image(
+        self,
+        user_id: str,
+        image_id: str,
+        signal=Event(),
+        crawler: Optional[Crawler] = None,
+    ) -> ChapterImage:
         image = ctx.images.get(image_id)
-
-        # get crawler
         url = HttpUrl(image.url)
         if not url.host:
             raise ServerErrors.invalid_url
-        novel_url = ctx.novels.get(image.novel_id).url
-        crawler = self.get_crawler(user_id, novel_url)
+
+        # get crawler
+        if crawler is None:
+            novel_url = ctx.novels.get(image.novel_id).url
+            crawler = self.get_crawler(user_id, novel_url)
         crawler_version = getattr(crawler, 'version')
         crawler.scraper.signal = signal
 

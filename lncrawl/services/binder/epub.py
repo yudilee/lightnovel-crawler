@@ -3,7 +3,7 @@ import re
 from pathlib import Path
 from threading import Event
 
-from ebooklib import epub
+from ebooklib import epub  # type:ignore
 
 from ...assets.epub import epub_chapter_xhtml, epub_cover_xhtml, epub_style_css
 from ...context import ctx

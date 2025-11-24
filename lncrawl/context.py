@@ -138,7 +138,6 @@ class AppContext:
         self.config.load()
         self.db.bootstrap()
         self.sources.load()
-        self.scheduler.start()
 
 
 ctx: AppContext = AppContext()

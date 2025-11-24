@@ -3,18 +3,18 @@ import logging
 from abc import ABC
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from threading import Event, Semaphore, Thread
-from typing import Any, Generator, Iterable, List, Optional, Set
+from typing import Callable, Generator, Iterable, List, Optional, Set, TypeVar
 
 from tqdm import tqdm
 
 from ..context import ctx
-from ..utils.ratelimit import RateLimiter
 from ..exceptions import LNException
+from ..utils.ratelimit import RateLimiter
 
-logger = logging.getLogger(__name__)
-
+T = TypeVar('T')
 
 _resolver = Semaphore(1)
+logger = logging.getLogger(__name__)
 
 
 class TaskManager(ABC):
@@ -93,7 +93,7 @@ class TaskManager(ABC):
         self._submit = self._executor.submit
         setattr(self._executor, "submit", self.submit_task)
 
-    def submit_task(self, fn, *args, **kwargs) -> Future:
+    def submit_task(self, fn: Callable[..., T], *args, **kwargs) -> Future[T]:
         """Submits a callable to be executed with the given arguments.
 
         Schedules the callable to be executed as fn(*args, **kwargs) and returns
@@ -116,7 +116,7 @@ class TaskManager(ABC):
 
     @staticmethod
     def progress_bar(
-        iterable: Optional[Iterable] = None,
+        iterable: Optional[Iterable[T]] = None,
         unit: Optional[str] = None,
         desc: Optional[str] = None,
         total: Optional[float] = None,
@@ -151,7 +151,7 @@ class TaskManager(ABC):
         bar.close = extended_close  # type: ignore
         return bar
 
-    def cancel_futures(self, futures: Iterable[Future]) -> None:
+    def cancel_futures(self, futures: Iterable[Future[T]]) -> None:
         """Cancels all the future that are not yet done.
 
         Args:
@@ -165,13 +165,13 @@ class TaskManager(ABC):
 
     def resolve_as_generator(
         self,
-        futures: Iterable[Future],
+        futures: Iterable[Future[T]],
         disable_bar: bool = False,
         desc: Optional[str] = None,
         unit: Optional[str] = None,
         fail_fast: bool = False,
         signal: Optional[Event] = None,
-    ) -> Generator[Any, None, None]:
+    ) -> Generator[Optional[T], None, None]:
         """Create a generator output to resolve the futures.
 
         Args:
@@ -195,7 +195,7 @@ class TaskManager(ABC):
             desc=desc,
             unit=unit,
             disable=disable_bar,
-        )
+        )  # type:ignore
         try:
             for future in as_completed(futures):
                 if signal.is_set():
@@ -234,7 +234,7 @@ class TaskManager(ABC):
 
     def resolve_futures(
         self,
-        futures: Iterable[Future],
+        futures: Iterable[Future[T]],
         disable_bar: bool = False,
         desc: Optional[str] = None,
         unit: Optional[str] = None,

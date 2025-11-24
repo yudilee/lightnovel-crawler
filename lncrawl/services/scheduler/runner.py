@@ -1,12 +1,11 @@
 import logging
+import traceback
 from functools import cached_property
 from threading import Event
 from typing import Any, Dict, Optional
 
-import traceback
-
 from ...context import ctx
-from ...dao import Job
+from ...dao import Artifact, Job
 from ...dao.enums import JobStatus, JobType, OutputFormat
 from ...dao.tier import ENABLED_FORMATS
 from ...exceptions import AbortedException
@@ -480,7 +479,7 @@ class JobRunner:
                 return self.__set_done('No output format')
 
             if format not in set(OutputFormat):
-                return self.__set_done('Invalid format: {format}')
+                return self.__set_done(f'Invalid format: {format}')
 
             if not self.job.is_running:
                 self.__set_running()
@@ -489,13 +488,19 @@ class JobRunner:
             if not novel_title:
                 novel_title = ctx.novels.get(novel_id).title
 
+            epub: Optional[Artifact] = None
+            if format in ctx.binder.depends_on_epub:
+                if not self.job.depends_on:
+                    return self.__set_done(f'Dependency job not found for {format}')
+                epub = ctx.artifacts.get_epub(self.job.depends_on)
+
             artifact = ctx.binder.make_artifact(
                 format=format,
                 novel_id=novel_id,
                 novel_title=novel_title,
-                depends_on=self.job.depends_on,
                 job_id=self.job.id,
                 user_id=self.user.id,
+                epub=epub,
                 signal=self.signal,
             )
             if not artifact.is_available:

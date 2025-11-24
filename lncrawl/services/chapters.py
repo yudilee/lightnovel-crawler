@@ -50,6 +50,28 @@ class ChapterService:
             items = sess.exec(stmt).all()
             return list(items)
 
+    def list_ids(
+        self,
+        novel_id: Optional[str] = None,
+        volume_id: Optional[str] = None,
+        descending: bool = False,
+        limit: Optional[int] = None,
+    ) -> List[str]:
+        with ctx.db.session() as sess:
+            stmt = select(Chapter.id)
+            if novel_id:
+                stmt = stmt.where(Chapter.novel_id == novel_id)
+            if volume_id:
+                stmt = stmt.where(Chapter.volume_id == volume_id)
+            if descending:
+                stmt = stmt.order_by(col(Chapter.serial).desc())
+            else:
+                stmt = stmt.order_by(col(Chapter.serial).asc())
+            if limit:
+                stmt = stmt.limit(limit)
+            items = sess.exec(stmt).all()
+            return list(items)
+
     def find(self, novel_id: str, serial: int) -> Chapter:
         with ctx.db.session() as sess:
             stmt = select(Chapter).where(

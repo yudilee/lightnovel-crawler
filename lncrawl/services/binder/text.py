@@ -1,26 +1,14 @@
 import logging
-import re
 import zipfile
 from pathlib import Path
 from threading import Event
 
-from bs4 import BeautifulSoup
-
 from ...context import ctx
 from ...dao import Artifact
 from ...exceptions import AbortedException
-from ...utils.platforms import Platform
+from ...utils.html_tools import extract_text
 
 logger = logging.getLogger(__name__)
-
-
-def extract_text(html: str) -> str:
-    html = html.replace("</p><p", "</p>\n<p")
-    soup = BeautifulSoup(html, "lxml")
-    text = "\n\n".join(soup.stripped_strings)
-    if Platform.posix:
-        text = re.sub(r"[\r\n]+", '\n', text)
-    return text
 
 
 def make_text(

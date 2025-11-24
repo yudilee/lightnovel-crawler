@@ -146,7 +146,7 @@ def _build_path(locale: str, file_name: str):
 
 
 def _prompt_url() -> str:
-    print('[i]The URL must start with [cyan]http[/cyan] or [cyan]https[/cyan]:[/i]')
+    print('[i]The URL must start with [cyan]http[/cyan] or [cyan]https[/cyan].[/i]')
     return questionary.text(
         "Website URL:",
         qmark="🌐",
