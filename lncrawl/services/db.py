@@ -125,6 +125,9 @@ class DB:
         current = self.__get_current()
         if current == 0:
             self.__create_tables()
+            current = self.__get_current()
+        if current == 0:
+            raise ValueError('Invalid migration value')
         while current < latest:
             logger.info(f'Running migrations: {current} -> {latest}')
             self.__migrate_next(current)
