@@ -1,7 +1,7 @@
 import logging
 from typing import Mapping, Optional, Sequence
 
-from sqlmodel import Session, col, create_engine, inspect, update
+from sqlmodel import SQLModel, Session, col, create_engine, inspect, update
 
 from ..context import ctx
 from ..dao import Migration, tables
@@ -100,8 +100,7 @@ class DB:
 
     def __create_tables(self, retry=2):
         try:
-            for table in tables:
-                table.create(self.engine, True)
+            SQLModel.metadata.create_all(self.engine)
 
             logger.info('Preparing migration table')
             with self.session() as sess:
@@ -124,6 +123,8 @@ class DB:
     def __run_migrations(self):
         latest = DB.latest_version
         current = self.__get_current()
+        if current == 0:
+            self.__create_tables()
         while current < latest:
             logger.info(f'Running migrations: {current} -> {latest}')
             self.__migrate_next(current)
@@ -133,6 +134,8 @@ class DB:
     def __get_current(self) -> int:
         with self.session() as sess:
             entry = sess.get_one(Migration, DB.migration_id)
+            if not entry:
+                return 0
             return entry.version
 
     def __set_current(self, value: int) -> None:

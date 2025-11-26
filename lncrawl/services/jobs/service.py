@@ -4,8 +4,8 @@ from typing import Any, Iterable, List, Optional, TypeVar
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import update as sa_update
 from sqlalchemy.orm import aliased
-from sqlmodel import (Session, and_, asc, case, col, desc, func, literal, or_,
-                      select, true)
+from sqlmodel import (Session, and_, asc, case, cast, col, desc, func, literal,
+                      or_, select, true)
 
 from ...context import ctx
 from ...dao import Job, User
@@ -17,11 +17,12 @@ from ...server.models.pagination import Paginated
 from ...utils.time_utils import current_timestamp
 from .utils import sa_select_children, sa_select_parents
 
+T = TypeVar('T')
+
 job_alias = aliased(Job)
 job_status_type = Job.__table__.c.status.type  # type: ignore
-
-
-T = TypeVar('T')
+job_success_literal = cast(literal(JobStatus.SUCCESS.name), job_status_type)
+job_running_literal = cast(literal(JobStatus.RUNNING.name), job_status_type)
 
 
 class JobService:
@@ -492,8 +493,14 @@ class JobService:
         inclusive: bool = False,
     ) -> None:
         now = current_timestamp()
-        sa_total = func.max(1, total)
-        sa_done = func.min(sa_total, done)
+        sa_total = case(
+            (total < 1, 1),
+            else_=total,
+        )
+        sa_done = case(
+            (done <= sa_total, done),
+            else_=sa_total,
+        )
         sa_is_done = sa_done == sa_total
         sa_started_at = case(
             (sa_is_done, func.coalesce(Job.started_at, now)),
@@ -504,8 +511,8 @@ class JobService:
             else_=Job.finished_at
         )
         sa_status = case(
-            (sa_is_done, literal(JobStatus.SUCCESS, type_=job_status_type)),
-            else_=literal(JobStatus.RUNNING, type_=job_status_type)
+            (sa_is_done, job_success_literal),
+            else_=job_running_literal
         )
 
         sa_pars = sa_select_parents(job_id, inclusive)
