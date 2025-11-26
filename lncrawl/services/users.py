@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 
 from jose import jwt
 from passlib.context import CryptContext
-from sqlmodel import and_, asc, col, func, or_, select
+from sqlmodel import String, and_, asc, cast, col, func, or_, select
 
 from ..context import ctx
 from ..dao import User, VerifiedEmail
@@ -121,8 +121,8 @@ class UserService:
                     or_(
                         col(User.name).ilike(q),
                         col(User.email).ilike(q),
-                        col(User.role).ilike(q),
-                        col(User.tier).ilike(q),
+                        cast(User.role, String).ilike(q),
+                        cast(User.tier, String).ilike(q),
                     )
                 )
 
