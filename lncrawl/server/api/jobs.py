@@ -3,14 +3,13 @@ from typing import Optional
 from fastapi import APIRouter, Body, Path, Query, Security
 
 from ...context import ctx
-from ...dao import Job
-from ...dao.enums import JobPriority, JobStatus, JobType
+from ...dao import Job, User
+from ...dao.enums import JobPriority, JobStatus, JobType, UserRole
 from ...exceptions import ServerErrors
 from ..models.job import (FetchChaptersRequest, FetchImagesRequest,
                           FetchNovelRequest, FetchVolumesRequest,
                           MakeArtifactsRequest)
 from ..models.pagination import Paginated
-from ..models.user import User
 from ..security import ensure_user
 
 # The root router
@@ -19,6 +18,7 @@ router = APIRouter()
 
 @router.get("s", summary='Returns a list of jobs')
 def list_jobs(
+    user: User = Security(ensure_user),
     offset: int = Query(default=0),
     limit: int = Query(default=20, le=100),
     type: Optional[JobType] = Query(default=None),
@@ -28,6 +28,8 @@ def list_jobs(
     parent_job_id: Optional[str] = Query(default=None),
     is_done: Optional[bool] = Query(default=None),
 ) -> Paginated[Job]:
+    if user.role == UserRole.USER:
+        user_id = user.id
     return ctx.jobs.list(
         limit=limit,
         offset=offset,
