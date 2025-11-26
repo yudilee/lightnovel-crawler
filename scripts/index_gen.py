@@ -397,10 +397,10 @@ output = subprocess.check_output(["python", "lncrawl", "-h"]).decode("utf-8")
 output = re.sub(r'\x1b\[[0-9;\r]*m', '', output.strip())
 
 help_text = "\n"
-help_text += "```bash\n"
+help_text += "```text\n"
 help_text += "$ lncrawl -h\n"
 help_text += output
-help_text += "```\n"
+help_text += "\n```\n"
 
 readme_text = HELP_RESULT_QUE.join([before, help_text, after])
 
