@@ -13,7 +13,7 @@ class User(BaseTable, table=True):
     referrer_id: Optional[str] = Field(
         default=None,
         foreign_key="users.id",
-        ondelete='CASCADE',
+        ondelete='SET NULL',
         nullable=True,
     )
 
