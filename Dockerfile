@@ -17,10 +17,6 @@ RUN apt-get update -yq \
 RUN wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin \
     && ln -s /opt/calibre/ebook-convert /usr/local/bin/ebook-convert
 
-# Add app user
-RUN useradd -ms /bin/bash lncrawl
-USER lncrawl
-
 # Update pip
 RUN python -m pip install -U pip
 
@@ -46,7 +42,7 @@ FROM runner
 WORKDIR /app
 
 # Install requirements
-COPY --chown=lncrawl:lncrawl requirements.txt .
+COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Copy sources
@@ -54,10 +50,9 @@ COPY sources sources
 COPY lncrawl lncrawl
 
 # Copy web assets
-COPY --from=node --chown=lncrawl:lncrawl /app/lncrawl/server/web lncrawl/server/web
+COPY --from=node /app/lncrawl/server/web lncrawl/server/web
 
-# Copy web assets
-ENV OUTPUT_PATH=/home/lncrawl/output
-RUN mkdir -p $OUTPUT_PATH
+# Custom data path
+ENV LNCRAWL_DATA_PATH=/data
 
 ENTRYPOINT [ "python", "-m", "lncrawl" ]

@@ -1,3 +1,6 @@
+from pathlib import Path
+
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from ...context import ctx
@@ -27,3 +30,23 @@ class StaticFilesGuard(BaseHTTPMiddleware):
             return ServerErrors.inactive_user.to_response()
 
         return await call_next(request)
+
+
+class CustomStaticFiles(StaticFiles):
+    def __init__(self) -> None:
+        super().__init__(
+            directory=ctx.config.app.output_path
+        )
+
+    async def get_response(self, path, scope):
+        resp = await super().get_response(path, scope)
+
+        if resp.status_code < 400:
+            if '/artifacts/' in path:
+                filename = Path(path).name
+                resp.headers["content-disposition"] = f'attachment; filename="{filename}"'
+                if path.endswith(".epub"):
+                    resp.media_type = "application/epub+zip"
+                    resp.headers["content-type"] = "application/epub+zip"
+
+        return resp

@@ -4,22 +4,11 @@
 [![download linux](<https://img.shields.io/badge/download-lncrawl_(linux)-brown?logo=linux&style=for-the-badge>)](https://go.bitanon.dev/lncrawl-linux)
 [![download mac](<https://img.shields.io/badge/download-lncrawl_(mac)-blue?logo=apple&style=for-the-badge>)](https://go.bitanon.dev/lncrawl-mac)
 <br>
-[![Discord](https://img.shields.io/discord/578550900231110656?logo=discord&label=discord)](https://discord.gg/wMECG2Q)
 [![PyPI version](https://img.shields.io/pypi/v/lightnovel-crawler.svg?logo=python)](https://pypi.org/project/lightnovel-crawler)
 [![Python version](https://img.shields.io/pypi/pyversions/lightnovel-crawler.svg)](https://pypi.org/project/lightnovel-crawler)
 [![Downloads](https://pepy.tech/badge/lightnovel-crawler)](https://pepy.tech/project/lightnovel-crawler)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://github.com/dipu-bd/lightnovel-crawler/blob/master/LICENSE)
 [![Build and Publish](https://github.com/dipu-bd/lightnovel-crawler/actions/workflows/release.yml/badge.svg)](https://github.com/dipu-bd/lightnovel-crawler/actions/workflows/release.yml)
-
-<!-- [![GitHub stars](https://img.shields.io/github/stars/dipu-bd/lightnovel-crawler?logo=github)](https://github.com/dipu-bd/lightnovel-crawler) -->
-<!-- [![AppVeyor](https://img.shields.io/appveyor/build/dipu-bd/lightnovel-crawler?logo=appveyor)](https://ci.appveyor.com/project/dipu-bd/lightnovel-crawler) -->
-<!-- [![travis-ci](https://travis-ci.com/dipu-bd/lightnovel-crawler.svg?branch=master)](https://travis-ci.com/dipu-bd/lightnovel-crawler) -->
-
-An app to download novels from online sources and generate e-books.
-
-> **Discord: [https://discord.gg/wMECG2Q](https://discord.gg/wMECG2Q)**
-
-> **Telegram: [https://t.me/epub_smelter_bot](https://t.me/epub_smelter_bot)**
 
 ## Table of contents
 
@@ -83,15 +72,15 @@ If you used a folder other than Applications during installation, replace `/Appl
 
 ### Standalone Bundle (Windows, Linux)
 
-⏬ **Windows**: [lncrawl.exe ~ 36MB](https://go.bitanon.dev/lncrawl-windows)
+⏬ **Windows**: [lncrawl.exe](https://go.bitanon.dev/lncrawl-windows)
 
 > In Windows 8, 10 or later versions, it might say that `lncrawl.exe` is not safe to download or execute. You should bypass/ignore this security check to execute this program.
 
-⏬ **Linux**: [lncrawl ~ 54MB](https://go.bitanon.dev/lncrawl-linux)
+⏬ **Linux**: [lncrawl](https://go.bitanon.dev/lncrawl-linux)
 
 > It is recommended to install via **pip** if you are on Linux
 
-⏬ **MacOS**: [lncrawl ~ 33MB](https://go.bitanon.dev/lncrawl-mac)
+⏬ **MacOS**: [lncrawl](https://go.bitanon.dev/lncrawl-mac)
 
 > It is recommended to install via **pip** if you are on Mac
 
@@ -101,25 +90,32 @@ If you used a folder other than Applications during installation, replace `/Appl
 
 📦 A python package named `lightnovel-crawler` is available at [pypi](https://pypi.org/project/lightnovel-crawler).
 
-> Make sure you have installed **Python v3.8** or higher and have **pip** enabled. Visit these links to install python with pip in [Windows](https://stackoverflow.com/a/44437176/1583052), [Linux](https://stackoverflow.com/a/51799221/1583052) and [MacOS](https://itsevans.com/install-pip-osx/). Feel free to ask on the Discord server if you are stuck.
+> Make sure you have installed **Python v3.8** or higher and have **pip** enabled.
+> Visit these links to install python with pip in
+> [Windows](https://stackoverflow.com/a/44437176/1583052),
+> [Linux](https://stackoverflow.com/a/51799221/1583052),
+> and [MacOS](https://itsevans.com/install-pip-osx/).
+> Feel free to ask on the [discussions](https://github.com/dipu-bd/lightnovel-crawler/discussions) page if you are stuck.
 
-To install this app or to update installed one via `pip`, just run:
+To install this app via `pip`:
 
 ```bash
 $ pip install -U lightnovel-crawler
 ```
 
-In some cases you have to use `python3 -m pip` or `pip3` or `python -m pip`. And you do not need `--user` option, if you are running from root.
+In some cases you have to use `python3 -m pip` or `pip3` or `python -m pip`.
 
-Next, open your terminal and enter:
+Next, open your terminal and run:
 
 ```
-$ lncrawl
+$ lncrawl -h
 ```
 
-> To view extra logs, use: `lncrawl -lll`
+If that does not work, you have not configured PATH variables properly. You can access it anyway using:
 
-If you want to get the cutting-edge (sometimes unstable) from the `dev` branch, you can get it by:
+```
+$ python3 -m lncrawl -h
+```
 
 ### PIP (Directly from GitHub)
 
@@ -139,77 +135,31 @@ $ pip install -U https://github.com/dipu-bd/lightnovel-crawler/tarball/refs/head
 
 Docker is a convenient way to run it anywhere.
 
-- First clone the project.
+- Pull docker image:
 
 ```
-$ git clone https://github.com/dipu-bd/lightnovel-crawler
+$ docker pull ghcr.io/dipu-bd/lightnovel-crawler
+$ docker tag ghcr.io/dipu-bd/lightnovel-crawler lncrawl
 ```
 
-- Build docker:
+- Run using docker:
 
 ```
-$ cd lightnovel-crawler
-$ docker build -t lncrawl -f Dockerfile .
+$ mkdir -p ~/.lncrawl
+$ docker run -v ~/.lncrawl:/data --rm -it lncrawl
 ```
 
-- Run commands using docker:
+> You can setup _alias_ to the above command in your terminal's profile. e.g.:
 
 ```
-$ mkdir ~/Lightnovels
-$ docker run -v ~/Lightnovels:/home/appuser/app/Lightnovels -it lncrawl
+alias docker-lncrawl=docker run -v ~/.lncrawl:/data --rm -it -p 8080:8080 lncrawl
 ```
 
-> You can setup _alias_ to the above command in your terminal's profile to run using single a single-word command.
+- Run server with docker:
 
-### Termux (Android)
-
-> Please read before proceeding:
->
-> - It is not guaranteed that the app will run smoothly in all devices.
-> - It may take a long time to install depending on your mobile processor.
-> - It is recommended to use the bots on either Discord or Telegram if you are on mobile.
-
-📱 Using Termux, you can run this app in your android phones too. Follow this instructions:
-
-- Install [Termux](https://github.com/termux/termux-app/releases/) from github.
-- Open the app and run these commands one by one:
-  - `termux-change-repo && pkg upgrade -y && termux-setup-storage` run to update repo to local and setup storage
-  - `pkg upgrade -y && pkg install python-grpcio python-lxml python-pillow -y` run to setup depends
-  - `CFLAGS="-Wno-error=incompatible-function-pointer-types" pip install -U setuptools lightnovel-crawler` run to install
-  - `cd ~/storage/downloads` set storage location to downloads folder
-  - `lncrawl` run the crawler
-- You can navigate up using <kbd>Vol UP</kbd> + <kbd>W</kbd> and down using <kbd>Vol UP</kbd> + <kbd>S</kbd>.
-
-When there is a new update available, you can install it just by running `pip install -U lightnovel-crawler`. You will not have to run all the above commands again.
-
-**PyDroid**
-
-You can also use PyDroid in Android phones. Check this discussion for a custom script to run the app: https://github.com/dipu-bd/lightnovel-crawler/discussions/1137
-
-<!-- TODO -->
-<!-- ### Google Colab -->
-
-### Chatbots
-
-#### Discord
-
-Join our server: https://discord.gg/7A5Hktx
-
-Or, visit this link to install discord bot to your own server:
-https://discordapp.com/oauth2/authorize?client_id=537526751170002946&permissions=51264&scope=bot
-
-#### Telegram
-
-Visit this link to get started with the telegram bot:
-https://t.me/epub_smelter_bot
-
-Send `!help` to open the bot help message.
-
-### Heroku Deployment
-
-Simply fill out the environment variables and you get a running instance.
-
-[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+```
+$ docker-lncrawl server
+```
 
 ## Running from source
 
@@ -231,51 +181,28 @@ $ pip install -r requirements.txt
 $ python lncrawl
 ```
 
-## Running the Bots
+- Build docker from source:
 
-There are two chatbots available at this moment: Telegram and Discord. To run your own bot server, follow these instructions:
-
-- Clone this repository
-
-```bash
-$ git clone https://github.com/dipu-bd/lightnovel-crawler
+```
+$ docker build -t lncrawl -f Dockerfile .
 ```
 
-- Install calibre for pdf, mobi etc. formats.
+- Run server using docker:
 
-  - https://calibre-ebook.com/download
-
-- Install requirements
-
-```bash
-$ pip3 install -r requirements.txt
 ```
-
-- Copy `.env.example` file to `.env` file. Edit this file and give your API credentials here.
-
-- To run the discord bot:
-
-```bash
-$ python3 lncrawl --bot discord --shard-id 0 --shard-count 1
+$ docker compose -f ./scripts/local-compose.yml up
 ```
-
-- To run the telegram bot
-
-```bash
-$ python3 lncrawl --bot telegram
-```
-
-_There is a `start.sh` script to run a bot in ubuntu servers. It will basically execute the `python3 lncrawl` and send the task to run in background. I use it to run my discord bot in the server._
 
 ## General Usage
 
 ### Available options
 
 <!-- auto generated command line output -->
+
 ```text
 $ lncrawl -h
-Usage: lncrawl [OPTIONS] COMMAND [ARGS]...                                     
-                                                                                
+Usage: lncrawl [OPTIONS] COMMAND [ARGS]...
+
 ╭─ Options ────────────────────────────────────────────────────────────────────╮
 │ --verbose             -l            Log levels: -l = warn, -ll = info, -lll  │
 │                                     = debug                                  │
@@ -297,69 +224,59 @@ Usage: lncrawl [OPTIONS] COMMAND [ARGS]...
 │ telegram   Run Telegram bot.                                                 │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 ```
+
 <!-- auto generated command line output -->
 
 ### Example Usage
 
-Open your console and type `lncrawl --version` first to check if you have installed it properly.
-Here are some example usage of the app:
+Run `lncrawl server` to start the server and visit http://localhost:8080.
 
-- To start an interactive session: `lncrawl`
+```
+$ lncrawl -ll server -p 8080
+```
 
-- To download using an url: `lncrawl -s https://boxnovel.com/novel/reincarnation-of-the-strongest-sword-god/`
-- To search novels: `lncrawl -q "Strongest Sword God"`
-- To search novels from selected sources: `lncrawl -q "Strongest Sword God" --sources`
+The default login for the web is:
 
-- To download all chapters: `lncrawl --all`
-- To download first 25 chapters: `lncrawl --first 25`
-- To download all between two chapters: `lncrawl --range 10 30`
-- To download all between two chapter links: `lncrawl -s https://novelfull.com/release-that-witch.html --chapters https://novelfull.com/release-that-witch/chapter-6-training-part-i.html https://novelfull.com/release-that-witch/chapter-8-months-of-the-demons-part-1.html`
-- To download a specific volumes: `lncrawl --volumes 2 3`
+```
+username: admin
+password: admin
+```
 
-- To define output path: `lncrawl -o "D:\Lightnovels\reincarnation-of-the-strongest-sword-god"`
-- To delete the output folder if exists: `lncrawl -f`
-- To ignore the output folder if exists: `lncrawl -i`
-- To resume download where is has been left previously: `lncrawl -i`
-- To specify output formats: `lncrawl --format epub pdf mobi`
+For terminal usage, you can check help on each subcommands by `-h`:
 
-- To display list of supported sources: `lncrawl --list-sources`
+```text
+$ lncrawl crawl -h
+ Usage: lncrawl crawl [OPTIONS] [URL]
 
-- If you provide an option in the argument, it will skip it in the interactive session.
-  If you want to disable all interactive prompts, pass `--suppress` at the end.
+ Crawl from novel page URL.
 
-- You can stack up options like this: `lncrawl -s https://boxnovel.com/novel/reincarnation-of-the-strongest-sword-god/ -o "D:\Lightnovels\reincarnation-of-the-strongest-sword-god" --last 50 -i --format pdf --suppress`
+╭─ Arguments ───────────────────────────────────────────────────────────────────────────────────────╮
+│   url      [URL]  Novel details page URL.                                                         │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --noin                                                    Disable interactive mode                │
+│ --all                                                     Download all chapters                   │
+│ --first           N [x>=1]                                Download first few chapters             │
+│ --last            N [x>=1]                                Download latest few chapters            │
+│ --format  -f      [json|epub|txt|pdf|mobi|docx|rtf|fb2|a  Output formats                          │
+│                   zw3|lit|lrf|pdb|rb|tcr]                                                         │
+│ --help    -h                                              Show this message and exit.             │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
 
 ### Additional Help
 
 Visit the [discussions](https://github.com/dipu-bd/lightnovel-crawler/discussions) page for more information. You can also post your query there too.
 
-### Login to [www.wuxiaworld.com](https://www.wuxiaworld.com/)
-
-Follow this guide to know how to login: https://github.com/dipu-bd/lightnovel-crawler/discussions/1360
-
-## Development
-
-You are very welcome to contribute in this project. You can:
-
-- create new issues pointing out the bugs.
-- solve existing issues.
-- add your own sources.
-- add new output formats.
-- create new bots.
-
 ### Adding new source
 
-- Use `lncrawl --bot lookup` first to auto-generate your crawler from an existing template.
-- Check inside the [`sources/_examples`](https://github.com/dipu-bd/lightnovel-crawler/blob/master/sources/_examples). Read all the comments of all the files. And pick the one you like.
-- You can find plenty examples in the `sources` folder. Try to check the latest ones
-- Put your source file inside the language folder.
-  The `en` folder has too many files, therefore it is grouped using the first letter of the domain name.
-- Before making commit format files using `blake` formatter, and use `scripts/lint.sh` or `scripts/lint.bat` to check linting issues.
+Run the following command to add a new source:
 
-### Adding new Bot
+```
+$ lncrawl sources create
+```
 
-- Create a new bot file using [`bots/_sample.py`](https://github.com/dipu-bd/lightnovel-crawler/blob/master/lncrawl/bots/_sample.py) as template.
-- Import bot to [`bots/__init__.py`](https://github.com/dipu-bd/lightnovel-crawler/blob/master/lncrawl/bots/__init__.py) file.
+It can auto generate the code using ChatGPT.
 
 ## Supported sources
 
@@ -531,7 +448,6 @@ We are supporting 460 sources and 389 crawlers.
 </tbody>
 </table>
 
-
 ### `ar` Arabic
 
 <table>
@@ -558,7 +474,6 @@ We are supporting 460 sources and 389 crawlers.
 </tr>
 </tbody>
 </table>
-
 
 ### `en` English
 
@@ -2277,7 +2192,6 @@ We are supporting 460 sources and 389 crawlers.
 </tbody>
 </table>
 
-
 ### `es` Spanish; Castilian
 
 <table>
@@ -2304,7 +2218,6 @@ We are supporting 460 sources and 389 crawlers.
 </tr>
 </tbody>
 </table>
-
 
 ### `fr` French
 
@@ -2352,7 +2265,6 @@ We are supporting 460 sources and 389 crawlers.
 </tr>
 </tbody>
 </table>
-
 
 ### `id` Indonesian
 
@@ -2461,7 +2373,6 @@ We are supporting 460 sources and 389 crawlers.
 </tbody>
 </table>
 
-
 ### `pt` Portuguese
 
 <table>
@@ -2493,7 +2404,6 @@ We are supporting 460 sources and 389 crawlers.
 </tr>
 </tbody>
 </table>
-
 
 ### `ru` Russian
 
@@ -2567,7 +2477,6 @@ We are supporting 460 sources and 389 crawlers.
 </tbody>
 </table>
 
-
 ### `tr` Turkish
 
 <table>
@@ -2584,7 +2493,6 @@ We are supporting 460 sources and 389 crawlers.
 </tr>
 </tbody>
 </table>
-
 
 ### `vi` Vietnamese
 
@@ -2617,7 +2525,6 @@ We are supporting 460 sources and 389 crawlers.
 </tr>
 </tbody>
 </table>
-
 
 ### `zh` Chinese
 

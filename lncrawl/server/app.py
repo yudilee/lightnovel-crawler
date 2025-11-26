@@ -4,13 +4,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 
 from ..assets.version import get_version
 from ..context import ctx
 from ..exceptions import attach_exception_handlers
 from .api import router as api
-from .middleware.static_guard import StaticFilesGuard
+from .middleware.staticfiles import CustomStaticFiles, StaticFilesGuard
 
 web_dir = (Path(__file__).parent / 'web').absolute()
 
@@ -48,11 +47,7 @@ app.add_middleware(
 app.include_router(api, prefix='/api')
 
 # Mount static files
-app.mount(
-    "/static",
-    StaticFiles(directory=ctx.config.app.output_path),
-    name="static",
-)
+app.mount("/static", CustomStaticFiles(), name="static",)
 
 
 # Mount frontend

@@ -18,8 +18,9 @@ logger = logging.getLogger(__name__)
 
 ROOT_DIR = Path(__file__).parent.absolute()
 APP_DIR = Path(
-    typer.get_app_dir(
-        "Lightnovel Crawler",
+    os.getenv('LNCRAWL_DATA_PATH')
+    or typer.get_app_dir(
+        "LNCrawl",
         force_posix=True,
         roaming=True,
     )
@@ -190,13 +191,9 @@ class AppConfig(_Section):
     def version(self) -> str:
         return (ROOT_DIR / "VERSION").read_text(encoding="utf8").strip()
 
-    @property
+    @cached_property
     def output_path(self) -> Path:
-        return Path(self._get("output_path", str(APP_DIR)))
-
-    @output_path.setter
-    def output_path(self, path: Optional[Path]) -> None:
-        self._set("output_path", str(path) if path else None)
+        return APP_DIR
 
     @property
     def history_limit_per_user(self) -> int:
@@ -224,7 +221,9 @@ class DatabaseConfig(_Section):
     section = "database"
 
     def __url(self) -> str:
-        return f"sqlite:///{(APP_DIR / 'sqlite.db').resolve().as_posix()}"
+        env_url = os.getenv('DATABASE_URL')
+        sqlite_url = f"sqlite:///{(APP_DIR / 'sqlite.db').resolve().as_posix()}"
+        return env_url or sqlite_url
 
     @property
     def url(self) -> str:
@@ -267,7 +266,7 @@ class CrawlerConfig(_Section):
 
     @property
     def selenium_grid(self) -> str:
-        return self._get("selenium_grid", "")
+        return self._get("selenium_grid", os.getenv("SELENIUM_GRID", ""))
 
     @selenium_grid.setter
     def selenium_grid(self, url: Optional[str]) -> None:

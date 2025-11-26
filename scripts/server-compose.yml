@@ -46,20 +46,15 @@ services:
     image: ghcr.io/dipu-bd/lightnovel-crawler
     restart: unless-stopped
     ports:
-      - "23457:8000"
-    command: |
-      python -m lncrawl \
-        -ll --suppress \
-        --bot server \
-        --port 8000 \
-        --selenium-grid "http://chrome:4444"
+      - "23457:8080"
+    command: -ll server
     environment:
       - PYTHONUNBUFFERED=1
-      - OUTPUT_PATH=/home/lncrawl/output
+      - LNCRAWL_DATA_PATH=/data
+      - SELENIUM_GRID=http://chrome:4444
       - DATABASE_URL=postgresql+psycopg://pguser:pgpass@postgres:5432/lncrawl
     volumes:
-      - ./output_path:/home/lncrawl/output
-      - ./.env:/app/.env
+      - ./appdata:/data
     depends_on:
       - chrome
       - postgres
@@ -73,6 +68,6 @@ services:
         reservations:
           cpus: '1.00'
           memory: 1G
-
+  
 volumes:
   pgdata:
