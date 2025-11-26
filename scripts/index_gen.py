@@ -7,6 +7,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 import time
@@ -392,12 +393,13 @@ logger.info("Generated supported sources list.")
 before, help_text, after = readme_text.split(HELP_RESULT_QUE)
 
 os.chdir(WORKDIR)
-output = subprocess.check_output(["python", "lncrawl", "-h"])
+output = subprocess.check_output(["python", "lncrawl", "-h"]).decode("utf-8")
+output = re.sub(r'\x1b\[[0-9;\r]*m', '', output.strip())
 
 help_text = "\n"
 help_text += "```bash\n"
 help_text += "$ lncrawl -h\n"
-help_text += output.decode("utf-8").replace("\r\n", "\n")
+help_text += output
 help_text += "```\n"
 
 readme_text = HELP_RESULT_QUE.join([before, help_text, after])

@@ -17,7 +17,13 @@ def main():
     except Exception:
         pass
 
-    # start the app
+    # Remove colors from terminal in CI
+    import os
+    if os.getenv('CI'):
+        os.environ["TERM"] = "dumb"
+        os.environ["NO_COLOR"] = "1"
+
+    # Start the app
     from .app import app
     app()
 
