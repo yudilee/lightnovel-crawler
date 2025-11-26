@@ -54,6 +54,7 @@ class ChapterService:
         self,
         novel_id: Optional[str] = None,
         volume_id: Optional[str] = None,
+        is_crawled: Optional[bool] = None,
         descending: bool = False,
         limit: Optional[int] = None,
     ) -> List[str]:
@@ -63,6 +64,11 @@ class ChapterService:
                 stmt = stmt.where(Chapter.novel_id == novel_id)
             if volume_id:
                 stmt = stmt.where(Chapter.volume_id == volume_id)
+            if is_crawled is not None:
+                stmt = stmt.where(
+                    col(Chapter.is_done).is_(true()) if is_crawled
+                    else col(Chapter.is_done).is_not(true())
+                )
             if descending:
                 stmt = stmt.order_by(col(Chapter.serial).desc())
             else:
