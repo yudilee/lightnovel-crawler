@@ -46,7 +46,7 @@ jobs:
       - name: 🧪 Test Wheel Installation
         run: |
           pip install dist/lightnovel_crawler*.whl
-          lncrawl --list-sources
+          lncrawl -ll sources list
           lncrawl -s 'https://novelfull.com/the-kings-avatar-for-the-glory.html' --first 2 -f --format epub --suppress -lll
 
   build-windows:
@@ -74,7 +74,7 @@ jobs:
       - name: 🧪 Test Executable
         env:
           PYTHONIOENCODING: utf-8
-        run: .\dist\lncrawl.exe --list-sources
+        run: .\dist\lncrawl.exe -ll sources list
 
       - name: 🚀 Release Artifact
         uses: ncipollo/release-action@v1
@@ -104,7 +104,7 @@ jobs:
           mv ./dist/lncrawl ./dist/lncrawl-mac
 
       - name: 🧪 Test Executable
-        run: ./dist/lncrawl-mac --list-sources
+        run: ./dist/lncrawl-mac -ll sources list
 
       - name: 🚀 Release Artifact
         uses: ncipollo/release-action@v1
@@ -135,7 +135,7 @@ jobs:
           mv ./dist/lncrawl ./dist/lncrawl-linux
 
       - name: 🧪 Test Executable
-        run: ./dist/lncrawl-linux --list-sources
+        run: ./dist/lncrawl-linux -ll sources list
 
       - name: 🚀 Release Artifacts
         uses: ncipollo/release-action@v1

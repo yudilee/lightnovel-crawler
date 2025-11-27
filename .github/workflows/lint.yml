@@ -44,4 +44,4 @@ jobs:
       - name: 🧪 Install & Run lncrawl
         run: |
           pip install dist/lightnovel_crawler*.whl
-          lncrawl --list-sources
+          lncrawl -ll sources list
