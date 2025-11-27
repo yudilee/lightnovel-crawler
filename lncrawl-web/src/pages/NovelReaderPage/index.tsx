@@ -4,7 +4,7 @@ import './index.scss';
 import { store } from '@/store';
 import { Auth } from '@/store/_auth';
 import { Reader } from '@/store/_reader';
-import type { ReadChapter } from '@/types';
+import { type Job, type ReadChapter } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { formatFromNow } from '@/utils/time';
 import { Button, Flex, Result, Spin } from 'antd';
@@ -12,8 +12,10 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
+import { JobDetailsCard } from '../JobDetails/JobDetailsCard';
 import { ReaderVerticalLayout } from './ReaderLayoutVertical';
 
+const fetchJobs = new Map<string, Promise<Job>>();
 const cache = new Map<string, Promise<ReadChapter>>();
 
 async function fetchChapter(id: string) {
@@ -39,16 +41,30 @@ function fetchChapterCached(id: string): Promise<ReadChapter> {
   return cache.get(id)!;
 }
 
+function createFetchJob(id: string) {
+  if (!fetchJobs.has(id)) {
+    const promise = axios
+      .get<Job>(`/api/chapter/${id}/fetch`)
+      .then((res) => res.data);
+    fetchJobs.set(id, promise);
+  }
+  return fetchJobs.get(id)!;
+}
+
 export const NovelReaderPage: React.FC<any> = () => {
   const { id } = useParams<{ id: string }>();
   const token = useSelector(Auth.select.authToken);
+  const autoFetch = useSelector(Reader.select.autoFetch);
 
   const [refreshId, setRefreshId] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
   const [data, setData] = useState<ReadChapter>();
+  const [job, setJob] = useState<Job>();
 
+  // get chapter content data
   useEffect(() => {
+    setJob(undefined);
     setData(undefined);
     setError(undefined);
     if (id) {
@@ -59,6 +75,60 @@ export const NovelReaderPage: React.FC<any> = () => {
         .finally(() => setLoading(false));
     }
   }, [id, token, refreshId]);
+
+  // get job details if auto fetch is enabled
+  useEffect(() => {
+    if (autoFetch && data && !data.chapter.is_done) {
+      setLoading(true);
+      createFetchJob(data.chapter.id)
+        .then(setJob)
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    } else {
+      setJob(undefined);
+    }
+  }, [autoFetch, data]);
+
+  // auto refresh job status
+  useEffect(() => {
+    if (!job || !data || data.chapter.is_done) {
+      return;
+    }
+    if (job.is_done) {
+      cache.delete(data.chapter.id);
+      setRefreshId((v) => v + 1);
+    } else {
+      const iid = setInterval(() => {
+        axios
+          .get<Job>(`/api/job/${job.id}`)
+          .then((res) => setJob(res.data))
+          .catch(console.error);
+      }, 1000);
+      return () => clearInterval(iid);
+    }
+  }, [data, job]);
+
+  // preload next chapter
+  useEffect(() => {
+    if (data?.next_id) {
+      fetchChapterCached(data.next_id).then((next) => {
+        if (autoFetch && !next.chapter.is_done) {
+          createFetchJob(next.chapter.id);
+        }
+      });
+    }
+  }, [data?.next_id, autoFetch]);
+
+  // preload previous chapter
+  useEffect(() => {
+    if (data?.previous_id) {
+      fetchChapterCached(data.previous_id).then((prev) => {
+        if (autoFetch && !prev.chapter.is_done) {
+          createFetchJob(prev.chapter.id);
+        }
+      });
+    }
+  }, [data?.previous_id, autoFetch]);
 
   useEffect(() => {
     if (!loading) {
@@ -76,22 +146,25 @@ export const NovelReaderPage: React.FC<any> = () => {
     return () => cancelAnimationFrame(fid);
   }, [loading, data?.content]);
 
-  useEffect(() => {
-    if (data?.next_id) {
-      fetchChapterCached(data.next_id);
-    }
-  }, [data?.next_id]);
-
-  useEffect(() => {
-    if (data?.previous_id) {
-      fetchChapterCached(data.previous_id);
-    }
-  }, [data?.previous_id]);
-
   if (loading) {
     return (
       <Flex align="center" justify="center" style={{ height: '100vh' }}>
-        <Spin size="large" style={{ marginTop: 100 }} />
+        <Spin size="large" style={{ margin: '50px 0' }} />
+      </Flex>
+    );
+  }
+
+  if (job && !job.is_done) {
+    return (
+      <Flex
+        vertical
+        gap={15}
+        align="center"
+        justify="center"
+        style={{ height: '100vh' }}
+      >
+        <JobDetailsCard job={job} />
+        <Button href={`/job/${job.id}`}>View Request</Button>
       </Flex>
     );
   }
@@ -100,7 +173,7 @@ export const NovelReaderPage: React.FC<any> = () => {
     return (
       <Flex align="center" justify="center" style={{ height: '100vh' }}>
         <Result
-          status="error"
+          status="404"
           title="Failed to load chapter content"
           subTitle={error}
           extra={[

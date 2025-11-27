@@ -23,7 +23,10 @@ def fetch_chapter(
     user: User = Security(ensure_user),
     chapter_id: str = Path(),
 ) -> Job:
-    return ctx.jobs.fetch_chapter(user, chapter_id)
+    job = ctx.jobs.get_chapter_job(chapter_id)
+    if not job:
+        job = ctx.jobs.fetch_chapter(user, chapter_id)
+    return job
 
 
 @router.get("/{chapter_id}/images", summary='Gets list of chapter images')

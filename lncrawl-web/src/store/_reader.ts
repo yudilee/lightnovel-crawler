@@ -20,6 +20,7 @@ export interface ReaderState {
   theme: ReaderTheme;
   layout: ReaderLayout;
   fontFamily: FontFamily;
+  autoFetch: boolean;
 }
 
 const buildInitialState = (): ReaderState => ({
@@ -33,6 +34,7 @@ const buildInitialState = (): ReaderState => ({
   lineHeight: 1.4,
   theme: ReaderTheme.Dark,
   fontFamily: FontFamily.Literata,
+  autoFetch: false,
 });
 
 //
@@ -72,6 +74,9 @@ export const ReaderSlice = createSlice({
     setVoiceSpeed(state, action: PayloadAction<number>) {
       state.voiceSpeed = action.payload;
     },
+    setAutoFetch(state, action: PayloadAction<boolean>) {
+      state.autoFetch = action.payload;
+    },
   },
 });
 
@@ -92,6 +97,7 @@ export const Reader = {
     voiceSpeed: createSelector(selectReader, (reader) => reader.voiceSpeed),
     voicePitch: createSelector(selectReader, (reader) => reader.voicePitch),
     speaking: createSelector(selectReader, (reader) => reader.speaking),
+    autoFetch: createSelector(selectReader, (reader) => reader.autoFetch),
     speakPosition: createSelector(
       selectReader,
       (reader) => reader.speakPosition

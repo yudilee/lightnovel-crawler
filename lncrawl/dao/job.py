@@ -96,20 +96,19 @@ class Job(BaseTable, table=True):
             self.type == JobType.NOVEL
             or self.type == JobType.FULL_NOVEL
         ):
-            return self.extra.get('url')
+            return self.extra['url']
 
         if (
             self.type == JobType.NOVEL_BATCH
             or self.type == JobType.FULL_NOVEL_BATCH
         ):
-            urls = self.extra.get('urls') or []
+            urls = self.extra['urls']
             if len(urls) == 1:
                 return urls[0]
             else:
                 return f'{urls[0]} & {len(urls) - 1} more'
 
         novel_title = self.extra.get('novel_title')
-        ids = self.extra.get('image_ids') or []
         if novel_title:
             novel_title += ' · '
         else:
@@ -152,6 +151,6 @@ class Job(BaseTable, table=True):
             if len(formats) <= 2:
                 return f"{novel_title}{', '.join(formats)}"
             else:
-                return f"{novel_title}{', '.join(formats[:2])} & {len(urls) - 2} more"
+                return f"{novel_title}{', '.join(formats[:2])} & {len(formats) - 2} more"
 
-        return None
+        return f'Job {self.id}'

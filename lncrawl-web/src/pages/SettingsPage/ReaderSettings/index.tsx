@@ -7,6 +7,7 @@ import type { ReaderSettingsItem } from './types';
 import { ReaderVoicePitchSettings } from './VoicePitch';
 import { ReaderVoiceSettings } from './VoiceSettings';
 import { ReaderVoiceSpeedSettings } from './VoiceSpeed';
+import { ReaderAutoFetchSetting } from './AutoFetchSetting';
 
 const items: ReaderSettingsItem[] = [
   // ReaderLayoutSettings,
@@ -17,6 +18,7 @@ const items: ReaderSettingsItem[] = [
   ReaderVoiceSettings,
   ReaderVoicePitchSettings,
   ReaderVoiceSpeedSettings,
+  ReaderAutoFetchSetting,
 ];
 
 export const ReaderSettings = () => {

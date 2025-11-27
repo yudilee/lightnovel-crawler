@@ -119,6 +119,18 @@ class JobService:
             stmt = select(Job).where(Job.parent_job_id == parent_job_id)
             return sess.exec(stmt).all()
 
+    def get_chapter_job(self, chapter_id: str) -> Optional[Job]:
+        with ctx.db.session() as sess:
+            return sess.exec(
+                select(Job)
+                .where(
+                    Job.type == JobType.CHAPTER,
+                    col(Job.is_done).is_(False),
+                    Job.extra["chapter_id"].as_string() == chapter_id,
+                )
+                .limit(1)
+            ).first()
+
     # -------------------------------------------------------------------------
     #                              CANCEL Jobs
     # -------------------------------------------------------------------------
