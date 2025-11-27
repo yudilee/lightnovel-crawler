@@ -29,20 +29,32 @@ class JobRunner:
 
     @staticmethod
     def run(signal: Event, artifact: bool):
-        with _lock.using(signal):
-            job = ctx.jobs._pending(artifact, _queue.keys())
-            if not job:
-                return
-            _queue[job.id] = Event()
-
         try:
-            JobRunner(job, _queue[job.id]).process()
-        except Exception:
-            logger.error('Unexpected error during process', exc_info=True)
-        finally:
             with _lock.using(signal):
-                if job.id in _queue:
-                    _queue.pop(job.id).set()
+                job = ctx.jobs._pending(artifact, _queue.keys())
+                if not job:
+                    return
+                if job.parent_job_id:
+                    root = ctx.jobs._get_root(job.id)
+                    if not root or root.is_done:
+                        logger.info(f'Dangling job [b]{job.id}[/b] | {job.job_title}')
+                        with ctx.db.session() as sess:
+                            if root:
+                                ctx.jobs._cancel_down(sess, root.id, False)
+                            else:
+                                ctx.jobs._cancel_down(sess, job.id, True)
+                            sess.commit()
+                        return
+                _queue[job.id] = Event()
+
+            try:
+                JobRunner(job, _queue[job.id]).process()
+            finally:
+                with _lock.using(signal):
+                    if job.id in _queue:
+                        _queue.pop(job.id).set()
+        except Exception:
+            logger.error('Unexpected error in runner', exc_info=True)
 
     @staticmethod
     def cancel(job_id: str):
@@ -58,7 +70,16 @@ class JobRunner:
         _queue.clear()
 
     def process(self) -> bool:
-        logger.debug(f'Processing [b]{self.job.type.name}[/b]: {self.job.id}')
+        message = (
+            f'[cyan]{self.job.status.name}[/cyan]'
+            f' [b]{self.job.id}[/b]'
+            f' | {self.job.job_title}'
+        )
+        if not self.job.parent_job_id:
+            logger.info(message)
+        else:
+            logger.debug(f'{message}')
+
         if self.job.type == JobType.FULL_NOVEL_BATCH:
             return self._novel_batch()
         if self.job.type == JobType.NOVEL_BATCH:
@@ -83,6 +104,7 @@ class JobRunner:
             return self._artifact_batch()
         if self.job.type == JobType.ARTIFACT:
             return self._artifact()
+
         return self.__set_done(f'Job type is not supported: [b]{self.job.type}[/b]')
 
     # ------------------------------------------------------------------ #
@@ -207,6 +229,8 @@ class JobRunner:
 
             full = self.job.type == JobType.FULL_NOVEL_BATCH
             for url in sorted(urls):
+                if self.signal.is_set():
+                    raise AbortedException()
                 ctx.jobs.fetch_novel(
                     self.user,
                     url,
@@ -215,6 +239,8 @@ class JobRunner:
                 )
 
             return self.__increment()
+        except AbortedException:
+            return False  # ignore error
         except Exception as e:
             return self.__set_done('Failed to create requests', e)
 
@@ -287,6 +313,8 @@ class JobRunner:
                 self.__set_running()
 
             for volume_id in volume_ids:
+                if self.signal.is_set():
+                    raise AbortedException()
                 ctx.jobs.fetch_volume(
                     self.user,
                     volume_id,
@@ -295,6 +323,8 @@ class JobRunner:
                 )
 
             return self.__increment()
+        except AbortedException:
+            return False  # ignore error
         except Exception as e:
             return self.__set_done('Failed to create requests', e)
 
@@ -316,6 +346,8 @@ class JobRunner:
                 self.__set_running()
 
             for chapter_id in chapter_ids:
+                if self.signal.is_set():
+                    raise AbortedException()
                 ctx.jobs.fetch_chapter(
                     self.user,
                     chapter_id,
@@ -324,6 +356,8 @@ class JobRunner:
                 )
 
             return self.__increment()
+        except AbortedException:
+            return False  # ignore error
         except Exception as e:
             return self.__set_done('Failed to create requests', e)
 
@@ -341,6 +375,8 @@ class JobRunner:
                 self.__set_running()
 
             for chapter_id in chapter_ids:
+                if self.signal.is_set():
+                    raise AbortedException()
                 ctx.jobs.fetch_chapter(
                     self.user,
                     chapter_id,
@@ -349,6 +385,8 @@ class JobRunner:
                 )
 
             return self.__increment()
+        except AbortedException:
+            return False  # ignore error
         except Exception as e:
             return self.__set_done('Failed to create requests', e)
 
@@ -408,6 +446,8 @@ class JobRunner:
                 self.__set_running()
 
             for image_id in image_ids:
+                if self.signal.is_set():
+                    raise AbortedException()
                 ctx.jobs.fetch_image(
                     self.user,
                     image_id,
@@ -419,6 +459,8 @@ class JobRunner:
                 )
 
             return self.__increment()
+        except AbortedException:
+            return False  # ignore error
         except Exception as e:
             return self.__set_done('Failed to create requests', e)
 
@@ -473,6 +515,8 @@ class JobRunner:
                 return self.__set_done()
 
             for format in sorted(formats - need_epub - added_format):
+                if self.signal.is_set():
+                    raise AbortedException()
                 job = ctx.jobs.make_artifact(
                     self.user,
                     novel_id,
@@ -488,6 +532,8 @@ class JobRunner:
                     return self.__set_done('Failed to create epub request')
 
                 for format in sorted(need_epub - added_format):
+                    if self.signal.is_set():
+                        raise AbortedException()
                     job = ctx.jobs.make_artifact(
                         self.user,
                         novel_id,
@@ -497,6 +543,8 @@ class JobRunner:
                     )
 
             return self.__increment()
+        except AbortedException:
+            return False  # ignore error
         except Exception as e:
             return self.__set_done('Failed to create requests', e)
 
@@ -526,6 +574,8 @@ class JobRunner:
                     return self.__set_done(f'Dependency job not found for {format}')
                 epub = ctx.artifacts.get_epub(self.job.depends_on)
 
+            if self.signal.is_set():
+                raise AbortedException()
             artifact = ctx.binder.make_artifact(
                 format=format,
                 novel_id=novel_id,

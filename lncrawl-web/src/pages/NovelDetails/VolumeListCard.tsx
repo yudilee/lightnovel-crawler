@@ -1,7 +1,7 @@
 import { type Job, type ReadHistory, type Volume } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { DownloadOutlined } from '@ant-design/icons';
-import { Button, Card, Collapse, message, Space, Typography } from 'antd';
+import { Button, Card, Collapse, Flex, message, Spin, Typography } from 'antd';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -14,12 +14,14 @@ export const VolumeListCard: React.FC<{
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
 
+  const [loading, setLoading] = useState<boolean>(true);
   const [volumes, setVolumes] = useState<Volume[]>([]);
   const [history, setHistory] = useState<ReadHistory>({});
 
   useEffect(() => {
     const fetchVolumes = async (id: string) => {
       setVolumes([]);
+      setLoading(true);
       try {
         const { data: volumes } = await axios.get<Volume[]>(
           `/api/novel/${id}/volumes`
@@ -27,6 +29,8 @@ export const VolumeListCard: React.FC<{
         setVolumes(volumes);
       } catch (err) {
         messageApi.error(stringifyError(err));
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -78,7 +82,8 @@ export const VolumeListCard: React.FC<{
         <Button
           size="small"
           shape="round"
-          style={{ width: 90 }}
+          type="primary"
+          style={{ width: 100 }}
           icon={<DownloadOutlined />}
           onClick={(e) =>
             createVolumeJob(
@@ -93,40 +98,34 @@ export const VolumeListCard: React.FC<{
     >
       {contextHolder}
 
-      <Collapse
-        accordion
-        items={volumes.map((volume) => ({
-          key: volume.id,
-          label: volume.title,
-          children: (
-            <VolumeDetailsCard inner volume={volume} history={history} />
-          ),
-          extra: (
-            <Space size="small">
+      {loading ? (
+        <Flex align="center" justify="center">
+          <Spin size="large" style={{ margin: '50px 0' }} />
+        </Flex>
+      ) : (
+        <Collapse
+          accordion
+          items={volumes.map((volume) => ({
+            key: volume.id,
+            label: volume.title,
+            children: (
+              <VolumeDetailsCard inner volume={volume} history={history} />
+            ),
+            extra: (
               <Typography.Text
                 type="secondary"
                 style={{ fontSize: '12px', whiteSpace: 'nowrap' }}
               >
                 {Intl.NumberFormat('en').format(volume.chapter_count)} chapters
               </Typography.Text>
-
-              <Button
-                size="small"
-                shape="round"
-                style={{ width: 75 }}
-                icon={<DownloadOutlined />}
-                onClick={(e) => createVolumeJob(e, [volume.id])}
-              >
-                Get
-              </Button>
-            </Space>
-          ),
-          styles: {
-            body: { padding: 0 },
-            header: { textTransform: 'capitalize' },
-          },
-        }))}
-      />
+            ),
+            styles: {
+              body: { padding: 0 },
+              header: { textTransform: 'capitalize' },
+            },
+          }))}
+        />
+      )}
     </Card>
   );
 };

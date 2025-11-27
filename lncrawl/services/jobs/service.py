@@ -1,4 +1,3 @@
-from functools import lru_cache
 from typing import Any, Iterable, List, Optional, TypeVar
 
 from sqlalchemy import delete as sa_delete
@@ -20,8 +19,10 @@ T = TypeVar('T')
 
 job_alias = aliased(Job)
 job_status_type = Job.__table__.c.status.type  # type: ignore
+job_failed_literal = cast(literal(JobStatus.FAILED.name), job_status_type)
 job_success_literal = cast(literal(JobStatus.SUCCESS.name), job_status_type)
 job_running_literal = cast(literal(JobStatus.RUNNING.name), job_status_type)
+job_canceled_literal = cast(literal(JobStatus.CANCELED.name), job_status_type)
 
 
 class JobService:
@@ -129,8 +130,8 @@ class JobService:
             self._update(
                 sess,
                 job_id,
-                status=JobStatus.CANCELED,
                 error=f'Canceled by {who}',
+                status=job_canceled_literal,
             )
             sess.commit()
 
@@ -430,12 +431,11 @@ class JobService:
             sess.refresh(job)
             return job
 
-    @lru_cache
-    def _get_root(self, job_id: str) -> Optional[str]:
+    def _get_root(self, job_id: str) -> Optional[Job]:
         with ctx.db.session() as sess:
             sa_pars = sa_select_parents(job_id)
             return sess.exec(
-                select(Job.id)
+                select(Job)
                 .where(col(Job.id).in_(sa_pars))
                 .where(col(Job.parent_job_id).is_(None))
                 .limit(1)
@@ -518,7 +518,7 @@ class JobService:
         sess.exec(
             sa_update(Job)
             .where(col(Job.id).in_(sa_pars))
-            .where(col(Job.is_done).is_not(true()))
+            .where(col(Job.is_done).is_(False))
             .values(
                 done=sa_done,
                 total=sa_total,
@@ -536,12 +536,11 @@ class JobService:
             sa_update(Job)
             .where(
                 col(Job.id).in_(sa_deps),
-                col(Job.is_done).is_not(true()),
+                col(Job.is_done).is_(False),
             )
             .values(
                 is_done=True,
-                # done=Job.total,
-                status=JobStatus.CANCELED,
+                status=job_canceled_literal,
                 error='Canceled by one of the parent',
                 started_at=func.coalesce(Job.started_at, now),
                 finished_at=func.coalesce(Job.finished_at, now),
@@ -570,5 +569,5 @@ class JobService:
             sess,
             job_id,
             error=reason,
-            status=JobStatus.FAILED,
+            status=job_failed_literal,
         )

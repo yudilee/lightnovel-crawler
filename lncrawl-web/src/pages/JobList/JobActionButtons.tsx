@@ -4,6 +4,7 @@ import { stringifyError } from '@/utils/errors';
 import { CloseOutlined, ReloadOutlined } from '@ant-design/icons';
 import { Button, message, type ButtonProps } from 'antd';
 import axios from 'axios';
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
@@ -17,8 +18,11 @@ export const JobActionButtons: React.FC<{
   const currentUser = useSelector(Auth.select.user);
   const [messageApi, contextHolder] = message.useMessage();
 
+  const [busy, setBusy] = useState<boolean>(false);
+
   const cancelJob = async () => {
     try {
+      setBusy(true);
       await axios.post(`/api/job/${job.id}/cancel`);
       if (onChange) onChange();
     } catch (err) {
@@ -26,11 +30,14 @@ export const JobActionButtons: React.FC<{
         type: 'error',
         content: stringifyError(err, 'Something went wrong!'),
       });
+    } finally {
+      setBusy(false);
     }
   };
 
   const replayJob = async () => {
     try {
+      setBusy(true);
       const result = await axios.post<Job>(`/api/job/${job.id}/replay`, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -42,6 +49,8 @@ export const JobActionButtons: React.FC<{
         type: 'error',
         content: stringifyError(err, 'Something went wrong!'),
       });
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -49,12 +58,12 @@ export const JobActionButtons: React.FC<{
     <>
       {contextHolder}
       {job.is_done && (
-        <Button size={size} onClick={replayJob}>
+        <Button size={size} onClick={replayJob} loading={busy}>
           <ReloadOutlined /> Replay
         </Button>
       )}
       {(isAdmin || job.user_id === currentUser?.id) && !job.is_done && (
-        <Button size={size} danger onClick={cancelJob}>
+        <Button size={size} danger onClick={cancelJob} loading={busy}>
           <CloseOutlined /> Cancel
         </Button>
       )}

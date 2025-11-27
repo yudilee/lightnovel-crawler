@@ -1,7 +1,7 @@
 import type { Chapter, Job, ReadHistory } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { DownloadOutlined, RightCircleOutlined } from '@ant-design/icons';
-import { Button, Collapse, message, type ButtonProps } from 'antd';
+import { Button, Collapse, message } from 'antd';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { ChapterDetailsCard } from './ChapterDetailsCard';
@@ -24,20 +24,13 @@ export const ChapterListCard: React.FC<{
     }
   };
 
-  const stopPropagation =
-    (cb: ButtonProps['onClick']): ButtonProps['onClick'] =>
-    (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      if (cb) cb(e);
-    };
-
   return (
-    <>
+    <div style={{ marginTop: 10 }}>
       {contextHolder}
       <Collapse
+        ghost
         accordion
-        style={{ marginTop: 10 }}
+        size="small"
         items={chapters.map((chapter) => ({
           key: chapter.id,
           label: chapter.title,
@@ -55,7 +48,11 @@ export const ChapterListCard: React.FC<{
               shape="round"
               style={{ width: 75 }}
               icon={<RightCircleOutlined />}
-              onClick={stopPropagation(() => navigate(`/read/${chapter.id}`))}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigate(`/read/${chapter.id}`);
+              }}
             >
               Read
             </Button>
@@ -66,13 +63,17 @@ export const ChapterListCard: React.FC<{
               type="primary"
               style={{ width: 75 }}
               icon={<DownloadOutlined />}
-              onClick={stopPropagation(() => createChapterJob(chapter.id))}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                createChapterJob(chapter.id);
+              }}
             >
               Get
             </Button>
           ),
         }))}
       />
-    </>
+    </div>
   );
 };

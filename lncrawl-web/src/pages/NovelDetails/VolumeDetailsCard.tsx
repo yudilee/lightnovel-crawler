@@ -1,9 +1,11 @@
-import { type Chapter, type ReadHistory, type Volume } from '@/types';
+import { type Chapter, type Job, type ReadHistory, type Volume } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { formatDate } from '@/utils/time';
-import { Card, Descriptions, Grid, message } from 'antd';
+import { DownloadOutlined } from '@ant-design/icons';
+import { Button, Card, Descriptions, Flex, Grid, message, Spin } from 'antd';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChapterListCard } from './ChapterListCard';
 
 export const VolumeDetailsCard: React.FC<{
@@ -12,9 +14,11 @@ export const VolumeDetailsCard: React.FC<{
   history?: ReadHistory;
   hideChapters?: boolean;
 }> = ({ volume, inner, hideChapters, history = {} }) => {
+  const navigate = useNavigate();
   const { lg } = Grid.useBreakpoint();
   const [messageApi, contextHolder] = message.useMessage();
 
+  const [loading, setLoading] = useState<boolean>(true);
   const [chapters, setChapters] = useState<Chapter[]>([]);
 
   useEffect(() => {
@@ -27,12 +31,27 @@ export const VolumeDetailsCard: React.FC<{
       } catch (err) {
         messageApi.error(stringifyError(err));
         setChapters([]);
+      } finally {
+        setLoading(false);
       }
     };
     if (!hideChapters) {
       fetchChapters(volume.id);
     }
   }, [volume.id, hideChapters, messageApi]);
+
+  const createVolumeJob = async (e: React.MouseEvent) => {
+    try {
+      e.stopPropagation();
+      e.preventDefault();
+      const result = await axios.post<Job>(`/api/job/create/fetch-volumes`, {
+        volumes: [volume.id],
+      });
+      navigate(`/job/${result.data.id}`);
+    } catch (err) {
+      messageApi.error(stringifyError(err));
+    }
+  };
 
   return (
     <Card
@@ -51,30 +70,48 @@ export const VolumeDetailsCard: React.FC<{
     >
       {contextHolder}
 
-      <Descriptions
-        size="small"
-        layout="horizontal"
-        column={lg ? 3 : 1}
-        bordered
-        items={[
-          {
-            label: 'Serial',
-            children: volume.serial,
-          },
-          {
-            label: 'Chapters',
-            children: volume.chapter_count ?? 0,
-          },
-          {
-            label: 'Last Update',
-            children: formatDate(volume.updated_at),
-          },
-        ]}
-      />
+      <Flex wrap vertical={!lg} align="center" justify="center" gap={10}>
+        <Descriptions
+          bordered
+          size="small"
+          layout="horizontal"
+          column={lg ? 3 : 1}
+          style={{ flex: 1, width: '100%' }}
+          items={[
+            {
+              label: 'Serial',
+              children: volume.serial,
+            },
+            {
+              label: 'Chapters',
+              children: volume.chapter_count ?? 0,
+            },
+            {
+              label: 'Last Update',
+              children: formatDate(volume.updated_at),
+            },
+          ]}
+        />
+        {!hideChapters && (
+          <Button
+            shape="round"
+            type="primary"
+            onClick={createVolumeJob}
+            icon={<DownloadOutlined />}
+            style={{ width: lg ? 100 : '100%' }}
+          >
+            {lg ? 'Get All' : 'Get all chapters'}
+          </Button>
+        )}
+      </Flex>
 
-      {chapters.length > 0 && (
+      {hideChapters ? null : loading ? (
+        <Flex align="center" justify="center">
+          <Spin size="large" style={{ margin: '50px 0' }} />
+        </Flex>
+      ) : chapters.length > 0 ? (
         <ChapterListCard chapters={chapters} history={history} />
-      )}
+      ) : null}
     </Card>
   );
 };

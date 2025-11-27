@@ -142,6 +142,7 @@ class CrawlerService:
 
         # update db
         with ctx.db.session() as sess:
+            chapter.title = model.title
             chapter.is_done = bool(model.body)
             chapter.extra['crawler_version'] = crawler_version
             sess.add(chapter)

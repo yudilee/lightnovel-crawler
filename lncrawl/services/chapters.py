@@ -44,7 +44,7 @@ class ChapterService:
             if is_crawled is not None:
                 stmt = stmt.where(
                     col(Chapter.is_done).is_(true()) if is_crawled
-                    else col(Chapter.is_done).is_not(true())
+                    else col(Chapter.is_done).is_(False)
                 )
             stmt = stmt.order_by(col(Chapter.serial).asc())
             items = sess.exec(stmt).all()
@@ -67,7 +67,7 @@ class ChapterService:
             if is_crawled is not None:
                 stmt = stmt.where(
                     col(Chapter.is_done).is_(true()) if is_crawled
-                    else col(Chapter.is_done).is_not(true())
+                    else col(Chapter.is_done).is_(False)
                 )
             if descending:
                 stmt = stmt.order_by(col(Chapter.serial).desc())
