@@ -25,7 +25,8 @@ ENABLED_FORMATS = {
     ],
     UserTier.PREMIUM: [
         OutputFormat.epub,
-        OutputFormat.mobi,
+        OutputFormat.json,
+        OutputFormat.text,
     ],
     UserTier.VIP: list(OutputFormat)
 }
