@@ -6,6 +6,7 @@ ascii
 regex
 packaging
 html-clean
+openai
 lxml>=5.4.0,<7.0.0
 pyease-grpc>=1.6.0
 python-dotenv>=0.15.0,<2.0.0
@@ -28,7 +29,6 @@ python-box>=6.0.0,<8.0.0
 pycryptodome>=3.0.0,<4.0.0
 selenium>=3.141.0
 tenacity>=9.0.0
-openai>=2.8.1
 pyparsing >= 3.1.0
 pyOpenSSL >= 24.0.0
 brotli >= 1.1.0
