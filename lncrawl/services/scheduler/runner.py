@@ -246,10 +246,12 @@ class JobRunner:
                 added_types[job.type] = job.id
 
             if JobType.ARTIFACT_BATCH not in added_types:
+                available = ctx.binder.available_formats
+                enabled = set(ENABLED_FORMATS[self.user.tier])
                 ctx.jobs.make_many_artifacts(
                     self.user,
                     novel.id,
-                    *ENABLED_FORMATS[self.user.tier],
+                    *(enabled & available),
                     parent_id=self.job.id,
                     novel_title=novel.title,
                     depends_on=added_types[JobType.VOLUME_BATCH],
