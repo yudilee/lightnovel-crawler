@@ -17,27 +17,27 @@ import { useDispatch, useSelector } from 'react-redux';
 const items = [
   {
     key: NotificationItem.FULL_NOVEL_SUCCESS,
-    label: 'When full-novel available',
-  },
-  {
-    key: NotificationItem.JOB_RUNNING,
-    label: 'On any request start',
-  },
-  {
-    key: NotificationItem.JOB_SUCCESS,
-    label: 'On any request success',
-  },
-  {
-    key: NotificationItem.JOB_FAILURE,
-    label: 'On any request failure',
-  },
-  {
-    key: NotificationItem.JOB_CANCELED,
-    label: 'On any request cancel',
+    label: 'On full novel request success',
   },
   {
     key: NotificationItem.ARTIFACT_SUCCESS,
-    label: 'When new artifact available',
+    label: 'On create artifact request success',
+  },
+  {
+    key: NotificationItem.JOB_RUNNING,
+    label: 'When any request starts running',
+  },
+  {
+    key: NotificationItem.JOB_SUCCESS,
+    label: 'When any request is successful',
+  },
+  {
+    key: NotificationItem.JOB_FAILURE,
+    label: 'When any request failed',
+  },
+  {
+    key: NotificationItem.JOB_CANCELED,
+    label: 'When any request canceled',
   },
 ];
 

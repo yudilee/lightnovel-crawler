@@ -235,12 +235,28 @@ class UserService:
             return bool(verified)
 
     def set_verified(self, email: str) -> None:
+        if self.is_verified(email):
+            return
+
         with ctx.db.session() as sess:
-            verified = sess.get(VerifiedEmail, email)
-            if not verified:
-                row = VerifiedEmail(email=email)
-                sess.add(row)
-                sess.commit()
+            user = sess.exec(
+                select(User).where(User.email == email)
+            ).first()
+            if not user:
+                raise ServerErrors.no_such_user
+
+            row = VerifiedEmail(email=email)
+            sess.add(row)
+
+            if 'email_alerts' not in user.extra:
+                extra = dict(user.extra)
+                extra['email_alerts'] = {
+                    NotificationItem.ARTIFACT_SUCCESS: True,
+                    NotificationItem.FULL_NOVEL_SUCCESS: True,
+                }
+                user.extra = extra
+
+            sess.commit()
 
     def send_otp(self, email: str) -> str:
         with ctx.db.session() as sess:
