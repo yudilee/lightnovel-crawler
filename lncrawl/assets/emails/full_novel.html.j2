@@ -1,0 +1,141 @@
+{% extends "layout.html.j2" %}
+
+{% block head %}
+<title>Novel: {{ novel_title }}</title>
+<style>
+  main {
+    padding: 2rem;
+    max-width: 450px;
+    letter-spacing: 0.02rem;
+    align-items: flex-start;
+  }
+
+  .title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #222;
+  }
+
+  .subtitle {
+    color: #666;
+    font-size: 0.925rem;
+  }
+
+  .synopsis {
+    color: #888;
+    font-size: 0.825rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+
+  .artifacts {
+    background: #f7fafc;
+    border-radius: 0.5rem;
+    padding: 5px;
+    border: none;
+  }
+
+  .artifacts th {
+    color: #336;
+    font-size: 1rem;
+    font-family: monospace;
+    white-space: nowrap;
+    min-width: 50px;
+    vertical-align: top;
+  }
+
+  .artifacts a {
+    text-decoration: none;
+  }
+
+  .artifacts a:hover {
+    text-decoration: underline;
+  }
+
+  .artifacts .file-size {
+    color: #666;
+    white-space: nowrap;
+    font-size: 0.825rem;
+    font-family: monospace;
+    text-align: right;
+    vertical-align: top;
+  }
+
+  .button {
+    display: block;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    background: #276ef1;
+    align-self: center;
+
+    color: #fff;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+
+  .footer {
+    color: #aaa;
+    font-size: 0.8rem;
+  }
+
+  .link {
+    color: #2563eb;
+    word-break: break-all;
+  }
+
+  hr {
+    width: 100%;
+    opacity: 0.4;
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<main>
+  <div class="title">
+    {{ novel_title }}
+  </div>
+  <div class="subtitle">
+    <b>Author(s):</b> {{ novel_authors }} <br />
+    <b>Chapters:</b> {{ chapter_count }} | <b>Volumes:</b> {{ volume_count }}
+  </div>
+
+  {% if novel_synopsis %}
+  <hr />
+  <div class="synopsis">
+    {{ novel_synopsis }}
+  </div>
+  {% endif %}
+
+  {% if artifacts %}
+  <hr />
+  <b class="subtitle">Artifacts</b>
+  <table width="100%" class="artifacts" cellpadding="5px" cellspacing="5px">
+    {% for artifact in artifacts %}
+    <tr>
+      <th align="right">
+        {{ artifact.format }}
+      </th>
+      <td width="100%">
+        <a href="{{ artifact.url }}" target="_blank">
+          {{ artifact.name }}
+        </a>
+      </td>
+      <td class="file-size">
+        {{ artifact.size }}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+
+  <hr />
+  <a href="{{ job_url }}" target="_blank" class="button">
+    View Job Details
+  </a>
+</main>
+{% endblock %}

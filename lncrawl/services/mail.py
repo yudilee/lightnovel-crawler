@@ -9,8 +9,8 @@ import lxml.html
 from ..assets import emails
 from ..context import ctx
 from ..dao import Job, User
-from ..dao.enums import JobType
 from ..exceptions import ServerErrors
+from ..utils.file_tools import format_size
 
 logger = logging.getLogger(__name__)
 
@@ -80,12 +80,6 @@ class MailService:
         self.send(email, subject, body)
 
     def send_full_novel_job_success(self, user: User, job: Job):
-        if job.type != JobType.FULL_NOVEL:
-            return
-
-        if not ctx.users.is_verified(user.email):
-            return
-
         novel_id = job.extra.get('novel_id')
         if not novel_id:
             return
@@ -95,16 +89,17 @@ class MailService:
 
         base_url = ctx.config.server.base_url
         job_url = f'{base_url}/job/{job.id}'
-        novel_title = novel.title or "Unknown Title"
-        novel_authors = novel.authors or "Unknown Author"
+        novel_title = novel.title or "Unknown"
+        novel_authors = novel.authors or "Unknown"
         chapter_count = novel.chapter_count or "?"
         volume_count = novel.volume_count or "?"
-        novel_synopsis = novel.synopsis or "No synopsis available."
+        novel_synopsis = novel.synopsis or ""
 
-        token = ctx.users.generate_token(user)
+        token = ctx.users.generate_token(user, 30 * 24 * 60)
         artifacts = [
             {
                 'format': str(item.format),
+                'size': format_size(item.file_size),
                 'name': ctx.files.resolve(item.output_file).name,
                 'url': f'{base_url}/static/{item.output_file}?token={token}',
             } for item in artifacts.items
@@ -113,7 +108,7 @@ class MailService:
         if len(novel_synopsis) > 300:
             novel_synopsis = f'{novel_synopsis[:300]}...'
 
-        body = emails.job_template().render(
+        body = emails.job_full_novel_template().render(
             job_url=job_url,
             artifacts=artifacts,
             novel_title=novel_title,

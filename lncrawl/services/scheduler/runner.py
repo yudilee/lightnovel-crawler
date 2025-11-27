@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 
 from ...context import ctx
 from ...dao import Artifact, Job
-from ...dao.enums import JobStatus, JobType, OutputFormat
+from ...dao.enums import JobStatus, JobType, OutputFormat, NotificationItem
 from ...dao.tier import ENABLED_FORMATS
 from ...exceptions import AbortedException
 from ...utils.event_lock import EventLock
@@ -153,10 +153,30 @@ class JobRunner:
     def __send_mail(self):
         if self.job.parent_job_id:
             return
-        if self.job.status != JobStatus.SUCCESS:
+        if not ctx.users.is_verified(self.user.email):
             return
-        if self.job.type == JobType.FULL_NOVEL:
-            ctx.mail.send_full_novel_job_success(self.user, self.job)
+        alerts = self.user.extra.get('email_alerts') or {}
+        if alerts.get(NotificationItem.JOB_SUCCESS):
+            if self.job.status == JobStatus.SUCCESS:
+                pass
+        if alerts.get(NotificationItem.JOB_RUNNING):
+            if self.job.status == JobStatus.RUNNING:
+                pass
+        if alerts.get(NotificationItem.JOB_CANCELED):
+            if self.job.status == JobStatus.CANCELED:
+                pass
+        if alerts.get(NotificationItem.JOB_FAILURE):
+            if self.job.status == JobStatus.FAILED:
+                pass
+        if alerts.get(NotificationItem.ARTIFACT_SUCCESS):
+            if self.job.status == JobStatus.SUCCESS and (
+                self.job.type == JobType.ARTIFACT
+                or self.job.type == JobType.ARTIFACT_BATCH
+            ):
+                pass
+        if alerts.get(NotificationItem.FULL_NOVEL_SUCCESS):
+            if self.job.status == JobStatus.SUCCESS and self.job.type == JobType.FULL_NOVEL:
+                ctx.mail.send_full_novel_job_success(self.user, self.job)
 
     # ------------------------------------------------------------------ #
     #                             Job Runners                            #

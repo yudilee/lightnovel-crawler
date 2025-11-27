@@ -6,7 +6,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 ROOT = Path(__file__).parent
 
 
-@lru_cache
+# @lru_cache
 def get_jinja2_env():
     return Environment(
         loader=FileSystemLoader(str(ROOT)),
@@ -14,16 +14,16 @@ def get_jinja2_env():
     )
 
 
-@lru_cache
+# @lru_cache
 def otp_template():
-    return get_jinja2_env().get_template("otp.jinja2")
+    return get_jinja2_env().get_template("otp.html.j2")
 
 
-@lru_cache
-def job_template():
-    return get_jinja2_env().get_template("job.jinja2")
-
-
-@lru_cache
+# @lru_cache
 def repass_template():
-    return get_jinja2_env().get_template("repass.jinja2")
+    return get_jinja2_env().get_template("repass.html.j2")
+
+
+# @lru_cache
+def job_full_novel_template():
+    return get_jinja2_env().get_template("full_novel.html.j2")

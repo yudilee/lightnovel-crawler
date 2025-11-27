@@ -16,32 +16,28 @@ import { useDispatch, useSelector } from 'react-redux';
 
 const items = [
   {
+    key: NotificationItem.FULL_NOVEL_SUCCESS,
+    label: 'When full-novel available',
+  },
+  {
     key: NotificationItem.JOB_RUNNING,
-    label: 'On request start',
+    label: 'On any request start',
   },
   {
     key: NotificationItem.JOB_SUCCESS,
-    label: 'On request success',
+    label: 'On any request success',
   },
   {
     key: NotificationItem.JOB_FAILURE,
-    label: 'On request failure',
+    label: 'On any request failure',
   },
   {
     key: NotificationItem.JOB_CANCELED,
-    label: 'On request cancel',
-  },
-  {
-    key: NotificationItem.NOVEL_SUCCESS,
-    label: 'When new novel available',
+    label: 'On any request cancel',
   },
   {
     key: NotificationItem.ARTIFACT_SUCCESS,
     label: 'When new artifact available',
-  },
-  {
-    key: NotificationItem.FULL_NOVEL_SUCCESS,
-    label: 'When full-novel available',
   },
 ];
 
@@ -95,6 +91,7 @@ export const NotificationSettings: React.FC<any> = () => {
             <Space size="small">
               <Switch
                 loading={loading}
+                disabled={!verified}
                 value={notifications && notifications[key]}
                 onChange={(value) => updateNotification(key, value)}
               />

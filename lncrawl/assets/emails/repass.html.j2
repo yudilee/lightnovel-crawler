@@ -1,0 +1,77 @@
+{% extends "layout.html.j2" %}
+
+{% block head %}
+<title>Password Reset</title>
+<style>
+  main {
+    padding: 2rem;
+    max-width: 425px;
+    letter-spacing: 0.02rem;
+    text-align: center;
+  }
+
+  .title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 1rem;
+  }
+
+  .subtitle {
+    color: #666;
+  }
+
+  .button {
+    display: block;
+    margin-top: 1rem;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .notice {
+    color: #888;
+    font-size: 0.825rem;
+  }
+
+  .footer {
+    color: #aaa;
+    font-size: 0.8rem;
+  }
+
+  .link {
+    color: #2563eb;
+    word-break: break-all;
+  }
+
+  hr {
+    width: 100%;
+    opacity: 0.4;
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<main>
+  <div class="title">
+    Reset Your Password
+  </div>
+  <div class="subtitle">
+    We have received a request to reset your password. Click the button below to proceed.
+  </div>
+  <a href="{{ link }}" target="_blank" class="button">
+    Reset Password
+  </a>
+  <div class="notice">
+    This link will expire in <strong>5 minutes</strong>.
+  </div>
+  <hr />
+  <div class="footer">
+    If the button doesn’t work, follow this link:<br />
+    <a href="{{ link }}" target="_blank" class="link">{{ link }}</a>
+  </div>
+</main>
+{% endblock %}
