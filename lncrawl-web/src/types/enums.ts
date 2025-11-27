@@ -21,7 +21,7 @@ export type JobPriority = (typeof JobPriority)[keyof typeof JobPriority];
 export const JobStatus = {
   PENDING: 0,
   RUNNING: 1,
-  SUCCESS: 2,
+  SUCCESSFUL: 2,
   FAILED: 3,
   CANCELED: 4,
 };

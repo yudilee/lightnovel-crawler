@@ -21,7 +21,7 @@ T = TypeVar('T')
 
 job_alias = aliased(Job)
 job_status_type = Job.__table__.c.status.type  # type: ignore
-job_success_literal = cast(literal(JobStatus.SUCCESS.name), job_status_type)
+job_success_literal = cast(literal(JobStatus.SUCCESSFUL.name), job_status_type)
 job_running_literal = cast(literal(JobStatus.RUNNING.name), job_status_type)
 
 

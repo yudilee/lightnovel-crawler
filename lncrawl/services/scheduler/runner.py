@@ -157,25 +157,25 @@ class JobRunner:
             return
         alerts = self.user.extra.get('email_alerts') or {}
         if alerts.get(NotificationItem.JOB_SUCCESS):
-            if self.job.status == JobStatus.SUCCESS:
-                pass
+            if self.job.status == JobStatus.SUCCESSFUL:
+                ctx.mail.send_job_report(self.user, self.job)
         if alerts.get(NotificationItem.JOB_RUNNING):
             if self.job.status == JobStatus.RUNNING:
-                pass
+                ctx.mail.send_job_report(self.user, self.job)
         if alerts.get(NotificationItem.JOB_CANCELED):
             if self.job.status == JobStatus.CANCELED:
-                pass
+                ctx.mail.send_job_report(self.user, self.job)
         if alerts.get(NotificationItem.JOB_FAILURE):
             if self.job.status == JobStatus.FAILED:
-                pass
+                ctx.mail.send_job_report(self.user, self.job)
         if alerts.get(NotificationItem.ARTIFACT_SUCCESS):
-            if self.job.status == JobStatus.SUCCESS and (
+            if self.job.status == JobStatus.SUCCESSFUL and (
                 self.job.type == JobType.ARTIFACT
                 or self.job.type == JobType.ARTIFACT_BATCH
             ):
-                pass
+                ctx.mail.send_full_novel_job_success(self.user, self.job)
         if alerts.get(NotificationItem.FULL_NOVEL_SUCCESS):
-            if self.job.status == JobStatus.SUCCESS and self.job.type == JobType.FULL_NOVEL:
+            if self.job.status == JobStatus.SUCCESSFUL and self.job.type == JobType.FULL_NOVEL:
                 ctx.mail.send_full_novel_job_success(self.user, self.job)
 
     # ------------------------------------------------------------------ #

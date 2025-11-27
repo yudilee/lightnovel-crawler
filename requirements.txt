@@ -1,12 +1,13 @@
 # app requirements
 zstd
 typer[all]
-httpx[http2,brotli,zstd]
+httpx[http2,brotli]
 ascii
 regex
 packaging
 html-clean
 openai
+humanize
 lxml>=5.4.0,<7.0.0
 pyease-grpc>=1.6.0
 python-dotenv>=0.15.0,<2.0.0

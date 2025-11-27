@@ -6,6 +6,7 @@ from sqlmodel import SQLModel
 from .artifact import Artifact
 from .chapter import Chapter
 from .chapter_image import ChapterImage
+from .enums import *  # noqa: F401,F403
 from .job import Job
 from .migration import Migration
 from .novel import Novel

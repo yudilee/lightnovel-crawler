@@ -8,7 +8,7 @@ export const JobStatusFilterParams = [
   {
     value: 'successful',
     label: 'Successful',
-    params: { status: JobStatus.SUCCESS },
+    params: { status: JobStatus.SUCCESSFUL },
   },
   {
     value: 'failed',

@@ -1,14 +1,5 @@
 from enum import Enum, IntEnum
 
-__all__ = [
-    'OutputFormat',
-    'UserRole',
-    'UserTier',
-    'JobStatus',
-    'JobPriority',
-    'JobType',
-]
-
 
 class UserRole(str, Enum):
     USER = "user"
@@ -39,7 +30,7 @@ class JobType(IntEnum):
 class JobStatus(IntEnum):
     PENDING = 0
     RUNNING = 1
-    SUCCESS = 2
+    SUCCESSFUL = 2
     FAILED = 3
     CANCELED = 4
 
