@@ -183,7 +183,8 @@ class UserService:
                 password=self._hash(body.password),
                 extra=dict(
                     email_alerts={
-                        NotificationItem.FULL_NOVEL_SUCCESS: True
+                        NotificationItem.ARTIFACT_SUCCESS: True,
+                        NotificationItem.FULL_NOVEL_SUCCESS: True,
                     },
                 )
             )
@@ -209,7 +210,9 @@ class UserService:
             if body.is_active is not None:
                 user.is_active = body.is_active
             if body.extra is not None:
-                user.extra.update(body.extra)
+                extra = dict(user.extra)
+                extra.update(body.extra)
+                user.extra = extra
 
             sess.commit()
 
