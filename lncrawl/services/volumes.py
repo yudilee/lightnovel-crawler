@@ -6,8 +6,7 @@ from sqlalchemy import update as sa_update
 from sqlmodel import case, col, func, select
 
 from ..context import ctx
-from ..dao import User, Volume
-from ..dao.enums import UserRole
+from ..dao import User, UserRole, Volume
 from ..exceptions import ServerErrors
 from ..models.volume import Volume as ModelVolume
 

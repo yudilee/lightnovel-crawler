@@ -6,8 +6,7 @@ from threading import Event
 from typing import Optional
 
 from ...context import ctx
-from ...dao import Artifact
-from ...dao.enums import OutputFormat
+from ...dao import Artifact, OutputFormat
 from ...exceptions import AbortedException, ServerErrors
 from ...utils.event_lock import EventLock
 

@@ -5,8 +5,7 @@ from threading import Event
 from typing import Callable, Dict, Optional, Set
 
 from ...context import ctx
-from ...dao import Artifact
-from ...dao.enums import OutputFormat
+from ...dao import Artifact, OutputFormat
 from ...exceptions import ServerErrors
 from ...utils.file_tools import safe_filename
 from .calibre import convert_epub, is_calibre_available

@@ -2,7 +2,7 @@ from typing import List
 
 from pydantic import BaseModel, Field, HttpUrl
 
-from ...dao.enums import OutputFormat
+from ...dao import OutputFormat
 
 
 class FetchNovelRequest(BaseModel):

@@ -3,8 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Body, Path, Query, Security
 
 from ...context import ctx
-from ...dao import Job, User
-from ...dao.enums import JobPriority, JobStatus, JobType, UserRole
+from ...dao import Job, JobPriority, JobStatus, JobType, User, UserRole
 from ...exceptions import ServerErrors
 from ..models.job import (FetchChaptersRequest, FetchImagesRequest,
                           FetchNovelRequest, FetchVolumesRequest,

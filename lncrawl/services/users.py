@@ -11,8 +11,7 @@ from passlib.context import CryptContext
 from sqlmodel import String, and_, asc, cast, col, func, or_, select
 
 from ..context import ctx
-from ..dao import User, VerifiedEmail
-from ..dao.enums import NotificationItem, UserRole, UserTier
+from ..dao import NotificationItem, User, UserRole, UserTier, VerifiedEmail
 from ..exceptions import ServerErrors
 from ..server.models.pagination import Paginated
 from ..server.models.user import (CreateRequest, LoginRequest,

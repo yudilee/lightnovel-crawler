@@ -3,8 +3,7 @@ from typing import List, Optional
 from sqlmodel import and_, asc, desc, func, select
 
 from ..context import ctx
-from ..dao import Artifact, User
-from ..dao.enums import OutputFormat, UserRole
+from ..dao import Artifact, OutputFormat, User, UserRole
 from ..exceptions import ServerErrors
 from ..server.models.pagination import Paginated
 

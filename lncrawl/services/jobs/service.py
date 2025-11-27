@@ -8,9 +8,8 @@ from sqlmodel import (Session, and_, asc, case, cast, col, desc, func, literal,
                       or_, select, true)
 
 from ...context import ctx
-from ...dao import Job, User
-from ...dao.enums import (JobPriority, JobStatus, JobType, OutputFormat,
-                          UserRole)
+from ...dao import (Job, JobPriority, JobStatus, JobType, OutputFormat, User,
+                    UserRole)
 from ...dao.tier import JOB_PRIORITY_LEVEL
 from ...exceptions import ServerErrors
 from ...server.models.pagination import Paginated

@@ -5,8 +5,8 @@ from threading import Event
 from typing import Any, Dict, Optional
 
 from ...context import ctx
-from ...dao import Artifact, Job
-from ...dao.enums import JobStatus, JobType, OutputFormat, NotificationItem
+from ...dao import (Artifact, Job, JobStatus, JobType, NotificationItem,
+                    OutputFormat)
 from ...dao.tier import ENABLED_FORMATS
 from ...exceptions import AbortedException
 from ...utils.event_lock import EventLock

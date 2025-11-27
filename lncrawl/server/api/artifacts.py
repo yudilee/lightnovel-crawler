@@ -3,8 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Path, Query, Security
 
 from ...context import ctx
-from ...dao import Artifact
-from ...dao.enums import OutputFormat
+from ...dao import Artifact, OutputFormat
 from ..models.pagination import Paginated
 from ..security import ensure_user
 

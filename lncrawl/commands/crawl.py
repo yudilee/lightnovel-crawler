@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Tuple, Optional, Set, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import questionary
 import typer
@@ -8,12 +8,10 @@ from rich.console import Console
 from rich.panel import Panel
 
 from ..context import ctx
-from ..dao import Artifact, Chapter, Novel, Volume
-from ..dao.enums import OutputFormat
+from ..dao import Artifact, Chapter, Novel, OutputFormat, Volume
 from ..exceptions import ServerError
 from ..utils.file_tools import format_size, open_folder
 from ..utils.url_tools import validate_url
-
 
 app = typer.Typer()
 console = Console()
