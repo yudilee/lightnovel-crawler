@@ -11,7 +11,8 @@
       & > * {
         cursor: pointer;
       }
-      & > [data-speak='true'] {
+
+      & > [data-focus] {
         border-radius: 5px;
         outline-offset: 7px;
         outline: 1px solid rgba(241, 108, 111, 0.5);

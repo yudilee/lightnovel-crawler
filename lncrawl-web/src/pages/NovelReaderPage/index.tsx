@@ -1,4 +1,4 @@
-import './fonts.scss';
+import './fonts.css';
 import './index.scss';
 
 import { store } from '@/store';
@@ -49,14 +49,32 @@ export const NovelReaderPage: React.FC<any> = () => {
   const [data, setData] = useState<ReadChapter>();
 
   useEffect(() => {
+    setData(undefined);
+    setError(undefined);
     if (id) {
-      setError(undefined);
+      setLoading(true);
       fetchChapterCached(id)
         .then(setData)
         .catch((err) => setError(stringifyError(err)))
         .finally(() => setLoading(false));
     }
   }, [id, token, refreshId]);
+
+  useEffect(() => {
+    if (!loading) {
+      store.dispatch(Reader.action.setSepakPosition(0));
+      if (!data?.content) {
+        store.dispatch(Reader.action.setSpeaking(false));
+      }
+    }
+    const fid = requestAnimationFrame(() => {
+      const mainEl = document.querySelector('main');
+      if (mainEl) {
+        mainEl.scrollTop = 0;
+      }
+    });
+    return () => cancelAnimationFrame(fid);
+  }, [loading, data?.content]);
 
   useEffect(() => {
     if (data?.next_id) {
@@ -69,17 +87,6 @@ export const NovelReaderPage: React.FC<any> = () => {
       fetchChapterCached(data.previous_id);
     }
   }, [data?.previous_id]);
-
-  useEffect(() => {
-    store.dispatch(Reader.action.setSepakPosition(0));
-    const fid = requestAnimationFrame(() => {
-      const mainEl = document.querySelector('main');
-      if (mainEl) {
-        mainEl.scrollTop = 0;
-      }
-    });
-    return () => cancelAnimationFrame(fid);
-  }, [data]);
 
   if (loading) {
     return (
@@ -104,5 +111,5 @@ export const NovelReaderPage: React.FC<any> = () => {
     );
   }
 
-  return <ReaderVerticalLayout data={data} />;
+  return <ReaderVerticalLayout key={id} data={data} />;
 };

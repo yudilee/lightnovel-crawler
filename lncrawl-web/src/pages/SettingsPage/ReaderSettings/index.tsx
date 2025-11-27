@@ -4,7 +4,9 @@ import { ReaderFontSizeSettings } from './FontSizeSettings';
 import { ReaderLineHeightSettings } from './LineHeightSettings';
 import { ReaderThemeSettings } from './ThemeSettings';
 import type { ReaderSettingsItem } from './types';
+import { ReaderVoicePitchSettings } from './VoicePitch';
 import { ReaderVoiceSettings } from './VoiceSettings';
+import { ReaderVoiceSpeedSettings } from './VoiceSpeed';
 
 const items: ReaderSettingsItem[] = [
   // ReaderLayoutSettings,
@@ -13,6 +15,8 @@ const items: ReaderSettingsItem[] = [
   ReaderFontSizeSettings,
   ReaderLineHeightSettings,
   ReaderVoiceSettings,
+  ReaderVoicePitchSettings,
+  ReaderVoiceSpeedSettings,
 ];
 
 export const ReaderSettings = () => {

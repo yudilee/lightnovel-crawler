@@ -11,6 +11,8 @@ import type { RootState } from '.';
 
 export interface ReaderState {
   voice: string | undefined;
+  voiceSpeed: number;
+  voicePitch: number;
   speaking: boolean;
   speakPosition: number;
   fontSize: number;
@@ -25,6 +27,8 @@ const buildInitialState = (): ReaderState => ({
   speaking: false,
   speakPosition: 0,
   voice: undefined,
+  voiceSpeed: 1,
+  voicePitch: 1,
   fontSize: 16,
   lineHeight: 1.4,
   theme: ReaderTheme.Dark,
@@ -62,6 +66,12 @@ export const ReaderSlice = createSlice({
     setSepakPosition(state, action: PayloadAction<number>) {
       state.speakPosition = action.payload;
     },
+    setVoicePitch(state, action: PayloadAction<number>) {
+      state.voicePitch = action.payload;
+    },
+    setVoiceSpeed(state, action: PayloadAction<number>) {
+      state.voiceSpeed = action.payload;
+    },
   },
 });
 
@@ -79,6 +89,8 @@ export const Reader = {
     fontFamily: createSelector(selectReader, (reader) => reader.fontFamily),
     lineHeight: createSelector(selectReader, (reader) => reader.lineHeight),
     voice: createSelector(selectReader, (reader) => reader.voice),
+    voiceSpeed: createSelector(selectReader, (reader) => reader.voiceSpeed),
+    voicePitch: createSelector(selectReader, (reader) => reader.voicePitch),
     speaking: createSelector(selectReader, (reader) => reader.speaking),
     speakPosition: createSelector(
       selectReader,

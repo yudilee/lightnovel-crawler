@@ -5,15 +5,14 @@ import { NotificationSettings } from './NotificationSettings';
 
 const items: CollapseProps['items'] = [
   {
-    key: 'reader',
-    label: 'Reader',
-    children: <ReaderSettings />,
-  },
-
-  {
     key: 'notifications',
     label: 'Notifications',
     children: <NotificationSettings />,
+  },
+  {
+    key: 'reader',
+    label: 'Reader',
+    children: <ReaderSettings />,
   },
 ];
 
