@@ -2,71 +2,59 @@
 
 {% block head %}
 <title>Password Reset</title>
-<style>
-  main {
+{% endblock %}
+
+{% block content %}
+<div style="
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.6rem;
     padding: 2rem;
     max-width: 425px;
     letter-spacing: 0.02rem;
     text-align: center;
-  }
-
-  .title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #222;
-    margin-bottom: 1rem;
-  }
-
-  .subtitle {
-    color: #666;
-  }
-
-  .button {
-    display: block;
-    margin-top: 1rem;
-    padding: 1rem 2rem;
-    border-radius: 8px;
-    background: #2563eb;
-    color: #fff;
-    font-weight: 600;
-    text-decoration: none;
-  }
-
-  .notice {
-    color: #888;
-    font-size: 0.825rem;
-  }
-
-  .footer {
-    color: #aaa;
-    font-size: 0.8rem;
-  }
-
-  .link {
-    color: #2563eb;
-    word-break: break-all;
-  }
-</style>
-{% endblock %}
-
-{% block body %}
-<main>
-  <div class="title">
-    Reset Your Password
-  </div>
-  <div class="subtitle">
-    We have received a request to reset your password. Click the button below to proceed.
-  </div>
-  <a href="{{ link }}" target="_blank" class="button">
-    Reset Password
-  </a>
-  <div class="notice">
-    This link will expire in <strong>5 minutes</strong>.
-  </div>
-  <hr />
-  <div class="footer">
-    If the button doesn’t work, follow this link:<br />
-    <a href="{{ link }}" target="_blank" class="link">{{ link }}</a>
-  </div>
-</main>
+">
+    <div class="title" style="
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #222;
+        margin-bottom: 1rem;
+    ">
+        Reset Your Password
+    </div>
+    <div class="subtitle" style="color: #666">
+        We have received a request to reset your password. Click the button below to proceed.
+    </div>
+    <a href="{{ link }}" target="_blank" style="
+        display: block;
+        margin-top: 1rem;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        background: #2563eb;
+        color: #fff;
+        font-weight: 600;
+        text-decoration: none;
+    ">
+        Reset Password
+    </a>
+    <div style="
+        color: #888;
+        font-size: 0.825rem;
+    ">
+        This link will expire in <strong>5 minutes</strong>.
+    </div>
+    <hr style="width: 100%; opacity: 0.3;" />
+    <div class="footer" style="
+        color: #aaa;
+        font-size: 0.8rem;
+    ">
+        If the button doesn’t work, follow this link:<br />
+        <a href="{{ link }}" target="_blank" style="
+            color: #2563eb;
+            word-break: break-all;
+        ">{{ link }}</a>
+    </div>
+</div>
 {% endblock %}

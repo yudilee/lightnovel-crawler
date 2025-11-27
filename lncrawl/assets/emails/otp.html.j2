@@ -2,46 +2,39 @@
 
 {% block head %}
 <title>Email Verification Code</title>
-<style>
-  main {
-    padding: 2rem 3rem;
-    text-align: center;
-  }
-
-  .title {
-    font-size: 1.1rem;
-  }
-
-  .otp {
-    color: #276ef1;
-    font-family: monospace;
-    font-size: 2.5rem;
-    font-weight: 700;
-    letter-spacing: 0.5rem;
-
-    padding: 1rem 2rem;
-    border-radius: 1rem;
-    background: #f0f4ff;
-    box-shadow: 0 2px 8px rgba(39, 110, 241, 0.06);
-  }
-
-  .footer {
-    font-size: 0.875rem;
-    color: #888;
-  }
-</style>
 {% endblock %}
 
-{% block body %}
-<main>
-  <div class="title">
-    Your email verification code is
-  </div>
-  <div class="otp">
-    {{otp}}
-  </div>
-  <div class="footer">
-    This code will expire in 5 minutes.
-  </div>
-</main>
+{% block content %}
+<div style="
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 2rem 3rem;
+    text-align: center;
+">
+    <div style="font-size: 1.1rem">
+        Your email verification code is
+    </div>
+    <div style="
+        color: #276ef1;
+        font-family: monospace;
+        font-size: 2.5rem;
+        font-weight: 700;
+        letter-spacing: 0.5rem;
+        padding: 1rem 2rem;
+        border-radius: 1rem;
+        background: #f0f4ff;
+        box-shadow: 0 2px 8px rgba(39, 110, 241, 0.06);
+    ">
+        {{otp}}
+    </div>
+    <div style="
+        font-size: 0.875rem;
+        color: #888;
+    ">
+        This code will expire in 5 minutes.
+    </div>
+</div>
 {% endblock %}
