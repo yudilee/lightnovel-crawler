@@ -6,14 +6,42 @@ import { type User } from '@/types';
 import { formatDate } from '@/utils/time';
 import { CalendarOutlined } from '@ant-design/icons';
 import { Card, Col, Flex, Grid, Row, Space, Typography } from 'antd';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import md5 from 'spark-md5';
 import { UserActionButtons } from './UserActionButtons';
+
+const getGravatarProfile = async (email: string) => {
+  const hash = md5.hash(email.trim().toLowerCase());
+  const key = `__gravatar_${hash}`;
+  const cache = localStorage.getItem(key);
+  if (cache) {
+    return JSON.parse(cache);
+  }
+
+  const resp = await fetch(`https://en.gravatar.com/${hash}.json`);
+  const json = await resp.json();
+  const data = json.entry;
+  localStorage.setItem(key, JSON.stringify(data));
+  return data;
+};
 
 export const UserListItemCard: React.FC<{
   user: User;
   onChange?: () => any;
 }> = ({ user, onChange }) => {
   const { lg } = Grid.useBreakpoint();
+
+  const [displayName, setDisplayName] = useState(user.name?.trim());
+
+  useEffect(() => {
+    if (!user.name?.trim()) {
+      getGravatarProfile(user.email)
+        .then((p) => setDisplayName(p.displayName))
+        .catch(console.error);
+    }
+  }, [user.name, user.email]);
+
   return (
     <Card
       style={{ marginBottom: 5 }}
@@ -29,21 +57,25 @@ export const UserListItemCard: React.FC<{
               user={user}
               style={{ backgroundColor: '#1890ff' }}
             />
-            <Flex vertical>
-              <Typography.Text strong>
-                <Link to={`/admin/user/${user.id}`}>{user.name}</Link>
-              </Typography.Text>
-              <Typography.Text
-                style={{ whiteSpace: 'pre-wrap' }}
-                type={user.name.trim() ? 'secondary' : undefined}
-              >
-                {user.name.trim() ? (
-                  user.email
-                ) : (
+            {displayName ? (
+              <Flex vertical>
+                <Typography.Text strong>
+                  <Link to={`/admin/user/${user.id}`}>{displayName}</Link>
+                </Typography.Text>
+                <Typography.Text
+                  type={'secondary'}
+                  style={{ whiteSpace: 'pre-wrap' }}
+                >
+                  {user.email}
+                </Typography.Text>
+              </Flex>
+            ) : (
+              <Flex vertical>
+                <Typography.Text style={{ whiteSpace: 'pre-wrap' }}>
                   <Link to={`/admin/user/${user.id}`}>{user.email}</Link>
-                )}
-              </Typography.Text>
-            </Flex>
+                </Typography.Text>
+              </Flex>
+            )}
           </Space>
         </Col>
 
