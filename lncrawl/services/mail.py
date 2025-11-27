@@ -136,7 +136,7 @@ class MailService:
             started_at=format_time(job.started_at),
             finished_at=format_time(job.finished_at),
             is_running=job.status == JobStatus.RUNNING,
-            is_success=job.status == JobStatus.SUCCESSFUL,
+            is_success=job.status == JobStatus.SUCCESS,
             is_canceled=job.status == JobStatus.CANCELED,
             is_failed=job.status == JobStatus.FAILED,
         )

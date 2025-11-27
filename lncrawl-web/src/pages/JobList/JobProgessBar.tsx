@@ -7,7 +7,7 @@ function getProgressStatus(job: Job): ProgressProps['status'] {
       return 'normal';
     case JobStatus.RUNNING:
       return 'active';
-    case JobStatus.SUCCESSFUL:
+    case JobStatus.SUCCESS:
       return 'success';
     case JobStatus.FAILED:
     case JobStatus.CANCELED:

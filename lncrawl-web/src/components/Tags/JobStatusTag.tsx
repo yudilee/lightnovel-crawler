@@ -18,7 +18,7 @@ export const JobStatusTag: React.FC<{ value: JobStatus }> = ({ value }) => {
           Running
         </Tag>
       );
-    case JobStatus.SUCCESSFUL:
+    case JobStatus.SUCCESS:
       return (
         <Tag icon={<CheckOutlined />} color="orange">
           Success

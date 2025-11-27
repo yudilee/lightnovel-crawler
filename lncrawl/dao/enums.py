@@ -30,7 +30,7 @@ class JobType(IntEnum):
 class JobStatus(IntEnum):
     PENDING = 0
     RUNNING = 1
-    SUCCESSFUL = 2
+    SUCCESS = 2
     FAILED = 3
     CANCELED = 4
 
