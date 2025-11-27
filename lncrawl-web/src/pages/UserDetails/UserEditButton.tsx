@@ -95,7 +95,14 @@ export const UserEditButton: React.FC<
           <Form.Item
             name="name"
             label="Full Name"
-            rules={[{ min: 2, message: 'Name must be at least 2 characters' }]}
+            rules={[
+              {
+                validator: (_, value) =>
+                  value && value.trim().length >= 2
+                    ? Promise.resolve()
+                    : Promise.reject('Please enter a valid name'),
+              },
+            ]}
           >
             <Input placeholder="Enter full name" autoComplete="name" />
           </Form.Item>

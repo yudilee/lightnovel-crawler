@@ -37,8 +37,12 @@ export const SignupPage: React.FC<any> = () => {
         name="name"
         label="Full Name"
         rules={[
-          { required: true, message: 'Please enter your name' },
-          { min: 2, message: 'Name must be at least 2 characters' },
+          {
+            validator: (_, value) =>
+              value && value.trim().length >= 2
+                ? Promise.resolve()
+                : Promise.reject('Please enter a valid name'),
+          },
         ]}
       >
         <Input placeholder="Enter full name" autoComplete="name" />

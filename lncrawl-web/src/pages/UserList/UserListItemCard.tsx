@@ -34,10 +34,14 @@ export const UserListItemCard: React.FC<{
                 <Link to={`/admin/user/${user.id}`}>{user.name}</Link>
               </Typography.Text>
               <Typography.Text
-                type={user.name ? 'secondary' : undefined}
                 style={{ whiteSpace: 'pre-wrap' }}
+                type={user.name.trim() ? 'secondary' : undefined}
               >
-                {user.email}
+                {user.name.trim() ? (
+                  user.email
+                ) : (
+                  <Link to={`/admin/user/${user.id}`}>{user.email}</Link>
+                )}
               </Typography.Text>
             </Flex>
           </Space>
