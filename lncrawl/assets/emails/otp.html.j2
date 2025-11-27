@@ -1,16 +1,12 @@
 {% extends "layout.html.j2" %}
 
-{% block head %}
-<title>Email Verification Code</title>
-{% endblock %}
-
 {% block content %}
 <div style="
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 0.6rem;
+    max-width: 350px;
+    overflow: hidden;
+    background: #fff;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     padding: 2rem 3rem;
     text-align: center;
 ">
@@ -23,6 +19,8 @@
         font-size: 2.5rem;
         font-weight: 700;
         letter-spacing: 0.5rem;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
         padding: 1rem 2rem;
         border-radius: 1rem;
         background: #f0f4ff;

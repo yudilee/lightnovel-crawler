@@ -37,6 +37,8 @@ class JobRunner:
 
         try:
             JobRunner(job, _queue[job.id]).process()
+        except Exception:
+            logger.error('Unexpected error during process', exc_info=True)
         finally:
             with _lock.using(signal):
                 if job.id in _queue:
@@ -155,27 +157,35 @@ class JobRunner:
             return
         if not ctx.users.is_verified(self.user.email):
             return
-        alerts = self.user.extra.get('email_alerts') or {}
-        if alerts.get(NotificationItem.JOB_SUCCESS):
+        email_alerts = self.user.extra.get('email_alerts') or {}
+        alert_items = set([
+            NotificationItem(int(k))
+            for k, v in email_alerts.items()
+            if v and int(k) in list(NotificationItem)
+        ])
+        if NotificationItem.JOB_SUCCESS in alert_items:
             if self.job.status == JobStatus.SUCCESS:
                 ctx.mail.send_job_report(self.user, self.job)
-        if alerts.get(NotificationItem.JOB_RUNNING):
+        if NotificationItem.JOB_RUNNING in alert_items:
             if self.job.status == JobStatus.RUNNING:
                 ctx.mail.send_job_report(self.user, self.job)
-        if alerts.get(NotificationItem.JOB_CANCELED):
+        if NotificationItem.JOB_CANCELED in alert_items:
             if self.job.status == JobStatus.CANCELED:
                 ctx.mail.send_job_report(self.user, self.job)
-        if alerts.get(NotificationItem.JOB_FAILURE):
+        if NotificationItem.JOB_FAILURE in alert_items:
             if self.job.status == JobStatus.FAILED:
                 ctx.mail.send_job_report(self.user, self.job)
-        if alerts.get(NotificationItem.ARTIFACT_SUCCESS):
+        if NotificationItem.NOVEL_SUCCESS in alert_items:
+            if self.job.status == JobStatus.SUCCESS and (
+                self.job.type == JobType.FULL_NOVEL
+                or self.job.type == JobType.NOVEL
+            ):
+                ctx.mail.send_full_novel_job_success(self.user, self.job)
+        if NotificationItem.ARTIFACT_SUCCESS in alert_items:
             if self.job.status == JobStatus.SUCCESS and (
                 self.job.type == JobType.ARTIFACT
                 or self.job.type == JobType.ARTIFACT_BATCH
             ):
-                ctx.mail.send_full_novel_job_success(self.user, self.job)
-        if alerts.get(NotificationItem.FULL_NOVEL_SUCCESS):
-            if self.job.status == JobStatus.SUCCESS and self.job.type == JobType.FULL_NOVEL:
                 ctx.mail.send_full_novel_job_success(self.user, self.job)
 
     # ------------------------------------------------------------------ #

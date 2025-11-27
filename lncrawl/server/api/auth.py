@@ -87,6 +87,7 @@ def reset_password_with_token(
 ) -> bool:
     request = UpdateRequest(password=body.password)
     ctx.users.update(user.id, request)
+    ctx.users.set_verified(user.email)
     return True
 
 

@@ -185,7 +185,6 @@ class Config(object):
 class AppConfig(_Section):
     section = "app"
     name = "Lightnovel Crawler"
-    _secret = str(uuid.uuid4())
 
     @cached_property
     def version(self) -> str:
@@ -343,7 +342,7 @@ class ServerConfig(_Section):
 
     @property
     def token_secret(self) -> str:
-        return self._get("token_secret", "")
+        return self._get("token_secret", lambda: str(uuid.uuid4()))
 
     @token_secret.setter
     def token_secret(self, v: Optional[str]) -> None:

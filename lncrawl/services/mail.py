@@ -8,10 +8,9 @@ import lxml.html
 
 from ..assets import emails
 from ..context import ctx
-from ..dao import Job, User, JobStatus
+from ..dao import Job, JobStatus, User
 from ..exceptions import ServerErrors
 from ..utils.file_tools import format_size
-from ..utils.time_utils import format_time
 
 logger = logging.getLogger(__name__)
 
@@ -125,16 +124,15 @@ class MailService:
         base_url = ctx.config.server.base_url
         job_url = f'{base_url}/job/{job.id}'
         error = (job.error or '').strip().split('\n')[-1]
-        subject = f'Job {job.status.name.lower().title()}'
         job_type = job.type.name.lower().replace('_', ' ').title()
+        job_status = job.status.name.lower().replace('_', ' ').title()
+        subject = f'{job_status}: {job_type}'
         body = emails.job_status_template().render(
-            title=subject,
             failure=error,
             job_url=job_url,
             job_type=job_type,
-            created_at=format_time(job.created_at),
-            started_at=format_time(job.started_at),
-            finished_at=format_time(job.finished_at),
+            job_status=job_status,
+            job_title=job.job_title,
             is_running=job.status == JobStatus.RUNNING,
             is_success=job.status == JobStatus.SUCCESS,
             is_canceled=job.status == JobStatus.CANCELED,

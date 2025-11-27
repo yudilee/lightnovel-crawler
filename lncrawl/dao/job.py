@@ -88,3 +88,70 @@ class Job(BaseTable, table=True):
     def progress(self) -> int:
         '''Progress percetage (value is between 0 to 100)'''
         return (100 * self.done) // self.total
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def job_title(self) -> str:
+        if (
+            self.type == JobType.NOVEL
+            or self.type == JobType.FULL_NOVEL
+        ):
+            return self.extra.get('url')
+
+        if (
+            self.type == JobType.NOVEL_BATCH
+            or self.type == JobType.FULL_NOVEL_BATCH
+        ):
+            urls = self.extra.get('urls') or []
+            if len(urls) == 1:
+                return urls[0]
+            else:
+                return f'{urls[0]} & {len(urls) - 1} more'
+
+        novel_title = self.extra.get('novel_title')
+        ids = self.extra.get('image_ids') or []
+        if novel_title:
+            novel_title += ' · '
+        else:
+            novel_title = 'Fetch '
+
+        if self.type == JobType.VOLUME:
+            volume_serial = self.extra.get('volume_serial') or ''
+            if volume_serial:
+                return f'{novel_title}Volume {volume_serial}'
+            else:
+                return f'{novel_title}Volume'
+
+        if self.type == JobType.VOLUME_BATCH:
+            ids = self.extra.get('volume_ids') or []
+            return f'{novel_title}{len(ids)} Volumes'
+
+        if self.type == JobType.CHAPTER:
+            chapter_serial = self.extra.get('chapter_serial')
+            if chapter_serial:
+                return f'{novel_title}Chapter {chapter_serial}'
+            else:
+                return f'{novel_title}Chapter'
+        if self.type == JobType.CHAPTER_BATCH:
+            ids = self.extra.get('chapter_ids') or []
+            return f'{novel_title}{len(ids)} Chapters'
+
+        if self.type == JobType.IMAGE:
+            return self.extra.get('url') or f'{novel_title}1 Image'
+
+        if self.type == JobType.IMAGE_BATCH:
+            ids = self.extra.get('image_ids') or []
+            return f'{novel_title}{len(ids)} Images'
+
+        if self.type == JobType.ARTIFACT:
+            format = self.extra.get('format') or 'Artifact'
+            return f'{novel_title}{format}'
+
+        if self.type == JobType.ARTIFACT_BATCH:
+            formats = self.extra.get('formats') or []
+            if len(formats) <= 2:
+                return f"{novel_title}{', '.join(formats)}"
+            else:
+                return f"{novel_title}{', '.join(formats[:2])} & {len(urls) - 2} more"
+
+        return None

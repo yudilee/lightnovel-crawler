@@ -1,38 +1,30 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    {% block head %}{% endblock %}
-</head>
-
 <body style="
     margin: 0;
-    padding: 2rem;
-    font-family: sans-serif;
+    padding: 0;
     background-color: #f2fafc;
 ">
-    <main style="
-        max-width: fit-content;
-        margin: auto;
-        overflow: hidden;
-        background: #fff;
-        border-radius: 0.5rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    ">
-        {% block content %}{% endblock %}
-    </main>
-    <footer style="
-        user-select: none;
-        color: #888;
-        text-align: center;
-        font-size: 0.75rem;
-        margin: 1rem auto;
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="
+        margin: 0;
+        padding: 2rem;
         font-family: sans-serif;
+        background-color: #f2fafc;
     ">
-        This is an automated message. Please do not reply.
-    </footer>
+        <tr>
+            <td align="center">
+                {% block content %}{% endblock %}
+            </td>
+        </tr>
+        <tr>
+            <td align="center" style="
+                user-select: none;
+                padding: 1rem;
+                color: #888;
+                text-align: center;
+                font-size: 0.75rem;
+                font-family: sans-serif;
+            ">
+                This is an automated message. Please do not reply.
+            </td>
+        </tr>
+    </table>
 </body>
-
-</html>

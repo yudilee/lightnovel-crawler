@@ -183,8 +183,8 @@ class UserService:
                 password=self._hash(body.password),
                 extra=dict(
                     email_alerts={
-                        NotificationItem.ARTIFACT_SUCCESS: True,
-                        NotificationItem.FULL_NOVEL_SUCCESS: True,
+                        NotificationItem.NOVEL_SUCCESS: 1,
+                        NotificationItem.ARTIFACT_SUCCESS: 1,
                     },
                 )
             )
@@ -251,8 +251,8 @@ class UserService:
             if 'email_alerts' not in user.extra:
                 extra = dict(user.extra)
                 extra['email_alerts'] = {
-                    NotificationItem.ARTIFACT_SUCCESS: True,
-                    NotificationItem.FULL_NOVEL_SUCCESS: True,
+                    NotificationItem.NOVEL_SUCCESS: 1,
+                    NotificationItem.ARTIFACT_SUCCESS: 1,
                 }
                 user.extra = extra
 
@@ -297,9 +297,6 @@ class UserService:
                 raise ServerErrors.inactive_user
 
         token = self.generate_token(user, 5)
-        if not ctx.users.is_verified(email):
-            raise ServerErrors.email_not_verified
-
         base_url = ctx.config.server.base_url
         link = f'{base_url}/reset-password?token={token}'
         ctx.mail.send_reset_password_link(email, link)

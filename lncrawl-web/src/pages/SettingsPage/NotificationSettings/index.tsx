@@ -16,12 +16,12 @@ import { useDispatch, useSelector } from 'react-redux';
 
 const items = [
   {
-    key: NotificationItem.FULL_NOVEL_SUCCESS,
-    label: 'On full novel request success',
+    key: NotificationItem.NOVEL_SUCCESS,
+    label: 'On novel fetch request success',
   },
   {
     key: NotificationItem.ARTIFACT_SUCCESS,
-    label: 'On create artifact request success',
+    label: 'On artifact create request success',
   },
   {
     key: NotificationItem.JOB_RUNNING,
@@ -50,9 +50,10 @@ export const NotificationSettings: React.FC<any> = () => {
 
   const [loading, setLoading] = useState<boolean>(false);
 
-  const updateNotification = async (item: NotificationItem, value: boolean) => {
+  const toggleNotification = async (item: NotificationItem) => {
     setLoading(true);
     try {
+      const value = !(notifications && notifications[item]);
       const update = { ...notifications, [item]: value };
       await axios.put(`/api/settings/notifications`, { email_alerts: update });
       dispatch(Auth.action.updateEmailAlertConfig(update));
@@ -92,8 +93,8 @@ export const NotificationSettings: React.FC<any> = () => {
               <Switch
                 loading={loading}
                 disabled={!verified}
-                value={notifications && notifications[key]}
-                onChange={(value) => updateNotification(key, value)}
+                onClick={() => toggleNotification(key)}
+                checked={Boolean(notifications && notifications[key])}
               />
             </Space>
           ),

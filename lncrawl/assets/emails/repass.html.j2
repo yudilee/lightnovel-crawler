@@ -1,18 +1,14 @@
 {% extends "layout.html.j2" %}
 
-{% block head %}
-<title>Password Reset</title>
-{% endblock %}
-
 {% block content %}
 <div style="
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 2rem;
     max-width: 425px;
+    overflow: hidden;
+    background: #fff;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 2rem;
+    text-align: center;
     letter-spacing: 0.02rem;
     text-align: center;
 ">
@@ -20,7 +16,7 @@
         font-size: 1.5rem;
         font-weight: 600;
         color: #222;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
     ">
         Reset Your Password
     </div>
@@ -30,6 +26,7 @@
     <a href="{{ link }}" target="_blank" style="
         display: block;
         margin-top: 1rem;
+        margin-bottom: 0.5rem;
         padding: 1rem 2rem;
         border-radius: 8px;
         background: #2563eb;
@@ -44,17 +41,6 @@
         font-size: 0.825rem;
     ">
         This link will expire in <strong>5 minutes</strong>.
-    </div>
-    <hr style="width: 100%; opacity: 0.3;" />
-    <div class="footer" style="
-        color: #aaa;
-        font-size: 0.8rem;
-    ">
-        If the button doesn’t work, follow this link:<br />
-        <a href="{{ link }}" target="_blank" style="
-            color: #2563eb;
-            word-break: break-all;
-        ">{{ link }}</a>
     </div>
 </div>
 {% endblock %}

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body, Security
 
 from ...context import ctx
-from ...dao import User
+from ...dao import NotificationItem, User
 from ...server.models.user import PutNotificationRequest, UpdateRequest
 from ..security import ensure_user
 
@@ -19,7 +19,11 @@ def put_notification_settings(
 ) -> bool:
     request = UpdateRequest(
         extra=dict(
-            email_alerts=body.email_alerts
+            email_alerts={
+                NotificationItem(int(k)): 1 if v else 0
+                for k, v in body.email_alerts.items()
+                if v and int(k) in list(NotificationItem)
+            }
         )
     )
     ctx.users.update(user.id, request)

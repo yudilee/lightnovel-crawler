@@ -59,8 +59,8 @@ export const ResetPasswordPage: React.FC<any> = () => {
 
   if (loading) {
     return (
-      <Flex align="center" justify="center" style={{ height: '100vh' }}>
-        <Spin size="large" style={{ marginTop: 100 }} />
+      <Flex align="center" justify="center">
+        <Spin size="large" style={{ margin: '100px 0' }} />
       </Flex>
     );
   }

@@ -61,6 +61,7 @@ export interface Job {
   done: number;
   total: number;
   progress: number;
+  job_title?: string;
 
   extra: {
     url?: string;

@@ -1,8 +1,8 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 from pydantic import BaseModel, EmailStr, Field
 
-from ...dao import NotificationItem, User, UserRole, UserTier
+from ...dao import User, UserRole, UserTier
 
 
 class LoginRequest(BaseModel):
@@ -62,4 +62,4 @@ class ResetPasswordRequest(BaseModel):
 
 
 class PutNotificationRequest(BaseModel):
-    email_alerts: Dict[NotificationItem, bool] = Field(description='Notification config')
+    email_alerts: Dict[Union[int, str], Union[int, bool]] = Field(description='Notification config')

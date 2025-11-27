@@ -5,7 +5,6 @@ import { formatDate } from '@/utils/time';
 import { ClockCircleOutlined } from '@ant-design/icons';
 import { Card, Flex, Grid, Space, Tag, Typography } from 'antd';
 import { Link } from 'react-router-dom';
-import { JobTitleText } from '../JobDetails/JobTitleText';
 import { JobActionButtons } from './JobActionButtons';
 import { JobProgressCircle, JobProgressLine } from './JobProgessBar';
 
@@ -34,7 +33,7 @@ export const JobListItemCard: React.FC<{
                 fontFamily: "'Roboto Slab', serif",
               }}
             >
-              <JobTitleText job={job} />
+              {job.job_title || `Request ${job.id}`}
             </Typography.Text>
 
             <Space wrap style={{ marginTop: 5 }}>

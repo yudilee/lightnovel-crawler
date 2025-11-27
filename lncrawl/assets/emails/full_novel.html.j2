@@ -1,29 +1,27 @@
 {% extends "layout.html.j2" %}
 
-{% block head %}
-<title>Novel: {{ novel_title }}</title>
-{% endblock %}
-
 {% block content %}
 <div style="
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 0.6rem;
-    padding: 2rem;
     max-width: 450px;
+    overflow: hidden;
+    background: #fff;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 2rem;
     letter-spacing: 0.02rem;
+    text-align: left;
 ">
     <div style="
         font-size: 1.5rem;
         font-weight: 600;
         color: #222;
+        margin-bottom: 5px;
     ">
         {{ novel_title }}
     </div>
     <div style="
         color: #666;
+        line-height: 1.2rem;
         font-size: 0.925rem;
     ">
         <b>Author(s):</b> {{ novel_authors }} <br />
@@ -31,7 +29,7 @@
     </div>
 
     {% if novel_synopsis %}
-    <hr style="width: 100%; opacity: 0.3;" />
+    <hr style="width: 100%; opacity: 0.3; margin: 1rem 0" />
     <div style="
         color: #888;
         font-size: 0.825rem;
@@ -46,7 +44,7 @@
     {% endif %}
 
     {% if artifacts %}
-    <hr style="width: 100%; opacity: 0.3;" />
+    <hr style="width: 100%; opacity: 0.3; margin: 1rem 0" />
     <b style="
         color: #666;
         font-size: 0.925rem;
@@ -63,7 +61,7 @@
         <tr>
             <th align="right" style="
                 color: #336;
-                font-size: 1rem;
+                font-size: 0.925rem;
                 font-family: monospace;
                 white-space: nowrap;
                 min-width: 50px;
@@ -72,14 +70,14 @@
                 {{ artifact.format }}
             </th>
             <td width="100%">
-                <a href="{{ artifact.url }}" target="_blank">
+                <a href="{{ artifact.url }}" target="_blank" style="font-size: 0.875rem">
                     {{ artifact.name }}
                 </a>
             </td>
             <td style="
                 color: #666;
                 white-space: nowrap;
-                font-size: 0.825rem;
+                font-size: 0.75rem;
                 font-family: monospace;
                 text-align: right;
                 vertical-align: top;
@@ -91,18 +89,23 @@
     </table>
     {% endif %}
 
-    <hr style="width: 100%; opacity: 0.3;" />
-    <a href="{{ job_url }}" target="_blank" style="
-        display: block;
-        padding: 1rem 2rem;
-        border-radius: 8px;
-        background: #276ef1;
-        align-self: center;
-        color: #fff;
-        font-weight: 500;
-        text-decoration: none;
-    ">
-        View Job Details
-    </a>
+    <hr style="width: 100%; opacity: 0.3; margin: 20px 0" />
+    <table width="100%">
+        <tr>
+            <td align="center">
+                <a href="{{ job_url }}" target="_blank" style="
+                    padding: 1rem 2rem;
+                    border-radius: 8px;
+                    background: #276ef1;
+                    align-self: center;
+                    color: #fff;
+                    font-weight: 500;
+                    text-decoration: none;
+                ">
+                    View Job Details
+                </a>
+            </td>
+        </tr>
+    </table>
 </div>
 {% endblock %}

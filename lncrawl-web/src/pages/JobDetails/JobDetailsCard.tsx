@@ -2,15 +2,14 @@ import { JobEtaTimeTag } from '@/components/Tags/JobEtaTimeTag';
 import { JobPriorityTag } from '@/components/Tags/JobPriorityTag';
 import { JobStatusTag } from '@/components/Tags/JobStatusTag';
 import { JobTypeTag } from '@/components/Tags/JobTypeTag';
+import { Auth } from '@/store/_auth';
 import type { Job } from '@/types';
 import { formatDate, formatDuration } from '@/utils/time';
 import { ClockCircleFilled, ClockCircleOutlined } from '@ant-design/icons';
 import { Card, Flex, Grid, Tag, Typography } from 'antd';
+import { useSelector } from 'react-redux';
 import { JobActionButtons } from '../JobList/JobActionButtons';
 import { JobProgressLine } from '../JobList/JobProgessBar';
-import { JobTitleText } from './JobTitleText';
-import { useSelector } from 'react-redux';
-import { Auth } from '@/store/_auth';
 
 export const JobDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
   const { lg } = Grid.useBreakpoint();
@@ -25,7 +24,7 @@ export const JobDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
           fontFamily: "'Roboto Slab', serif",
         }}
       >
-        <JobTitleText job={job} />
+        {job.job_title || `Request ${job.id}`}
       </Typography.Title>
 
       <Flex wrap align="center" gap={5}>
