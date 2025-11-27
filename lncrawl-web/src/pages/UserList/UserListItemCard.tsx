@@ -32,13 +32,15 @@ export const UserListItemCard: React.FC<{
 }> = ({ user, onChange }) => {
   const { lg } = Grid.useBreakpoint();
 
-  const [displayName, setDisplayName] = useState(user.name?.trim());
+  const [displayName, setDisplayName] = useState<string>();
 
   useEffect(() => {
     if (!user.name?.trim()) {
       getGravatarProfile(user.email)
         .then((p) => setDisplayName(p.displayName))
         .catch(console.error);
+    } else {
+      setDisplayName(user.name.trim());
     }
   }, [user.name, user.email]);
 

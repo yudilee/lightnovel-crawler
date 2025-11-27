@@ -18,6 +18,7 @@ export const UserAvatar: React.FC<
   }
   return (
     <Avatar
+      key={user.email}
       size={72}
       {...avatarProps}
       alt={user.name || user.email}
