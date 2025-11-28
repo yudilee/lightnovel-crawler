@@ -4,7 +4,7 @@ from sqlalchemy import delete as sa_delete
 from sqlalchemy import update as sa_update
 from sqlalchemy.orm import aliased
 from sqlmodel import (Session, and_, asc, case, cast, col, desc, func, literal,
-                      or_, select, true)
+                      or_, select)
 
 from ...context import ctx
 from ...dao import (Job, JobPriority, JobStatus, JobType, OutputFormat, User,
@@ -61,7 +61,7 @@ class JobService:
             if status is not None:
                 conditions.append(Job.status == status)
             if is_done is not None:
-                conditions.append(col(Job.is_done).is_(true()))
+                conditions.append(col(Job.is_done).is_(True))
             if priority is not None:
                 conditions.append(Job.priority == priority)
 
@@ -461,7 +461,7 @@ class JobService:
             stmt = stmt.where(
                 or_(
                     col(Job.depends_on).is_(None),
-                    col(job_alias.is_done).is_(true())
+                    col(job_alias.is_done).is_(True)
                 )
             )
 
@@ -504,15 +504,11 @@ class JobService:
         inclusive: bool = False,
     ) -> None:
         now = current_timestamp()
-        sa_total = case(
-            (total < 1, 1),
-            else_=total,
-        )
-        sa_done = case(
-            (done <= sa_total, done),
-            else_=sa_total,
-        )
+
+        sa_done = done
+        sa_total = total
         sa_is_done = sa_done == sa_total
+
         sa_started_at = case(
             (sa_is_done, func.coalesce(Job.started_at, now)),
             else_=Job.started_at

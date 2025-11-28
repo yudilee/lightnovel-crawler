@@ -2,7 +2,7 @@ import logging
 import traceback
 from functools import cached_property
 from threading import Event
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Iterable, Optional
 
 from ...context import ctx
 from ...dao import (Artifact, Job, JobStatus, JobType, NotificationItem,
@@ -19,14 +19,6 @@ _queue: Dict[str, Event] = {}
 
 
 class JobRunner:
-    def __init__(self, job: Job, signal=Event()) -> None:
-        self.job = job
-        self.signal = signal
-
-    @cached_property
-    def user(self):
-        return ctx.users.get(self.job.user_id)
-
     @staticmethod
     def run(signal: Event, artifact: bool):
         try:
@@ -62,6 +54,15 @@ class JobRunner:
             signal.set()
         _queue.clear()
 
+    def __init__(self, job: Job, signal=Event()) -> None:
+        self.job = job
+        self.signal = signal
+        self.children: Iterable[Job] = []
+
+    @cached_property
+    def user(self):
+        return ctx.users.get(self.job.user_id)
+
     def process(self) -> bool:
         message = (
             f'[cyan]{self.job.status.name}[/cyan]'
@@ -72,6 +73,12 @@ class JobRunner:
             logger.info(message)
         else:
             logger.debug(f'{message}')
+
+        if self.job.is_running:
+            self.children = ctx.jobs.get_children(self.job.id)
+            if all(job.is_done for job in self.children):
+                print('--------------- setting done here!')
+                return self.__set_done()
 
         if self.job.type == JobType.FULL_NOVEL_BATCH:
             return self._novel_batch()
@@ -215,8 +222,10 @@ class JobRunner:
 
             urls = set(urls)
             if self.job.is_running:
-                jobs = ctx.jobs.get_children(self.job.id)
-                urls -= set([job.extra.get('url') for job in jobs])
+                urls -= set([
+                    job.extra.get('url')
+                    for job in self.children
+                ])
             else:
                 self.__set_running()
 
@@ -245,8 +254,10 @@ class JobRunner:
 
             added_types = {}
             if self.job.is_running:
-                jobs = ctx.jobs.get_children(self.job.id)
-                added_types = {job.type: job.id for job in jobs}
+                added_types = {
+                    job.type: job.id
+                    for job in self.children
+                }
             else:
                 self.__set_running()
 
@@ -300,8 +311,10 @@ class JobRunner:
 
             volume_ids = set(volume_ids)
             if self.job.is_running:
-                jobs = ctx.jobs.get_children(self.job.id)
-                volume_ids -= set([job.extra.get('volume_id') for job in jobs])
+                volume_ids -= set([
+                    job.extra.get('volume_id')
+                    for job in self.children
+                ])
             else:
                 self.__set_running()
 
@@ -333,8 +346,10 @@ class JobRunner:
             ])
 
             if self.job.is_running:
-                jobs = ctx.jobs.get_children(self.job.id)
-                chapter_ids -= set([job.extra.get('chapter_id') for job in jobs])
+                chapter_ids -= set([
+                    job.extra.get('chapter_id')
+                    for job in self.children
+                ])
             else:
                 self.__set_running()
 
@@ -362,8 +377,10 @@ class JobRunner:
 
             chapter_ids = set(chapter_ids)
             if self.job.is_running:
-                jobs = ctx.jobs.get_children(self.job.id)
-                chapter_ids -= set([job.extra.get('chapter_id') for job in jobs])
+                chapter_ids -= set([
+                    job.extra.get('chapter_id')
+                    for job in self.children
+                ])
             else:
                 self.__set_running()
 
@@ -391,8 +408,10 @@ class JobRunner:
 
             added_types = {}
             if self.job.is_running:
-                jobs = ctx.jobs.get_children(self.job.id)
-                added_types = {job.type: job.id for job in jobs}
+                added_types = {
+                    job.type: job.id
+                    for job in self.children
+                }
             else:
                 self.__set_running()
 
@@ -433,8 +452,10 @@ class JobRunner:
 
             image_ids = set(image_ids)
             if self.job.is_running:
-                jobs = ctx.jobs.get_children(self.job.id)
-                image_ids -= set([job.extra.get('image_id') for job in jobs])
+                image_ids -= set([
+                    job.extra.get('image_id')
+                    for job in self.children
+                ])
             else:
                 self.__set_running()
 
@@ -492,9 +513,10 @@ class JobRunner:
 
             format_job_map = {}
             if self.job.is_running:
-                for job in ctx.jobs.get_children(self.job.id):
-                    format = job.extra['format']
-                    format_job_map[OutputFormat(format)] = job.id
+                format_job_map = {
+                    OutputFormat(job.extra['format']): job.id
+                    for job in self.children
+                }
             else:
                 self.__set_running()
 
