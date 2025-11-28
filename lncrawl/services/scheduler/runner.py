@@ -35,15 +35,8 @@ class JobRunner:
                 if not job:
                     return
                 if job.parent_job_id:
-                    root = ctx.jobs._get_root(job.id)
-                    if not root or root.is_done:
-                        logger.info(f'Dangling job [b]{job.id}[/b] | {job.job_title}')
-                        with ctx.db.session() as sess:
-                            if root:
-                                ctx.jobs._cancel_down(sess, root.id, False)
-                            else:
-                                ctx.jobs._cancel_down(sess, job.id, True)
-                            sess.commit()
+                    if ctx.jobs._is_dangling(job):
+                        logger.debug(f'Dangling job [b]{job.id}[/b] | {job.job_title}')
                         return
                 _queue[job.id] = Event()
 

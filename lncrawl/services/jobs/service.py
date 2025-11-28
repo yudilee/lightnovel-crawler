@@ -583,3 +583,19 @@ class JobService:
             error=reason,
             status=job_failed_literal,
         )
+
+    def _is_dangling(self, job: Job) -> bool:
+        root = self._get_root(job.id)
+        if root and not root.is_done:
+            return False
+
+        self.cancel(job.id)
+        if root:
+            if root.status == JobStatus.CANCELED:
+                self.cancel(root.id)
+            else:
+                with ctx.db.session() as sess:
+                    self._cancel_down(sess, root.id, False)
+                    sess.commit()
+
+        return True
