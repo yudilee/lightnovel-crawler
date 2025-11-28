@@ -1,7 +1,8 @@
-import { Divider, Flex, Result } from 'antd';
+import { Divider, Flex, Result, Typography } from 'antd';
 import { JobListPage } from '../JobList';
 import { UserDetailSection } from './UserDetailSection';
 import { useParams } from 'react-router-dom';
+import { DeploymentUnitOutlined } from '@ant-design/icons';
 
 export const UserDetailsPage: React.FC<any> = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,7 +21,18 @@ export const UserDetailsPage: React.FC<any> = () => {
 
       <Divider size="large" />
 
-      <JobListPage userId={id} disableFilters autoRefresh />
+      <JobListPage
+        userId={id}
+        autoRefresh
+        title={
+          <>
+            <Divider style={{ margin: 0 }} />
+            <Typography.Title level={3}>
+              <DeploymentUnitOutlined /> User Requests
+            </Typography.Title>
+          </>
+        }
+      />
     </div>
   );
 };

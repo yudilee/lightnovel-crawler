@@ -20,6 +20,7 @@ import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Favicon } from '../../components/Favicon';
 import { NovelActionButtons } from './NovelActionButtons';
+import FallbackImage from '@/assets/no-image.svg';
 
 export const NovelDetailsCard: React.FC<{
   novel: Novel;
@@ -76,7 +77,7 @@ export const NovelDetailsCard: React.FC<{
           <Image
             alt="Novel Cover"
             src={`${API_BASE_URL}/static/${novel.cover_file}?token=${token}`}
-            fallback="/no-image.svg"
+            fallback={FallbackImage}
             style={{
               display: 'block',
               objectFit: 'cover',

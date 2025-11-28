@@ -1,5 +1,5 @@
 import { JobStatus, type Job } from '@/types';
-import { Progress, type ProgressProps } from 'antd';
+import { Progress, theme, type ProgressProps } from 'antd';
 
 function getProgressStatus(job: Job): ProgressProps['status'] {
   switch (job.status) {
@@ -36,6 +36,7 @@ export const JobProgressLine: React.FC<
     job: Job;
   } & ProgressProps
 > = ({ job, ...props }) => {
+  const { token } = theme.useToken();
   return (
     <Progress
       size={['100%', 12]}
@@ -43,7 +44,10 @@ export const JobProgressLine: React.FC<
       type="line"
       status={getProgressStatus(job)}
       percent={Math.round(job.progress || 0)}
-      strokeColor={{ from: '#108ee9', to: '#87d068' }}
+      strokeColor={{
+        from: token.colorInfo,
+        to: token.colorSuccess,
+      }}
     />
   );
 };

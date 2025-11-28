@@ -1,6 +1,6 @@
 import type { User } from '@/types';
 import { UserOutlined } from '@ant-design/icons';
-import { Avatar, type AvatarProps } from 'antd';
+import { Avatar, theme, type AvatarProps } from 'antd';
 import md5 from 'spark-md5';
 
 const getGravatarUrl = (email: string, size = 200) => {
@@ -13,6 +13,7 @@ export const UserAvatar: React.FC<
     user?: User | null;
   } & AvatarProps
 > = ({ user, ...avatarProps }) => {
+  const { token } = theme.useToken();
   if (!user) {
     return null;
   }
@@ -24,6 +25,10 @@ export const UserAvatar: React.FC<
       alt={user.name || user.email}
       src={getGravatarUrl(user.email)}
       icon={<UserOutlined style={{ fontSize: 'inherit' }} />}
+      style={{
+        backgroundColor: token.colorPrimary,
+        ...avatarProps.style,
+      }}
     />
   );
 };

@@ -18,11 +18,7 @@ export const UserDetailsCard: React.FC<{ user: User }> = ({ user }) => {
       <Row align="middle" gutter={[16, 16]}>
         <Col flex="auto">
           <Space size="middle">
-            <UserAvatar
-              size={56}
-              user={user}
-              style={{ backgroundColor: '#1890ff' }}
-            />
+            <UserAvatar size={56} user={user} />
             <Flex vertical>
               <Typography.Title level={5} style={{ margin: 0 }}>
                 <Link to={`/admin/user/${user.id}`}>

@@ -1,3 +1,4 @@
+import FallbackImage from '@/assets/no-image.svg';
 import { Favicon } from '@/components/Favicon';
 import { API_BASE_URL } from '@/config';
 import { Auth } from '@/store/_auth';
@@ -25,19 +26,22 @@ export const NovelListItemCard: React.FC<{ novel: Novel }> = ({ novel }) => {
           height: '100%',
           overflow: 'clip',
           position: 'relative',
-          background: '#eee',
           userSelect: 'none',
+          background: '#dee2e6',
         }}
         onClick={() => navigate(`/novel/${novel.id}`)}
         styles={{
-          body: { padding: 0 },
+          body: {
+            padding: 0,
+            aspectRatio: 0.7,
+          },
         }}
       >
         <Image
           alt="cover"
           preview={false}
           src={`${API_BASE_URL}/static/${novel.cover_file}?token=${token}`}
-          fallback="/no-image.svg"
+          fallback={FallbackImage}
           loading="lazy"
           fetchPriority="low"
           style={{

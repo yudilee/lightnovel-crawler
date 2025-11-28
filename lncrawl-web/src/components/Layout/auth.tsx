@@ -1,3 +1,4 @@
+import LncrawlImage from '@/assets/lncrawl.svg';
 import { Avatar, Card, Flex, Layout, Space, Typography } from 'antd';
 import { Outlet } from 'react-router-dom';
 
@@ -20,7 +21,7 @@ export const AuthLayout: React.FC<any> = () => {
                 style={{ padding: '15px', width: '100%' }}
               >
                 <Avatar
-                  src="/lncrawl.svg"
+                  src={LncrawlImage}
                   style={{
                     width: '96px',
                     height: '96px',

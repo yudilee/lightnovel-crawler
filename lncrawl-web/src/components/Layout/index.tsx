@@ -1,3 +1,4 @@
+import LncrawlImage from '@/assets/lncrawl.svg';
 import { Avatar, Divider, Grid, Layout, Typography } from 'antd';
 import { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
@@ -76,7 +77,7 @@ export const MainLayout: React.FC<{
               >
                 <Avatar
                   shape="square"
-                  src="/lncrawl.svg"
+                  src={LncrawlImage}
                   size={24}
                   style={{ paddingBottom: 3 }}
                 />

@@ -167,7 +167,6 @@ export const JobDetailsPage: React.FC<any> = () => {
       <JobListPage
         key={job.id + job.is_done}
         parentJobId={job.id}
-        disableFilters
         autoRefresh={!job.is_done}
         hideIfEmpty
         title={

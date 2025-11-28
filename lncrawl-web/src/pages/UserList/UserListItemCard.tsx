@@ -54,11 +54,7 @@ export const UserListItemCard: React.FC<{
       <Row align="middle" gutter={[25, 16]}>
         <Col flex="auto" style={{ width: '300px' }}>
           <Space size="middle" style={{ position: 'relative' }}>
-            <UserAvatar
-              size={48}
-              user={user}
-              style={{ backgroundColor: '#1890ff' }}
-            />
+            <UserAvatar size={48} user={user} />
             {displayName ? (
               <Flex vertical>
                 <Typography.Text strong>
