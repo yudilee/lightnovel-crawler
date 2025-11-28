@@ -2,16 +2,18 @@ import cx from 'classnames';
 import styles from './ReaderLayoutVertical.module.scss';
 
 import { Reader } from '@/store/_reader';
-import type { ReadChapter } from '@/types';
-import { Divider, Empty, Flex, Grid, Typography } from 'antd';
+import type { Job, ReadChapter } from '@/types';
+import { Button, Divider, Empty, Flex, Grid, Typography } from 'antd';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { ReaderVerticalContent } from './ReaderLayoutVerticalContent';
 import { ReaderNavBar } from './ReaderNavBar';
+import { JobDetailsCard } from '../JobDetails/JobDetailsCard';
 
 export const ReaderVerticalLayout: React.FC<{
   data: ReadChapter;
-}> = ({ data }) => {
+  job?: Job;
+}> = ({ data, job }) => {
   const { md } = Grid.useBreakpoint();
   const theme = useSelector(Reader.select.theme);
   const fontSize = useSelector(Reader.select.fontSize);
@@ -41,11 +43,25 @@ export const ReaderVerticalLayout: React.FC<{
       {data.content ? (
         <ReaderVerticalContent data={data} />
       ) : (
-        <Empty
-          description="No contents available"
-          styles={{ description: { color: theme.color } }}
-          style={{ padding: `calc(50vh - ${md ? 164 : 176}px) 0` }}
-        />
+        <Flex
+          gap={15}
+          vertical
+          align="center"
+          justify="center"
+          style={{ flex: 1, margin: 10 }}
+        >
+          {job && !job.is_done ? (
+            <>
+              <JobDetailsCard job={job} />
+              <Button href={`/job/${job.id}`}>View Request</Button>
+            </>
+          ) : (
+            <Empty
+              description="No contents available"
+              styles={{ description: { color: theme.color } }}
+            />
+          )}
+        </Flex>
       )}
     </Flex>
   );

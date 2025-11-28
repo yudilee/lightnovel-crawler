@@ -1,4 +1,5 @@
 .novel-reader {
+  min-height: 100vh;
   font-weight: 400;
   position: relative;
 
@@ -34,10 +35,12 @@
   }
 
   p {
+    white-space: normal;
     font-size: 1em;
     margin: 0 0 1em;
   }
 
+  p:empty,
   p + br,
   br + br,
   p > br {

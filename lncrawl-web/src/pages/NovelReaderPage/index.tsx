@@ -12,7 +12,6 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
-import { JobDetailsCard } from '../JobDetails/JobDetailsCard';
 import { ReaderVerticalLayout } from './ReaderLayoutVertical';
 
 const fetchJobs = new Map<string, Promise<Job>>();
@@ -21,14 +20,18 @@ const cache = new Map<string, Promise<ReadChapter>>();
 async function fetchChapter(id: string) {
   const { data } = await axios.get<ReadChapter>(`/api/chapter/${id}/read`);
   if (data.content) {
+    const clean = data.content.replace(
+      /<p>(\s+)|(&nbsp;)+<\/p>(\n|\s|<br\/>)+/gim,
+      ''
+    );
     data.content = `
-      <h1 style="margin-bottom: 0">${data.chapter.title}</h1>
+      <h1 style="margin-bottom: 0">${data.chapter.title.trim()}</h1>
       <div style="font-size: 12px; opacity: 0.8; margin-bottom: 25px">
         ${data.chapter.serial} of ${data.novel.chapter_count}
         <span> | </span>
         Updated ${formatFromNow(data.chapter.updated_at)}
       </div>
-      ${data.content}
+      ${clean}
     `;
   }
   return data;
@@ -69,6 +72,9 @@ export const NovelReaderPage: React.FC<any> = () => {
     setError(undefined);
     if (id) {
       setLoading(true);
+      if (fetchJobs.has(id)) {
+        cache.delete(id);
+      }
       fetchChapterCached(id)
         .then(setData)
         .catch((err) => setError(stringifyError(err)))
@@ -154,21 +160,6 @@ export const NovelReaderPage: React.FC<any> = () => {
     );
   }
 
-  if (job && !job.is_done) {
-    return (
-      <Flex
-        vertical
-        gap={15}
-        align="center"
-        justify="center"
-        style={{ height: '100vh' }}
-      >
-        <JobDetailsCard job={job} />
-        <Button href={`/job/${job.id}`}>View Request</Button>
-      </Flex>
-    );
-  }
-
   if (error || !data || !id) {
     return (
       <Flex align="center" justify="center" style={{ height: '100vh' }}>
@@ -184,5 +175,5 @@ export const NovelReaderPage: React.FC<any> = () => {
     );
   }
 
-  return <ReaderVerticalLayout key={id} data={data} />;
+  return <ReaderVerticalLayout key={id} data={data} job={job} />;
 };
