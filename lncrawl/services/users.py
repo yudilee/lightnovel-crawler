@@ -302,40 +302,42 @@ class UserService:
         ctx.mail.send_reset_password_link(email, link)
 
     def generate_user_token(self, user: User) -> str:
-        time = current_timestamp().to_bytes(8, 'little')
-        user_id = uuid.UUID(user.id).bytes
-        data = time + user_id
+        user_id = user.id
+        time = current_timestamp()
 
-        key = ctx.secrets.secret_key
-        ex_key = hashlib.blake2b(key, digest_size=len(data)).digest()
-        encrypted = bytes(x ^ y for x, y in zip(data, ex_key))
+        t_bytes = time.to_bytes(8, 'little')
+        id_bytes = uuid.UUID(user_id).bytes
+
+        t_key = hashlib.sha3_256(t_bytes).digest()[:16]
+        encrypted_id = bytes(x ^ y for x, y in zip(id_bytes, t_key))
+
+        encrypted = t_bytes + encrypted_id
 
         encoded = base64.urlsafe_b64encode(encrypted)
-        return encoded.decode('ascii')
+        token = encoded.decode('ascii')
+        return token
 
-    def verify_user_token(self, token: str) -> User:
+    def verify_user_token(self, token: str) -> str:
         try:
             encoded = token.encode('ascii')
             encrypted = base64.urlsafe_b64decode(encoded)
 
-            key = ctx.secrets.secret_key
-            ex_key = hashlib.blake2b(key, digest_size=len(encrypted)).digest()
-            data = bytes(x ^ y for x, y in zip(encrypted, ex_key))
+            t_bytes = encrypted[:8]
+            t_key = hashlib.sha3_256(t_bytes).digest()[:16]
 
-            time = int.from_bytes(data[:8], 'little')
-            user_id = str(uuid.UUID(bytes=data[8:]))
+            encrypted_id = encrypted[8:]
+            id_bytes = bytes(x ^ y for x, y in zip(encrypted_id, t_key))
+
+            time = int.from_bytes(t_bytes, 'little')
+            user_id = str(uuid.UUID(bytes=id_bytes))
         except Exception as e:
-            logger.exception('token verify')
             raise ServerErrors.token_invalid from e
 
-        exp = ctx.config.server.token_expiry * 60 * 1000
+        exp = ctx.config.server.token_expiry * (60 * 1000)
         if time + exp < current_timestamp():
             raise ServerErrors.token_expired
 
-        user = self.get(user_id)
-        if not user.is_active:
-            raise ServerErrors.inactive_user
-        return user
+        return user_id
 
     def signup(self, body: SignupRequest):
         referrer = self.verify_user_token(body.referrer)
