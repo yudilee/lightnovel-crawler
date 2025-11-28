@@ -2,12 +2,10 @@ import { JobEtaTimeTag } from '@/components/Tags/JobEtaTimeTag';
 import { JobPriorityTag } from '@/components/Tags/JobPriorityTag';
 import { JobStatusTag } from '@/components/Tags/JobStatusTag';
 import { JobTypeTag } from '@/components/Tags/JobTypeTag';
-import { Auth } from '@/store/_auth';
 import type { Job } from '@/types';
 import { formatDate, formatDuration } from '@/utils/time';
 import { ClockCircleFilled, ClockCircleOutlined } from '@ant-design/icons';
 import { Card, Flex, Grid, Tag, Typography } from 'antd';
-import { useSelector } from 'react-redux';
 import { JobActionButtons } from '../JobList/JobActionButtons';
 import { JobProgressLine } from '../JobList/JobProgessBar';
 
@@ -67,18 +65,15 @@ export const JobDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
 };
 
 export const JobErrorDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
-  const isAdmin = useSelector(Auth.select.isAdmin);
-
   if (!job.error) {
     return null;
   }
 
-  const lines = job.error
+  const html = job.error
     .split('\n')
     .filter(Boolean)
-    .map((line) => line.replace(/^\s+/, '&nbsp;'));
-
-  const error = isAdmin ? lines.join('<br/>') : lines[lines.length - 1];
+    .map((line) => line.replace(/^\s+/, '&nbsp;'))
+    .join('<br/>');
 
   return (
     <pre
@@ -93,7 +88,7 @@ export const JobErrorDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
         border: '1px solid #f8f749',
         background: '#f8f74910',
       }}
-      dangerouslySetInnerHTML={{ __html: error }}
+      dangerouslySetInnerHTML={{ __html: html }}
     />
   );
 };

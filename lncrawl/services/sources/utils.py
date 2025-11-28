@@ -5,7 +5,7 @@ import io
 import logging
 import shutil
 from pathlib import Path
-from typing import Type
+from typing import Generator, Type
 
 from ...context import ctx
 from ...core.crawler import Crawler
@@ -77,7 +77,7 @@ def batch_import_crawlers(*files: Path):
     )
 
 
-def import_crawlers(file: Path):
+def import_crawlers(file: Path) -> Generator[type[Crawler], None, None]:
     # validate the file
     if not file.is_file():
         return
@@ -139,6 +139,7 @@ def import_crawlers(file: Path):
         id = hashlib.md5(str(crawler).encode()).hexdigest()
         setattr(crawler, "__id__", id)
         setattr(crawler, "__file__", str(file))
+        setattr(crawler, '__module_obj__', module)
         setattr(crawler, "version", int(max(stat.st_mtime, stat.st_ctime)))
 
         yield crawler

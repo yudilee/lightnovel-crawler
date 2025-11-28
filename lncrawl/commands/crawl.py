@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Set, Tuple, Union
 
 import questionary
 import typer
@@ -72,7 +72,7 @@ def crawl(
 
     # init crawler
     try:
-        crawler = ctx.sources.init_crawler(url)
+        crawler = ctx.sources.init_crawler(url, disable_logger=False)
     except ServerError as e:
         print(f'[red]{e.format(True)}[/red]')
         return
@@ -168,11 +168,11 @@ def crawl(
             artifacts[fmt] = artifact
             file = ctx.files.resolve(artifact.output_file)
             size = format_size(artifact.file_size or 0)
-            print(f'Generated [b]{file}[/b] ({size})')
+            print(f'[b]{fmt}[/b] ({size}): [cyan]{file}[/cyan]')
         else:
             print(f'[red]Failed to generate [b]{fmt.value}[/b][/red]')
 
-    if not non_interactive and _prompt_open_artifact_folder():
+    if not non_interactive:
         cover_file = ctx.files.resolve(novel.cover_file)
         open_folder(cover_file.parent / 'artifacts')
 
@@ -254,7 +254,7 @@ def _prompt_select_volumes(volumes: List[Volume], attempt=0) -> List[str]:
             questionary.Choice(
                 value=volume.id,
                 title=volume.title,
-                shortcut_key=volume.serial,
+                shortcut_key=str(volume.serial),
             )
             for volume in volumes
         ],
@@ -272,7 +272,8 @@ def _prompt_select_volumes(volumes: List[Volume], attempt=0) -> List[str]:
     return _prompt_select_volumes(volumes, attempt + 1)
 
 
-def _prompt_select_chapters(groups: List[ChapterGroup], attempt=0) -> List[str]:
+def _prompt_select_chapters(groups: Sequence[ChapterGroup], attempt=0) -> List[str]:
+    assert isinstance(groups, list)
     # Group chapters into smaller chunks (as there can be more than 50,000)
     # Following code creates a Balanced Tree where each node will have at most k=20 children
     k = 20
@@ -289,7 +290,7 @@ def _prompt_select_chapters(groups: List[ChapterGroup], attempt=0) -> List[str]:
 
     # Make selected from the Balanced Tree
     selected: Set[str] = set()
-    stack: List[ChapterGroup] = [groups]
+    stack: List[List[ChapterGroup]] = [groups]
     while len(stack) > 0:
         # Get the last node from the stack
         current = stack[-1]
@@ -345,10 +346,11 @@ def _prompt_select_chapters(groups: List[ChapterGroup], attempt=0) -> List[str]:
 
         if isinstance(choice, int):
             # select current node group
-            if isinstance(current[choice], tuple):
-                stack.append(current[choice][2])
-            else:
-                stack.append(current[choice])
+            item = current[choice]
+            if isinstance(item, tuple):
+                stack.append(item[2])
+            elif isinstance(item, list):
+                stack.append(item)
             continue
 
         # handle default choice: 'back'
@@ -385,8 +387,8 @@ def _prompt_format_selection() -> List[OutputFormat]:
     return result
 
 
-def _prompt_open_artifact_folder() -> bool:
-    return questionary.confirm(
-        "Open the artifact folder?",
-        default=True,
-    ).ask(kbi_msg='')
+# def _prompt_open_artifact_folder() -> bool:
+#     return questionary.confirm(
+#         "Open the artifact folder?",
+#         default=True,
+#     ).ask(kbi_msg='')

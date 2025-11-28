@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 from threading import Event
-from typing import Dict, List, Type
+from typing import Dict, List, Optional, Type
 
 from ...context import ctx
 from ...core.crawler import Crawler
@@ -72,7 +72,10 @@ class SourceLoader:
 
     def load_crawlers(self, *files: Path) -> List[CrawlerInfo]:
         futures = [
-            self._taskman.submit_task(utils.import_crawlers, file)
+            self._taskman.submit_task(
+                utils.import_crawlers,
+                file
+            )
             for file in files
         ]
         return [
@@ -82,6 +85,7 @@ class SourceLoader:
                 disable_bar=True,
                 signal=self._signal,
             )
+            if crawlers
             for crawler in crawlers
             if issubclass(crawler, Crawler)
         ]
@@ -150,7 +154,8 @@ class SourceLoader:
             unit='source',
             signal=self._signal,
         ):
-            self.load_crawlers(dst_file)
+            if dst_file:
+                self.load_crawlers(dst_file)
         logger.info('Source synced.')
 
     def get_crawler(self, url: str) -> Type[Crawler]:
@@ -168,10 +173,28 @@ class SourceLoader:
 
         return self.crawlers[host]
 
-    def init_crawler(self, url: str) -> Crawler:
+    def init_crawler(
+        self,
+        url: str,
+        disable_logger=True,
+        workers: Optional[int] = None,
+        parser: Optional[str] = None,
+    ) -> Crawler:
         logger.debug(f"Creating crawler instance for {url}")
-        crawler = self.get_crawler(url)()
+        constructor = self.get_crawler(url)
+
+        # disable logging
+        if disable_logger:
+            module = getattr(constructor, '__module_obj__')
+            setattr(module, 'print', lambda *a, **k: None)
+            setattr(module, 'logger', type("", (), {
+                "__getattr__": lambda *n: (lambda *a, **k: None)
+            })())
+
+        # create instance
+        crawler = constructor(workers, parser)
         crawler.home_url = extract_base(url)
         crawler.novel_url = url
+
         crawler.initialize()
         return crawler

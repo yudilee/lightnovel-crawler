@@ -197,7 +197,7 @@ class TaskManager(ABC):
             desc=desc,
             unit=unit,
             disable=disable_bar,
-        )  # type:ignore
+        )
         try:
             for future in as_completed(futures):
                 if signal.is_set():
@@ -217,10 +217,7 @@ class TaskManager(ABC):
                 except Exception as e:
                     yield None
                     if bar.disable:
-                        logger.exception("Failure to resolve future")
-                    else:
-                        bar.clear()
-                        logger.warning(f"{type(e).__name__}: {e}")
+                        logger.info(f"Failure to resolve future. {repr(e)}")
                 finally:
                     bar.update()
         except KeyboardInterrupt:
