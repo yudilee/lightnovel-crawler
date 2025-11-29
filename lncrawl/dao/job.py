@@ -10,8 +10,11 @@ from .enums import JobPriority, JobStatus, JobType
 class Job(BaseTable, table=True):
     __tablename__ = 'jobs'  # type: ignore
     __table_args__ = (
-        Index("ix_job_is_done", 'id', 'is_done'),
-        Index("ix_job_parent_job_id", 'parent_job_id'),
+        Index("ix_jobs_is_done", 'is_done'),
+        Index("ix_jobs_parent_job_id", 'parent_job_id'),
+        Index("ix_jobs_depends_on", 'depends_on', 'is_done'),
+        Index("ix_jobs_scheduler", 'status', 'done', 'type'),
+        Index("ix_jobs_ordering", 'priority', 'user_id', 'updated_at'),
     )
 
     user_id: str = Field(

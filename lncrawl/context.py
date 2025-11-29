@@ -1,6 +1,7 @@
 import logging
 from functools import cached_property
-from typing import Optional
+from typing import Optional, Union
+from pathlib import Path
 
 _cache: Optional['AppContext'] = None
 
@@ -125,16 +126,21 @@ class AppContext:
         self.sources.close()
         self.scheduler.stop()
 
-    def setup(self):
+    def setup(
+        self,
+        log_level: Union[int, str, None] = None,
+        config_file: Optional[Path] = None,
+        sync_remote_index=True,
+    ):
         if self.__ready:
             return
         self.__ready = True
-        self.logger.setup()
-        self.config.load()
+        self.logger.setup(log_level)
+        self.config.load(config_file)
         self.db.bootstrap()
         self.users.setup_admin()
         self.secrets.setup_secret()
-        self.sources.load()
+        self.sources.load(sync_remote_index)
 
 
 ctx: AppContext = AppContext()

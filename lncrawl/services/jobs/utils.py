@@ -1,39 +1,52 @@
-from sqlmodel import col, select, literal
+from sqlmodel import col, select
 
 from ...dao import Job
 
 
-def sa_select_children(job_id: str, inclusive: bool = False):
-    deps = (
-        select(Job.id)
-        .where(Job.parent_job_id == job_id)
+def select_ancestors(job_id: str, inclusive: bool = False):
+    """
+    WITH RECURSIVE ancestors(id) AS (
+        SELECT jobs.id AS id FROM jobs
+            WHERE jobs.id = %(job_id)s::VARCHAR
+        UNION ALL
+        SELECT jobs.parent_job_id AS id FROM jobs
+            JOIN ancestors ON jobs.id = ancestors.id
+    ) SELECT ancestors.id FROM ancestors
+    """
+    anchor = Job.id if inclusive else Job.parent_job_id
+    par = (
+        select(col(anchor).label('id'))
+        .where(Job.id == job_id)
+        .cte("ancestors", recursive=True)
+    )
+    par = par.union_all(
+        select(col(Job.parent_job_id).label("id"))
+        .join(par, col(Job.id) == par.c.id)
+        .where(col(Job.parent_job_id).is_not(None))
+    )
+    return select(par.c.id)
+
+
+def select_descendends(job_id: str, inclusive: bool = False):
+    """
+    WITH RECURSIVE descendends(id) AS (
+        SELECT jobs.id AS id FROM jobs
+            WHERE jobs.id = %(job_id)s::VARCHAR
+        UNION ALL
+            SELECT jobs.id AS id FROM jobs
+            JOIN descendends ON jobs.parent_job_id = descendends.id
+    ) SELECT descendends.id FROM descendends
+    """
+    des = (
+        select(col(Job.id).label('id'))
+        .where(Job.id == job_id)
         .cte("descendends", recursive=True)
     )
-    deps = deps.union_all(
-        select(Job.id)
-        .where(Job.parent_job_id == deps.c.id)
+    des = des.union_all(
+        select(col(Job.id).label('id'))
+        .join(des, col(Job.parent_job_id) == des.c.id)
     )
-    if inclusive:
-        return select(deps.c.id).union_all(
-            select(literal(job_id).label('id'))
-        )
-    else:
-        return select(deps.c.id)
-
-
-def sa_select_parents(job_id: str, inclusive: bool = False):
-    pars = (
-        select(col(Job.parent_job_id).label('id'))
-        .where(Job.id == job_id)
-        .cte('ancestors', recursive=True)
-    )
-    pars = pars.union_all(
-        select(col(Job.parent_job_id).label('id'))
-        .where(Job.id == pars.c.id)
-    )
-    if inclusive:
-        return select(pars.c.id).union_all(
-            select(literal(job_id).label('id'))
-        )
-    else:
-        return select(pars.c.id)
+    stmt = select(des.c.id)
+    if not inclusive:
+        stmt = stmt.where(des.c.id != job_id)
+    return stmt

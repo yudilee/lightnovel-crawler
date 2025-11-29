@@ -20,5 +20,4 @@ exclude =
     venv-linux,
     Lightnovels,
     sqlite.db,
-    lncrawl-web,
-    lncrawl/migrations/versions
+    lncrawl-web

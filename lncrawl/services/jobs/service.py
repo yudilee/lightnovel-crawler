@@ -3,8 +3,8 @@ from typing import Any, Iterable, List, Optional, TypeVar
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import update as sa_update
 from sqlalchemy.orm import aliased
-from sqlmodel import (Session, and_, asc, case, cast, col, desc, func, literal,
-                      or_, select)
+from sqlmodel import (Session, and_, asc, case, cast, col, desc, exists, func,
+                      literal, or_, select)
 
 from ...context import ctx
 from ...dao import (Job, JobPriority, JobStatus, JobType, OutputFormat, User,
@@ -13,11 +13,10 @@ from ...dao.tier import JOB_PRIORITY_LEVEL
 from ...exceptions import ServerErrors
 from ...server.models.pagination import Paginated
 from ...utils.time_utils import current_timestamp
-from .utils import sa_select_children, sa_select_parents
+from .utils import select_ancestors, select_descendends
 
 T = TypeVar('T')
 
-job_alias = aliased(Job)
 job_status_type = Job.__table__.c.status.type  # type: ignore
 job_failed_literal = cast(literal(JobStatus.FAILED.name), job_status_type)
 job_success_literal = cast(literal(JobStatus.SUCCESS.name), job_status_type)
@@ -167,7 +166,7 @@ class JobService:
                 total=Job.total - total,
             )
 
-            sa_deps = sa_select_children(job_id, True)
+            sa_deps = select_descendends(job_id, True)
             sess.exec(
                 sa_delete(Job)
                 .where(col(Job.id).in_(sa_deps))
@@ -445,7 +444,7 @@ class JobService:
 
     def _get_root(self, job_id: str) -> Optional[Job]:
         with ctx.db.session() as sess:
-            sa_pars = sa_select_parents(job_id)
+            sa_pars = select_ancestors(job_id)
             return sess.exec(
                 select(Job)
                 .where(col(Job.id).in_(sa_pars))
@@ -453,39 +452,51 @@ class JobService:
                 .limit(1)
             ).first()
 
-    def _pending(self, artifact: bool, skip_job_ids: Iterable[str]) -> Optional[Job]:
+    def _pending(
+        self,
+        artifact: Optional[bool] = None,
+        skip_job_ids: Iterable[str] = []
+    ) -> Optional[Job]:
         with ctx.db.session() as sess:
             stmt = select(Job)
 
-            stmt = stmt.outerjoin(job_alias, col(job_alias.id) == Job.depends_on)
+            job_alias = aliased(Job)
+            dep_is_done = (
+                exists(1)
+                .where(col(job_alias.id) == Job.depends_on)
+                .where(col(job_alias.is_done).is_(True))
+            )
             stmt = stmt.where(
                 or_(
                     col(Job.depends_on).is_(None),
-                    col(job_alias.is_done).is_(True)
+                    dep_is_done
                 )
             )
 
+            job_is_new = and_(
+                Job.status == JobStatus.RUNNING,
+                Job.done == 0,
+            )
             stmt = stmt.where(
                 or_(
                     Job.status == JobStatus.PENDING,
-                    and_(
-                        Job.status == JobStatus.RUNNING,
-                        Job.done == 0,
-                    )
-                ),
+                    job_is_new,
+                )
             )
 
-            if artifact:
-                stmt = stmt.where(Job.type == JobType.ARTIFACT)
-            else:
-                stmt = stmt.where(Job.type != JobType.ARTIFACT)
+            if skip_job_ids:
                 stmt = stmt.where(col(Job.id).not_in(skip_job_ids))
+
+            if artifact is not None:
+                if artifact:
+                    stmt = stmt.where(Job.type == JobType.ARTIFACT)
+                else:
+                    stmt = stmt.where(Job.type != JobType.ARTIFACT)
 
             stmt = stmt.order_by(
                 desc(Job.priority),
-                asc(Job.created_at),
+                asc(Job.updated_at),
             )
-
             return sess.exec(stmt.limit(1)).first()
 
     def _update(self, sess: Session, job_id: str, **values) -> None:
@@ -509,20 +520,20 @@ class JobService:
         sa_total = total
         sa_is_done = sa_done == sa_total
 
+        sa_status = case(
+            (sa_is_done, job_success_literal),
+            else_=Job.status
+        )
         sa_started_at = case(
-            (sa_is_done, func.coalesce(Job.started_at, now)),
+            (and_(sa_is_done, col(Job.started_at).is_(None)), now),
             else_=Job.started_at
         )
         sa_finished_at = case(
-            (sa_is_done, func.coalesce(Job.finished_at, now)),
+            (and_(sa_is_done, col(Job.finished_at).is_(None)), now),
             else_=Job.finished_at
         )
-        sa_status = case(
-            (sa_is_done, job_success_literal),
-            else_=job_running_literal
-        )
 
-        sa_pars = sa_select_parents(job_id, inclusive)
+        sa_pars = select_ancestors(job_id, inclusive)
         sess.exec(
             sa_update(Job)
             .where(col(Job.id).in_(sa_pars))
@@ -539,7 +550,7 @@ class JobService:
 
     def _cancel_down(self, sess: Session, job_id: str, inclusive=False) -> None:
         now = current_timestamp()
-        sa_deps = sa_select_children(job_id, inclusive)
+        sa_deps = select_descendends(job_id, inclusive)
         sess.exec(
             sa_update(Job)
             .where(

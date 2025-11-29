@@ -37,7 +37,7 @@ class SourceLoader:
         self.rejected.clear()
         self.crawlers.clear()
 
-    def load(self):
+    def load(self, sync_remote=True):
         self._signal = Event()
         self._store = FTSStore()
         self._taskman = TaskManager(10)
@@ -53,7 +53,8 @@ class SourceLoader:
         )
 
         # run background task get online update
-        self._taskman.submit_task(self.update)
+        if sync_remote:
+            self._taskman.submit_task(self.update)
 
     def ensure_load(self):
         self._taskman.as_completed(
