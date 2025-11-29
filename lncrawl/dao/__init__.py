@@ -8,7 +8,6 @@ from .chapter import Chapter
 from .chapter_image import ChapterImage
 from .enums import *  # noqa: F401,F403
 from .job import Job
-from .migration import Migration
 from .novel import Novel
 from .read_history import ReadHistory
 from .secrets import Secret
@@ -17,7 +16,6 @@ from .user import User, VerifiedEmail
 from .volume import Volume
 
 models: List[Type[SQLModel]] = [
-    Migration,
     User,
     VerifiedEmail,
     Tag,
