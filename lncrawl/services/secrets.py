@@ -1,6 +1,7 @@
-from functools import cached_property
+import logging
 from typing import Any, List, Optional
 
+from cryptography.fernet import Fernet
 from sqlmodel import and_, col, func, select
 
 from ..context import ctx
@@ -8,42 +9,45 @@ from ..dao import Secret
 from ..exceptions import ServerErrors
 from ..server.models.crawler import LoginData
 from ..server.models.pagination import Paginated
-from ..utils.text_tools import generate_uuid, text_decrypt, text_encrypt
 from ..utils.url_tools import extract_host
 
 SECRET_KEY_ID = '--server-secret-key--'
+logger = logging.getLogger(__name__)
 
 
 class SecretService:
     def __init__(self) -> None:
-        pass
+        self._secret_key: Optional[bytes] = None
 
-    @cached_property
-    def secret_key(self) -> bytes:
+    def setup_secret(self) -> None:
+        admin = ctx.users.get_admin()
         with ctx.db.session() as sess:
             secret = sess.get(Secret, SECRET_KEY_ID)
-            if secret:
-                return secret.value
+            if not secret:
+                logger.info('Creating secret key')
+                value = Fernet.generate_key()
+                secret = Secret(
+                    name=SECRET_KEY_ID,
+                    user_id=admin.id,
+                    value=value,
+                )
+                sess.add(secret)
+                sess.commit()
+        self._secret_key = secret.value
 
-        value = generate_uuid().encode()
-        admin = ctx.users.get_admin()
-        secret = Secret(
-            name=SECRET_KEY_ID,
-            user_id=admin.id,
-            value=value,
-        )
-        with ctx.db.session() as sess:
-            sess.add(secret)
-            sess.commit()
-        return value
+    def get_secret_key(self) -> bytes:
+        if not self._secret_key:
+            self.setup_secret()
+            assert self._secret_key
+        return self._secret_key
 
-    def _decrypt(self, value: bytes) -> bytes:
-        return text_decrypt(value, self.secret_key)
+    def encrypt(self, value: bytes) -> bytes:
+        key = self.get_secret_key()
+        return Fernet(key).encrypt(value)
 
-    def _encrypt(self, value: bytes) -> bytes:
-        if isinstance(value, str):
-            value = value.encode()
-        return text_encrypt(value, self.secret_key)
+    def decrypt(self, value: bytes) -> bytes:
+        key = self.get_secret_key()
+        return Fernet(key).decrypt(value)
 
     def list(
         self,
@@ -96,7 +100,7 @@ class SecretService:
             secret = Secret(
                 name=name,
                 user_id=user_id,
-                value=self._encrypt(value.encode()),
+                value=self.encrypt(value.encode()),
             )
             sess.add(secret)
             sess.commit()
@@ -124,7 +128,7 @@ class SecretService:
     def get_value(self, user_id: str, name: str) -> Optional[str]:
         try:
             secret = self.get(user_id, name)
-            return self._decrypt(secret.value).decode()
+            return self.decrypt(secret.value).decode()
         except Exception:
             return None
 

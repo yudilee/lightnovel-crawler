@@ -43,6 +43,7 @@ python-telegram-bot[job-queue]~=20.0
 uvicorn
 fastapi[standard]
 cachetools
+alembic
 sqlmodel
 psycopg[binary]
 passlib[argon2]

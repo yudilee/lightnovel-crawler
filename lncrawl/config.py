@@ -7,7 +7,7 @@ from datetime import datetime
 from decimal import Decimal
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Callable, Optional, Type, TypeVar, Union, cast
+from typing import Any, Callable, Dict, Optional, Type, TypeVar, Union, cast
 
 import dotenv
 import typer
@@ -29,22 +29,8 @@ DEFAULT_CONFIG_FILE = APP_DIR / 'config.json'
 
 
 # ------------------------------------------------------------------ #
-#                            Section Base                            #
+#                            Utilitites                              #
 # ------------------------------------------------------------------ #
-class _Section(object):
-    section: str
-
-    def __init__(self, parent: 'Config') -> None:
-        self.root = parent
-
-    def _get(self, key: str, default: Union[T, Callable[[], Any]]) -> T:
-        return self.root.get(self.section, key, default)
-
-    def _set(self, key: str, value: Any) -> None:
-        logger.debug(f'[{self.section}] seting "{key}" = {value}')
-        self.root.set(self.section, key, value)
-
-
 def _serialize(obj: object) -> Any:
     if isinstance(obj, (str, int, float, bool, type(None))):
         return obj
@@ -80,16 +66,37 @@ def _traverse(obj: object) -> None:
     for name in dir(obj):
         if name.startswith("_"):
             continue
-
         attr = getattr(type(obj), name, None)
         if isinstance(attr, property) and attr.fset:
             value = getattr(obj, name)
             setattr(obj, name, value)
-
         elif isinstance(attr, cached_property):
             value = getattr(obj, name)
             if isinstance(value, _Section):
                 _traverse(value)
+
+
+def _merge(target: dict, source: dict) -> None:
+    for key, value in source.items():
+        if isinstance(target.get(key), dict) and isinstance(value, dict):
+            _merge(target[key], value)
+        else:
+            target[key] = value
+
+
+def _update(target: dict, source: dict) -> dict:
+    deprecated = {}
+    for key, value in source.items():
+        if key in target:
+            if isinstance(target[key], dict) and isinstance(value, dict):
+                inner = _update(target[key], value)
+                if inner:
+                    deprecated[key] = inner
+            else:
+                target[key] = value
+        else:
+            deprecated[key] = value
+    return deprecated
 
 
 # ------------------------------------------------------------------ #
@@ -98,7 +105,10 @@ def _traverse(obj: object) -> None:
 class Config(object):
     def __init__(self) -> None:
         dotenv.load_dotenv()
-        self.config_file = DEFAULT_CONFIG_FILE
+        self.config_file: Optional[Path] = None
+        self._data: Dict[str, Any] = {}
+        _traverse(self)
+        self._defaults = self._data
 
     @cached_property
     def app(self):
@@ -136,30 +146,45 @@ class Config(object):
 
         - Loads from param `file` if provided
         - Loads from `LNCRAWL_CONFIG` env var if available
-        - Loads from default config otherwise
+        - Loads from default config file otherwise
         """
         env_file = os.getenv('LNCRAWL_CONFIG')
         if not file and env_file:
             file = Path(env_file)
-        self.config_file = file or DEFAULT_CONFIG_FILE
-        logger.info(f'Config file: {self.config_file}')
-        if self.config_file.is_file():
-            self._data = json.loads(
-                self.config_file.read_text(encoding="utf-8")
-            )
-        else:
+        file = file or DEFAULT_CONFIG_FILE
+        if file == self.config_file:
+            return
+
+        self.config_file = file
+        logger.info(f'Config file: {file}')
+
+        if file.is_file():
+            source = json.loads(file.read_text(encoding="utf-8"))
+            assert isinstance(source, dict)
+
             self._data = {}
-        _traverse(self)
+            _merge(self._data, self._defaults)
+
+            old_deprecated = source.pop('__deprecated__', {})
+            new_deprecated = _update(self._defaults, source)
+            _merge(new_deprecated, old_deprecated)
+
+            if new_deprecated:
+                self._data['__deprecated__'] = new_deprecated
+
         self.save()
 
     def save(self) -> None:
+        if not self.config_file:
+            return
         self.config_file.parent.mkdir(parents=True, exist_ok=True)
         tid = time.thread_time_ns() % 1000
         tmp = self.config_file.with_suffix(f'.json.tmp{tid}')
         content = json.dumps(self._data, indent=2, ensure_ascii=False)
         tmp.write_text(content, encoding="utf-8")
         os.replace(tmp, self.config_file)
-        logger.debug(f'Config saved: {self.config_file}')
+
+    # -------------------------------------------------------------- #
 
     def get(self, section: str, key: str, default: Union[T, Callable[[], Any]]) -> Any:
         sub: dict = self._data.setdefault(section, {})
@@ -172,11 +197,26 @@ class Config(object):
 
     def set(self, section: str, key: str, value: Any) -> None:
         sub: dict = self._data.setdefault(section, {})
-        if value is None:
-            sub.pop(key, None)
-        else:
-            sub[key] = _serialize(value)
+        sub[key] = _serialize(value)
         self.save()
+
+
+# ------------------------------------------------------------------ #
+#                            Section Base                            #
+# ------------------------------------------------------------------ #
+class _Section(object):
+    section: str
+
+    def __init__(self, parent: Config) -> None:
+        self.root = parent
+        if not self.section:
+            raise ValueError(f'section is not defined for {self}')
+
+    def _get(self, key: str, default: Union[T, Callable[[], Any]]) -> T:
+        return self.root.get(self.section, key, default)
+
+    def _set(self, key: str, value: Any) -> None:
+        self.root.set(self.section, key, value)
 
 
 # ------------------------------------------------------------------ #
@@ -195,17 +235,7 @@ class AppConfig(_Section):
         return APP_DIR
 
     @property
-    def history_limit_per_user(self) -> int:
-        '''Number of items to store per user'''
-        return self._get("history_limit_per_user", 10000)
-
-    @history_limit_per_user.setter
-    def history_limit_per_user(self, v: Optional[int]) -> None:
-        self._set("history_limit_per_user", v)
-
-    @property
     def openai_key(self) -> Optional[str]:
-        '''Number of items to store per user'''
         return self._get("openai_api_key", None)
 
     @openai_key.setter

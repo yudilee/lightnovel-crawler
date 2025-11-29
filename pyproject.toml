@@ -58,4 +58,17 @@ sources = ["**/*", "!**/*.py", "!**/__pycache__/*"]
 "*" = ["__pycache__/*", "**/__pycache__/*"]
 
 [tool.black]
-line-length = 150
+extend-exclude = '''/
+   \.github
+  | \.venv*
+  | venv*
+  | __pycache__
+  | build
+  | dist
+  | res
+  | logs
+  | Lightnovels
+  | sqlite\.db
+  | lncrawl-web
+'''
+line-length = 120

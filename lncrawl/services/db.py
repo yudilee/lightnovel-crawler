@@ -1,38 +1,41 @@
 import logging
+from functools import cached_property
+from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
-from sqlmodel import SQLModel, Session, col, create_engine, inspect, update
+from alembic import command
+from alembic.config import Config
+from alembic.runtime.migration import MigrationContext
+from alembic.script import ScriptDirectory
+from sqlmodel import Session, create_engine, inspect
 
 from ..context import ctx
-from ..dao import Migration, tables
 
 logger = logging.getLogger(__name__)
 
 
 class DB:
-    # ------------------------------------------------------------------ #
-    migration_id = 1       # Migration row id
-    latest_version = 1     # Latest migration version
-    # ------------------------------------------------------------------ #
-
     def __init__(self) -> None:
-        self.engine = create_engine(
+        pass
+
+    @cached_property
+    def engine(self):
+        engine = create_engine(
             ctx.config.db.url,
             echo=ctx.logger.is_debug,
         )
         if ctx.logger.is_debug:
-            self.engine.logger = logger
-        logger.info(f'Database URL: "{self.engine.url}"')
-
-    @property
-    def is_postgres(self):
-        return self.engine.dialect.name == "postgresql"
+            engine.logger = logger
+        logger.info(f'Database URL: "{engine.url}"')
+        return engine
 
     def close(self):
-        self.engine.dispose()
+        if "engine" in self.__dict__:
+            self.engine.dispose()
 
     def session(
-        self, *,
+        self,
+        *,
         autoflush: bool = True,
         expire_on_commit: bool = False,
         enable_baked_queries: bool = True,
@@ -73,7 +76,7 @@ class DB:
                  "INSERT INTO table (id, value) VALUES (?, ?)", (1, "v1")
              )
 
-         """
+        """
         with self.engine.connect() as conn:
             return conn.exec_driver_sql(raw_sql, parameters, execution_options)
 
@@ -81,74 +84,44 @@ class DB:
     #                          Prepare Database                          #
     # ------------------------------------------------------------------ #
 
+    @cached_property
+    def alembic_config(self) -> Config:
+        cfg = Config()
+        migration_path = Path(__file__).parent.parent / "migrations"
+        cfg.set_main_option("sqlalchemy.url", ctx.config.db.url)
+        cfg.set_main_option("script_location", migration_path.as_posix())
+        cfg.set_main_option(
+            "file_template",
+            r"%%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d_%%(minute).2d_%%(second).2d_%%(slug)s",
+        )
+        cfg.set_section_option("post_write_hooks", "hooks", "black")
+        cfg.set_section_option("post_write_hooks", "black.type", "console_scripts")
+        cfg.set_section_option("post_write_hooks", "black.entrypoint", "black")
+        cfg.set_section_option("post_write_hooks", "black.options", "REVISION_SCRIPT_FILENAME")
+        return cfg
+
     def bootstrap(self):
-        # ensure tables
-        table = str(Migration.__tablename__)
-        inspector = inspect(self.engine)
-        if not inspector.has_table(table):
-            logger.info(f'Creating {len(tables)} tables')
-            self.__create_tables()
-        else:
-            self.__run_migrations()
+        if self.has_any_tables() and self.current_revision() is None:
+            command.stamp(self.alembic_config, self.base_revision())
+        command.upgrade(self.alembic_config, "head")
 
-        # ensure admin user
-        ctx.users.insert_admin()
+    def has_any_tables(self):
+        with self.engine.connect() as conn:
+            return bool(inspect(conn).get_table_names())
 
-    # ------------------------------------------------------------------ #
-    #                           Table Creation                           #
-    # ------------------------------------------------------------------ #
+    def current_revision(self):
+        with self.engine.connect() as conn:
+            context = MigrationContext.configure(conn)
+            return context.get_current_revision()
 
-    def __create_tables(self, retry=2):
-        try:
-            SQLModel.metadata.create_all(self.engine)
+    def base_revision(self):
+        script = ScriptDirectory.from_config(ctx.db.alembic_config)
+        base = script.get_base()
+        assert base
+        return base
 
-            logger.info('Preparing migration table')
-            with self.session() as sess:
-                entry = Migration(
-                    id=DB.migration_id,
-                    version=DB.latest_version,
-                )
-                sess.add(entry)
-                sess.commit()
-        except Exception as e:
-            if retry <= 0:
-                raise
-            logger.info(f'Retrying table creation. Cause: {repr(e)}')
-            self.__create_tables(retry - 1)
-
-    # ------------------------------------------------------------------ #
-    #                         Database Migrations                        #
-    # ------------------------------------------------------------------ #
-
-    def __run_migrations(self):
-        latest = DB.latest_version
-        current = self.__get_current()
-        if current == 0:
-            self.__create_tables()
-            current = self.__get_current()
-        if current == 0:
-            raise ValueError('Invalid migration value')
-        while current < latest:
-            logger.info(f'Running migrations: {current} -> {latest}')
-            self.__migrate_next(current)
-            current += 1
-            self.__set_current(current)
-
-    def __get_current(self) -> int:
-        with self.session() as sess:
-            entry = sess.get_one(Migration, DB.migration_id)
-            if not entry:
-                return 0
-            return entry.version
-
-    def __set_current(self, value: int) -> None:
-        with self.session() as sess:
-            sess.exec(
-                update(Migration)
-                .where(col(Migration.id) == DB.migration_id)
-                .values(version=value)
-            )
-            sess.commit()
-
-    def __migrate_next(self, version: int) -> None:
-        raise ValueError(f'Unknown version {version}')
+    def latest_revision(self):
+        script = ScriptDirectory.from_config(ctx.db.alembic_config)
+        head = script.get_current_head()
+        assert head
+        return head

@@ -1,8 +1,6 @@
 import logging
-import os
 from functools import cached_property
-from threading import Thread
-from typing import List, Optional
+from typing import Optional
 
 _cache: Optional['AppContext'] = None
 
@@ -117,8 +115,7 @@ class AppContext:
         return _cache
 
     def __init__(self) -> None:
-        self.__prepared = False
-        self.__threads: List[Thread] = []
+        self.__ready = False
 
     def destroy(self):
         global _cache
@@ -127,16 +124,16 @@ class AppContext:
         self.mail.close()
         self.sources.close()
         self.scheduler.stop()
-        self.__threads.clear()
 
     def setup(self):
-        if self.__prepared:
+        if self.__ready:
             return
-        self.__prepared = True
-        log_level = int(os.getenv('LNCRAWL_LOG_LEVEL', '0'))
-        self.logger.setup(log_level)
+        self.__ready = True
+        self.logger.setup()
         self.config.load()
         self.db.bootstrap()
+        self.users.setup_admin()
+        self.secrets.setup_secret()
         self.sources.load()
 
 

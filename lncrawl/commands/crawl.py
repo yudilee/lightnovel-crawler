@@ -61,6 +61,9 @@ def crawl(
         help="Novel details page URL.",
     ),
 ):
+    # setup context
+    ctx.setup()
+
     # ensure url
     if not url:
         if non_interactive:

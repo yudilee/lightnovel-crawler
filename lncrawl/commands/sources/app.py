@@ -4,14 +4,11 @@ from ...context import ctx
 
 app = typer.Typer(
     help='Manage sources.',
+    no_args_is_help=True,
 )
 
 
-@app.callback(
-    invoke_without_command=True,
-)
-def sources(context: typer.Context):
-    if context.invoked_subcommand is None:
-        typer.echo(context.get_help())
-    else:
-        ctx.sources.ensure_load()
+@app.callback()
+def sources():
+    ctx.setup()
+    ctx.sources.ensure_load()

@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -7,6 +7,7 @@ import typer
 from typing_extensions import Annotated
 
 from .commands.crawl import app as crawl
+from .commands.dev import app as dev
 from .commands.discord import app as discord
 from .commands.search import app as search
 from .commands.server import app as server
@@ -25,6 +26,7 @@ app = typer.Typer(
         # "auto_envvar_prefix": 'LNC',
         "help_option_names": ["-h", "--help"],
     },
+    no_args_is_help=True,
     pretty_exceptions_short=True,
     pretty_exceptions_enable=True,
     pretty_exceptions_show_locals=False,
@@ -32,6 +34,7 @@ app = typer.Typer(
 
 # Register subcommands
 app.add_typer(version)
+app.add_typer(dev, name='dev', hidden=True)
 app.add_typer(sources, name='sources')
 app.add_typer(crawl)
 app.add_typer(search)
@@ -41,9 +44,7 @@ app.add_typer(telegram)
 
 
 # Define main command
-@app.callback(
-    invoke_without_command=True,
-)
+@app.callback()
 def main(
     context: typer.Context,
     log_level: Annotated[
@@ -70,15 +71,11 @@ def main(
     context.obj = ctx
     context.call_on_close(ctx.destroy)
 
-    # setup context
+    # setup logger
+    os.environ['LNCRAWL_LOG_LEVEL'] = str(log_level)
+    ctx.logger.setup()
+
+    # load config
     if config:
         os.environ['LNCRAWL_CONFIG'] = str(config)
-    os.environ['LNCRAWL_LOG_LEVEL'] = str(log_level)
-    ctx.setup()
-
-    # show help if no args
-    if context.invoked_subcommand is None:
-        if ctx.logger.is_info:
-            context.fail('Missing command')
-        else:
-            typer.echo(context.get_help())
+    ctx.config.load()

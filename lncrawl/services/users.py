@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 class UserService:
     def __init__(self) -> None:
+        self._admin: Optional[User] = None
         self._passlib = CryptContext(
             schemes=['argon2'],
             deprecated='auto',
@@ -35,10 +36,10 @@ class UserService:
     def _check(self, plain: str, hashed: str) -> bool:
         return self._passlib.verify(plain, hashed)
 
-    def insert_admin(self):
+    def setup_admin(self) -> None:
+        email = ctx.config.db.admin_email
+        password = ctx.config.db.admin_password
         with ctx.db.session() as sess:
-            email = ctx.config.db.admin_email
-            password = ctx.config.db.admin_password
             user = sess.exec(
                 select(User).where(User.email == email)
             ).first()
@@ -54,11 +55,12 @@ class UserService:
                 sess.add(user)
             else:
                 logger.info('Updating admin user')
-                user.is_active = True
+                user.password = self._hash(password)
                 user.role = UserRole.ADMIN
                 user.tier = UserTier.VIP
-                user.password = self._hash(password)
+                user.is_active = True
             sess.commit()
+        self._admin = user
 
     def encode_token(
         self,
@@ -147,10 +149,10 @@ class UserService:
             )
 
     def get_admin(self) -> User:
-        with ctx.db.session() as sess:
-            email = ctx.config.db.admin_email
-            stmt = select(User).where(User.email == email)
-            return sess.exec(stmt).one()
+        if not self._admin:
+            self.setup_admin()
+            assert self._admin
+        return self._admin
 
     def get(self, user_id: str) -> User:
         with ctx.db.session() as sess:
@@ -340,11 +342,11 @@ class UserService:
         return user_id
 
     def signup(self, body: SignupRequest):
-        referrer = self.verify_user_token(body.referrer)
+        referrer_id = self.verify_user_token(body.referrer)
         request = CreateRequest(
             name=body.name,
             email=body.email,
             password=body.password,
-            referrer_id=referrer.id,
+            referrer_id=referrer_id,
         )
         return self.create(request)
