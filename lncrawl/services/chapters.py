@@ -14,19 +14,6 @@ class ChapterService:
     def __init__(self) -> None:
         pass
 
-    def count(
-        self, *,
-        novel_id: Optional[str] = None,
-        volume_id: Optional[str] = None,
-    ) -> int:
-        with ctx.db.session() as sess:
-            stmt = sq.select(sq.func.count()).select_from(Chapter)
-            if novel_id:
-                stmt = stmt.where(Chapter.novel_id == novel_id)
-            if volume_id:
-                stmt = stmt.where(Chapter.volume_id == volume_id)
-            return sess.exec(stmt).one()
-
     def list(
         self, *,
         novel_id: Optional[str] = None,
@@ -56,7 +43,7 @@ class ChapterService:
     ) -> Paginated[Chapter]:
         with ctx.db.session() as sess:
             stmt = sq.select(Chapter)
-            cnt = sq.select(sq.func.count()).select_from(User)
+            cnt = sq.select(sq.func.count()).select_from(Chapter)
 
             # Apply filters
             conditions: List[Any] = []

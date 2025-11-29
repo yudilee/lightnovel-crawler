@@ -43,6 +43,7 @@ export const VolumeDetailsCard: React.FC<{
   useEffect(() => {
     const fetchChapters = async (id: string) => {
       try {
+        setLoading(true);
         const { data } = await axios.get<Paginated<Chapter>>(
           `/api/volume/${id}/chapters`,
           {
