@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 
 from jose import jwt
 from passlib.context import CryptContext
-from sqlmodel import String, and_, asc, cast, col, func, or_, select
+from sqlmodel import String, asc, cast, col, func, or_, select
 
 from ..context import ctx
 from ..dao import NotificationItem, User, UserRole, UserTier, VerifiedEmail
@@ -128,9 +128,8 @@ class UserService:
                 )
 
             if conditions:
-                cnd = and_(*conditions)
-                stmt = stmt.where(cnd)
-                cnt = cnt.where(cnd)
+                cnt = cnt.where(*conditions)
+                stmt = stmt.where(*conditions)
 
             # Apply sorting
             stmt = stmt.order_by(asc(User.created_at))

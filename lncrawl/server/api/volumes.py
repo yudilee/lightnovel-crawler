@@ -1,9 +1,8 @@
-from typing import List
-
-from fastapi import APIRouter, Path, Security
+from fastapi import APIRouter, Path, Query, Security
 
 from ...context import ctx
 from ...dao import Chapter, Job, User, Volume
+from ..models.pagination import Paginated
 from ..security import ensure_user
 
 # The root router
@@ -28,5 +27,11 @@ def fetch_volume(
 @router.get("/{volume_id}/chapters", summary='Gets all chapters')
 async def get_volume_chapters(
     volume_id: str = Path(),
-) -> List[Chapter]:
-    return ctx.chapters.list(volume_id=volume_id)
+    offset: int = Query(default=0),
+    limit: int = Query(default=20, le=100),
+) -> Paginated[Chapter]:
+    return ctx.chapters.list_page(
+        limit=limit,
+        offset=offset,
+        volume_id=volume_id
+    )

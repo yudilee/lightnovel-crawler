@@ -32,7 +32,7 @@ export interface LoginResponse {
   is_verified: boolean;
 }
 
-export interface Paginatied<T> {
+export interface Paginated<T> {
   total: number;
   offset: number;
   limit: number;

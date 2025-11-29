@@ -1,8 +1,24 @@
-import { type Chapter, type Job, type ReadHistory, type Volume } from '@/types';
+import {
+  type Chapter,
+  type Job,
+  type Paginated,
+  type ReadHistory,
+  type Volume,
+} from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { formatDate } from '@/utils/time';
 import { DownloadOutlined } from '@ant-design/icons';
-import { Button, Card, Descriptions, Flex, Grid, message, Spin } from 'antd';
+import {
+  Button,
+  Card,
+  Descriptions,
+  Divider,
+  Flex,
+  Grid,
+  message,
+  Pagination,
+  Spin,
+} from 'antd';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -18,16 +34,26 @@ export const VolumeDetailsCard: React.FC<{
   const { lg } = Grid.useBreakpoint();
   const [messageApi, contextHolder] = message.useMessage();
 
+  const [page, setPage] = useState<number>(1);
+  const [total, setTotal] = useState<number>(0);
+  const [perPage, setPerPage] = useState<number>(10);
   const [loading, setLoading] = useState<boolean>(true);
   const [chapters, setChapters] = useState<Chapter[]>([]);
 
   useEffect(() => {
     const fetchChapters = async (id: string) => {
       try {
-        const { data: chapters } = await axios.get<Chapter[]>(
-          `/api/volume/${id}/chapters`
+        const { data } = await axios.get<Paginated<Chapter>>(
+          `/api/volume/${id}/chapters`,
+          {
+            params: {
+              limit: perPage,
+              offset: (page - 1) * perPage,
+            },
+          }
         );
-        setChapters(chapters);
+        setTotal(data.total);
+        setChapters(data.items);
       } catch (err) {
         messageApi.error(stringifyError(err));
         setChapters([]);
@@ -38,7 +64,7 @@ export const VolumeDetailsCard: React.FC<{
     if (!hideChapters) {
       fetchChapters(volume.id);
     }
-  }, [volume.id, hideChapters, messageApi]);
+  }, [volume.id, hideChapters, page, perPage, messageApi]);
 
   const createVolumeJob = async (e: React.MouseEvent) => {
     try {
@@ -110,7 +136,21 @@ export const VolumeDetailsCard: React.FC<{
           <Spin size="large" style={{ margin: '50px 0' }} />
         </Flex>
       ) : chapters.length > 0 ? (
-        <ChapterListCard chapters={chapters} history={history} />
+        <>
+          <ChapterListCard chapters={chapters} history={history} />
+          <Divider size="small" />
+          {(chapters.length > 0 || page > 1) && total / perPage > 1 && (
+            <Pagination
+              total={total}
+              current={page}
+              pageSize={perPage}
+              onChange={(page, perPage) => {
+                setPage(page);
+                setPerPage(perPage);
+              }}
+            />
+          )}
+        </>
       ) : null}
     </Card>
   );

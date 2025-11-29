@@ -1,11 +1,11 @@
 from typing import List
 
-from fastapi import APIRouter, Path, Query, Depends
+from fastapi import APIRouter, Depends, Path, Query
 
 from ...context import ctx
-from ..security import ensure_admin
 from ...dao import Artifact, Chapter, Novel, Volume
 from ..models.pagination import Paginated
+from ..security import ensure_admin
 
 # The root router
 router = APIRouter()
@@ -44,8 +44,14 @@ async def get_novel_volumes(
 @router.get("/{novel_id}/chapters", summary='Gets all chapters')
 async def get_novel_chapters(
     novel_id: str = Path(),
-) -> List[Chapter]:
-    return ctx.chapters.list(novel_id=novel_id)
+    offset: int = Query(default=0),
+    limit: int = Query(default=20, le=100),
+) -> Paginated[Chapter]:
+    return ctx.chapters.list_page(
+        limit=limit,
+        offset=offset,
+        novel_id=novel_id,
+    )
 
 
 @router.get("/{novel_id}/artifacts", summary='Gets latest artifacts')

@@ -12,40 +12,43 @@ export const ChapterListCard: React.FC<{
   const { token } = theme.useToken();
 
   return (
-    <div style={{ marginTop: 10 }}>
-      <Collapse
-        ghost
-        accordion
-        size="small"
-        items={chapters.map((chapter) => ({
-          key: chapter.id,
-          label: chapter.title,
-          children: <ChapterDetailsCard inner chapter={chapter} />,
-          styles: {
-            body: { padding: 0 },
-            header: {
-              textTransform: 'capitalize',
-              opacity: history[chapter.id] ? 0.5 : 1,
-              borderBottom: `1px solid ${token.colorSplit}`,
-            },
+    <Collapse
+      ghost
+      accordion
+      size="small"
+      style={{
+        marginTop: 10,
+        borderRadius: 0,
+      }}
+      items={chapters.map((chapter) => ({
+        key: chapter.id,
+        label: chapter.title,
+        children: <ChapterDetailsCard inner chapter={chapter} />,
+        styles: {
+          body: { padding: 0 },
+          header: {
+            borderRadius: 0,
+            textTransform: 'capitalize',
+            opacity: history[chapter.id] ? 0.5 : 1,
+            borderTop: `1px solid ${token.colorSplit}`,
           },
-          extra: (
-            <Button
-              size="small"
-              shape="round"
-              style={{ width: 75 }}
-              icon={<RightCircleOutlined />}
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                navigate(`/read/${chapter.id}`);
-              }}
-            >
-              Read
-            </Button>
-          ),
-        }))}
-      />
-    </div>
+        },
+        extra: (
+          <Button
+            size="small"
+            shape="round"
+            style={{ width: 75 }}
+            icon={<RightCircleOutlined />}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              navigate(`/read/${chapter.id}`);
+            }}
+          >
+            Read
+          </Button>
+        ),
+      }))}
+    />
   );
 };

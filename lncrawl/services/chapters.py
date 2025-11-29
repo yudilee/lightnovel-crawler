@@ -1,15 +1,13 @@
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy import delete as sa_delete
-from sqlalchemy import insert as sa_insert
-from sqlalchemy import update as sa_update
-from sqlmodel import case, col, func, select, true
+import sqlmodel as sq
 
 from ..context import ctx
 from ..dao import Chapter, User, Volume
 from ..exceptions import ServerErrors
 from ..models import Chapter as ModelChapter
 from ..server.models.novel import ReadChapterResponse
+from ..server.models.pagination import Paginated
 
 
 class ChapterService:
@@ -22,7 +20,7 @@ class ChapterService:
         volume_id: Optional[str] = None,
     ) -> int:
         with ctx.db.session() as sess:
-            stmt = select(func.count()).select_from(Chapter)
+            stmt = sq.select(sq.func.count()).select_from(Chapter)
             if novel_id:
                 stmt = stmt.where(Chapter.novel_id == novel_id)
             if volume_id:
@@ -36,19 +34,58 @@ class ChapterService:
         is_crawled: Optional[bool] = None,
     ) -> List[Chapter]:
         with ctx.db.session() as sess:
-            stmt = select(Chapter)
+            stmt = sq.select(Chapter)
             if novel_id:
                 stmt = stmt.where(Chapter.novel_id == novel_id)
             if volume_id:
                 stmt = stmt.where(Chapter.volume_id == volume_id)
             if is_crawled is not None:
-                stmt = stmt.where(
-                    col(Chapter.is_done).is_(true()) if is_crawled
-                    else col(Chapter.is_done).is_(False)
-                )
-            stmt = stmt.order_by(col(Chapter.serial).asc())
+                stmt = stmt.where(sq.col(Chapter.is_done).is_(is_crawled))
+            stmt = stmt.order_by(sq.col(Chapter.serial).asc())
             items = sess.exec(stmt).all()
             return list(items)
+
+    def list_page(
+        self,
+        offset: int = 0,
+        limit: int = 20,
+        *,
+        novel_id: Optional[str] = None,
+        volume_id: Optional[str] = None,
+        is_crawled: Optional[bool] = None,
+    ) -> Paginated[Chapter]:
+        with ctx.db.session() as sess:
+            stmt = sq.select(Chapter)
+            cnt = sq.select(sq.func.count()).select_from(User)
+
+            # Apply filters
+            conditions: List[Any] = []
+            if novel_id:
+                conditions += [Chapter.novel_id == novel_id]
+            if volume_id:
+                conditions += [Chapter.volume_id == volume_id]
+            if is_crawled is not None:
+                conditions += [sq.col(Chapter.is_done).is_(is_crawled)]
+
+            if conditions:
+                cnt = cnt.where(*conditions)
+                stmt = stmt.where(*conditions)
+
+            # Apply sorting
+            stmt = stmt.order_by(sq.col(Chapter.serial).asc())
+
+            # Apply pagination
+            stmt = stmt.offset(offset).limit(limit)
+
+            total = sess.exec(cnt).one()
+            items = sess.exec(stmt).all()
+
+            return Paginated(
+                total=total,
+                offset=offset,
+                limit=limit,
+                items=list(items),
+            )
 
     def list_ids(
         self,
@@ -59,20 +96,17 @@ class ChapterService:
         limit: Optional[int] = None,
     ) -> List[str]:
         with ctx.db.session() as sess:
-            stmt = select(Chapter.id)
+            stmt = sq.select(Chapter.id)
             if novel_id:
                 stmt = stmt.where(Chapter.novel_id == novel_id)
             if volume_id:
                 stmt = stmt.where(Chapter.volume_id == volume_id)
             if is_crawled is not None:
-                stmt = stmt.where(
-                    col(Chapter.is_done).is_(true()) if is_crawled
-                    else col(Chapter.is_done).is_(False)
-                )
+                stmt = stmt.where(sq.col(Chapter.is_done).is_(is_crawled))
             if descending:
-                stmt = stmt.order_by(col(Chapter.serial).desc())
+                stmt = stmt.order_by(sq.col(Chapter.serial).desc())
             else:
-                stmt = stmt.order_by(col(Chapter.serial).asc())
+                stmt = stmt.order_by(sq.col(Chapter.serial).asc())
             if limit:
                 stmt = stmt.limit(limit)
             items = sess.exec(stmt).all()
@@ -80,7 +114,7 @@ class ChapterService:
 
     def find(self, novel_id: str, serial: int) -> Chapter:
         with ctx.db.session() as sess:
-            stmt = select(Chapter).where(
+            stmt = sq.select(Chapter).where(
                 Chapter.novel_id == novel_id,
                 Chapter.serial == serial,
             )
@@ -98,8 +132,10 @@ class ChapterService:
 
     def get_many(self, chapter_ids: List[str]) -> List[Chapter]:
         with ctx.db.session() as sess:
-            stmt = select(Chapter).where(col(Chapter.id).in_(chapter_ids))
-            items = sess.exec(stmt).all()
+            items = sess.exec(
+                sq.select(Chapter)
+                .where(sq.col(Chapter.id).in_(chapter_ids))
+            ).all()
             return list(items)
 
     def delete(self, chapter_id: str) -> None:
@@ -121,13 +157,13 @@ class ChapterService:
 
         with ctx.db.session() as sess:
             previous_id = sess.exec(
-                select(Chapter.id)
+                sq.select(Chapter.id)
                 .where(Chapter.novel_id == novel.id)
                 .where(Chapter.serial == (chapter.serial - 1))
                 .limit(1)
             ).first()
             next_id = sess.exec(
-                select(Chapter.id)
+                sq.select(Chapter.id)
                 .where(Chapter.novel_id == novel.id)
                 .where(Chapter.serial == (chapter.serial + 1))
                 .limit(1)
@@ -148,7 +184,7 @@ class ChapterService:
             vol_id_map: Dict[Optional[int], str] = {
                 v.serial: v.id
                 for v in sess.exec(
-                    select(Volume)
+                    sq.select(Volume)
                     .where(Volume.novel_id == novel_id)
                 ).all()
             }
@@ -159,7 +195,7 @@ class ChapterService:
             existing = {
                 c.serial: c
                 for c in sess.exec(
-                    select(Chapter)
+                    sq.select(Chapter)
                     .where(Chapter.novel_id == novel_id)
                 ).all()
             }
@@ -172,7 +208,7 @@ class ChapterService:
 
             if to_insert:
                 sess.exec(
-                    sa_insert(Chapter),
+                    sq.insert(Chapter),
                     params=[
                         Chapter(
                             serial=s,
@@ -203,28 +239,28 @@ class ChapterService:
                         volume_updates[r.id] = vol_id
                 if url_updates:
                     sess.exec(
-                        sa_update(Chapter)
-                        .where(col(Chapter.id).in_(url_updates.keys()))
-                        .values(url=case(url_updates, value=Chapter.id))
+                        sq.update(Chapter)
+                        .where(sq.col(Chapter.id).in_(url_updates.keys()))
+                        .values(url=sq.case(url_updates, value=Chapter.id))
                     )
                 if title_updates:
                     sess.exec(
-                        sa_update(Chapter)
-                        .where(col(Chapter.id).in_(title_updates.keys()))
-                        .values(title=case(title_updates, value=Chapter.id))
+                        sq.update(Chapter)
+                        .where(sq.col(Chapter.id).in_(title_updates.keys()))
+                        .values(title=sq.case(title_updates, value=Chapter.id))
                     )
                 if volume_updates:
                     sess.exec(
-                        sa_update(Chapter)
-                        .where(col(Chapter.id).in_(volume_updates.keys()))
-                        .values(volume_id=case(volume_updates, value=Chapter.id))
+                        sq.update(Chapter)
+                        .where(sq.col(Chapter.id).in_(volume_updates.keys()))
+                        .values(volume_id=sq.case(volume_updates, value=Chapter.id))
                     )
 
             if to_delete:
                 sess.exec(
-                    sa_delete(Chapter)
-                    .where(col(Chapter.novel_id) == novel_id)
-                    .where(col(Chapter.serial).in_(to_delete))
+                    sq.delete(Chapter)
+                    .where(sq.col(Chapter.novel_id) == novel_id)
+                    .where(sq.col(Chapter.serial).in_(to_delete))
                 )
                 for serial in to_delete:
                     file = existing[serial].content_file

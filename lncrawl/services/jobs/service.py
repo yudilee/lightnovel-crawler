@@ -1,10 +1,8 @@
 from typing import Any, Iterable, List, Optional, TypeVar
 
-from sqlalchemy import delete as sa_delete
-from sqlalchemy import update as sa_update
+import sqlmodel as sq
 from sqlalchemy.orm import aliased
-from sqlmodel import (Session, and_, asc, case, cast, col, desc, exists, func,
-                      literal, or_, select)
+from sqlmodel import Session
 
 from ...context import ctx
 from ...dao import (Job, JobPriority, JobStatus, JobType, OutputFormat, User,
@@ -18,10 +16,10 @@ from .utils import select_ancestors, select_descendends
 T = TypeVar('T')
 
 job_status_type = Job.__table__.c.status.type  # type: ignore
-job_failed_literal = cast(literal(JobStatus.FAILED.name), job_status_type)
-job_success_literal = cast(literal(JobStatus.SUCCESS.name), job_status_type)
-job_running_literal = cast(literal(JobStatus.RUNNING.name), job_status_type)
-job_canceled_literal = cast(literal(JobStatus.CANCELED.name), job_status_type)
+job_failed_literal = sq.cast(sq.literal(JobStatus.FAILED.name), job_status_type)
+job_success_literal = sq.cast(sq.literal(JobStatus.SUCCESS.name), job_status_type)
+job_running_literal = sq.cast(sq.literal(JobStatus.RUNNING.name), job_status_type)
+job_canceled_literal = sq.cast(sq.literal(JobStatus.CANCELED.name), job_status_type)
 
 
 class JobService:
@@ -44,8 +42,8 @@ class JobService:
         parent_job_id: Optional[str] = None,
     ) -> Paginated[Job]:
         with ctx.db.session() as sess:
-            stmt = select(Job)
-            cnt = select(func.count()).select_from(Job)
+            stmt = sq.select(Job)
+            cnt = sq.select(sq.func.count()).select_from(Job)
 
             # Apply filters
             conditions: List[Any] = []
@@ -54,26 +52,25 @@ class JobService:
             if parent_job_id is not None:
                 conditions.append(Job.parent_job_id == parent_job_id)
             else:
-                conditions.append(col(Job.parent_job_id).is_(None))
+                conditions.append(sq.col(Job.parent_job_id).is_(None))
             if job_type is not None:
                 conditions.append(Job.type == job_type)
             if status is not None:
                 conditions.append(Job.status == status)
             if is_done is not None:
-                conditions.append(col(Job.is_done).is_(True))
+                conditions.append(sq.col(Job.is_done).is_(True))
             if priority is not None:
                 conditions.append(Job.priority == priority)
 
             if conditions:
-                cnd = and_(*conditions)
-                stmt = stmt.where(cnd)
-                cnt = cnt.where(cnd)
+                stmt = stmt.where(*conditions)
+                cnt = cnt.where(*conditions)
 
             # Apply sorting
             if parent_job_id is not None:
-                stmt = stmt.order_by(asc(Job.created_at))
+                stmt = stmt.order_by(sq.asc(Job.created_at))
             else:
-                stmt = stmt.order_by(desc(Job.created_at))
+                stmt = stmt.order_by(sq.desc(Job.created_at))
 
             # Apply pagination
             stmt = stmt.offset(offset).limit(limit)
@@ -97,7 +94,7 @@ class JobService:
 
     def get_user_id(self, job_id: str) -> Optional[str]:
         with ctx.db.session() as sess:
-            stmt = select(Job.user_id).where(Job.id == job_id)
+            stmt = sq.select(Job.user_id).where(Job.id == job_id)
             return sess.exec(stmt).first()
 
     def verify_access(self, user: User, job_id: str) -> str:
@@ -110,21 +107,21 @@ class JobService:
 
     def get_children_ids(self, parent_job_id: str) -> Iterable[str]:
         with ctx.db.session() as sess:
-            stmt = select(Job.id).where(Job.parent_job_id == parent_job_id)
+            stmt = sq.select(Job.id).where(Job.parent_job_id == parent_job_id)
             return sess.exec(stmt).all()
 
     def get_children(self, parent_job_id: str) -> Iterable[Job]:
         with ctx.db.session() as sess:
-            stmt = select(Job).where(Job.parent_job_id == parent_job_id)
+            stmt = sq.select(Job).where(Job.parent_job_id == parent_job_id)
             return sess.exec(stmt).all()
 
     def get_chapter_job(self, chapter_id: str) -> Optional[Job]:
         with ctx.db.session() as sess:
             return sess.exec(
-                select(Job)
+                sq.select(Job)
                 .where(
                     Job.type == JobType.CHAPTER,
-                    col(Job.is_done).is_(False),
+                    sq.col(Job.is_done).is_(False),
                     Job.extra["chapter_id"].as_string() == chapter_id,
                 )
                 .limit(1)
@@ -152,7 +149,7 @@ class JobService:
     def delete(self, job_id: str) -> None:
         with ctx.db.session() as sess:
             result = sess.exec(
-                select(Job.done, Job.total)
+                sq.select(Job.done, Job.total)
                 .where(Job.id == job_id)
             ).first()
             if not result:
@@ -168,8 +165,8 @@ class JobService:
 
             sa_deps = select_descendends(job_id, True)
             sess.exec(
-                sa_delete(Job)
-                .where(col(Job.id).in_(sa_deps))
+                sq.delete(Job)
+                .where(sq.col(Job.id).in_(sa_deps))
             )
 
             sess.commit()
@@ -446,9 +443,9 @@ class JobService:
         with ctx.db.session() as sess:
             sa_pars = select_ancestors(job_id)
             return sess.exec(
-                select(Job)
-                .where(col(Job.id).in_(sa_pars))
-                .where(col(Job.parent_job_id).is_(None))
+                sq.select(Job)
+                .where(sq.col(Job.id).in_(sa_pars))
+                .where(sq.col(Job.parent_job_id).is_(None))
                 .limit(1)
             ).first()
 
@@ -458,34 +455,34 @@ class JobService:
         skip_job_ids: Iterable[str] = []
     ) -> Optional[Job]:
         with ctx.db.session() as sess:
-            stmt = select(Job)
+            stmt = sq.select(Job)
 
             job_alias = aliased(Job)
             dep_is_done = (
-                exists(1)
-                .where(col(job_alias.id) == Job.depends_on)
-                .where(col(job_alias.is_done).is_(True))
+                sq.exists(1)
+                .where(sq.col(job_alias.id) == Job.depends_on)
+                .where(sq.col(job_alias.is_done).is_(True))
             )
             stmt = stmt.where(
-                or_(
-                    col(Job.depends_on).is_(None),
+                sq.or_(
+                    sq.col(Job.depends_on).is_(None),
                     dep_is_done
                 )
             )
 
-            job_is_new = and_(
+            job_is_new = sq.and_(
                 Job.status == JobStatus.RUNNING,
                 Job.done == 0,
             )
             stmt = stmt.where(
-                or_(
+                sq.or_(
                     Job.status == JobStatus.PENDING,
                     job_is_new,
                 )
             )
 
             if skip_job_ids:
-                stmt = stmt.where(col(Job.id).not_in(skip_job_ids))
+                stmt = stmt.where(sq.col(Job.id).not_in(skip_job_ids))
 
             if artifact is not None:
                 if artifact:
@@ -494,15 +491,15 @@ class JobService:
                     stmt = stmt.where(Job.type != JobType.ARTIFACT)
 
             stmt = stmt.order_by(
-                desc(Job.priority),
-                asc(Job.updated_at),
+                sq.desc(Job.priority),
+                sq.asc(Job.updated_at),
             )
             return sess.exec(stmt.limit(1)).first()
 
     def _update(self, sess: Session, job_id: str, **values) -> None:
         sess.exec(
-            sa_update(Job)
-            .where(col(Job.id) == job_id)
+            sq.update(Job)
+            .where(sq.col(Job.id) == job_id)
             .values(**values)
         )
 
@@ -520,24 +517,30 @@ class JobService:
         sa_total = total
         sa_is_done = sa_done == sa_total
 
-        sa_status = case(
+        sa_status = sq.case(
             (sa_is_done, job_success_literal),
             else_=Job.status
         )
-        sa_started_at = case(
-            (and_(sa_is_done, col(Job.started_at).is_(None)), now),
+        sa_started_at = sq.case(
+            (
+                sq.and_(sa_is_done, sq.col(Job.started_at).is_(None)),
+                now
+            ),
             else_=Job.started_at
         )
-        sa_finished_at = case(
-            (and_(sa_is_done, col(Job.finished_at).is_(None)), now),
+        sa_finished_at = sq.case(
+            (
+                sq.and_(sa_is_done, sq.col(Job.finished_at).is_(None)),
+                now
+            ),
             else_=Job.finished_at
         )
 
         sa_pars = select_ancestors(job_id, inclusive)
         sess.exec(
-            sa_update(Job)
-            .where(col(Job.id).in_(sa_pars))
-            .where(col(Job.is_done).is_(False))
+            sq.update(Job)
+            .where(sq.col(Job.id).in_(sa_pars))
+            .where(sq.col(Job.is_done).is_(False))
             .values(
                 done=sa_done,
                 total=sa_total,
@@ -552,17 +555,17 @@ class JobService:
         now = current_timestamp()
         sa_deps = select_descendends(job_id, inclusive)
         sess.exec(
-            sa_update(Job)
+            sq.update(Job)
             .where(
-                col(Job.id).in_(sa_deps),
-                col(Job.is_done).is_(False),
+                sq.col(Job.id).in_(sa_deps),
+                sq.col(Job.is_done).is_(False),
             )
             .values(
                 is_done=True,
                 status=job_canceled_literal,
                 error='Canceled by one of the parent',
-                started_at=func.coalesce(Job.started_at, now),
-                finished_at=func.coalesce(Job.finished_at, now),
+                started_at=sq.func.coalesce(Job.started_at, now),
+                finished_at=sq.func.coalesce(Job.finished_at, now),
             )
         )
 
@@ -576,7 +579,7 @@ class JobService:
 
     def _success(self, sess: Session, job_id: str) -> None:
         pending = sess.exec(
-            select(Job.total - Job.done)
+            sq.select(Job.total - Job.done)
             .where(Job.id == job_id)
         ).one()
         self._increment_up(sess, job_id, pending)
