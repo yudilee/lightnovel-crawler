@@ -11,8 +11,7 @@ export function getVoices(): Promise<SpeechSynthesisVoice[]> {
     if (!window.speechSynthesis) {
       return resolve([]);
     }
-    let interval: any, timeout: any;
-    interval = setInterval(() => {
+    const interval = setInterval(() => {
       const voices = speechSynthesis.getVoices();
       if (voices.length) {
         clearTimeout(timeout);
@@ -20,7 +19,7 @@ export function getVoices(): Promise<SpeechSynthesisVoice[]> {
         resolve(voices);
       }
     }, 50);
-    timeout = setTimeout(() => {
+    const timeout = setTimeout(() => {
       clearInterval(interval);
       clearTimeout(timeout);
       clearInterval(interval);

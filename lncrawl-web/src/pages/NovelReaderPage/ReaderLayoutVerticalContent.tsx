@@ -98,6 +98,7 @@ function useSpeechSynthesis(
     voicePitch,
     position,
     loading,
+    navigate,
   ]);
 
   useEffect(() => {
@@ -151,6 +152,7 @@ function useSpeechSynthesis(
     voicePitch,
     position,
     loading,
+    navigate,
   ]);
 }
 

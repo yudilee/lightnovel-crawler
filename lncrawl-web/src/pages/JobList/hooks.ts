@@ -53,45 +53,37 @@ export function useJobList(
     }
   }, [searchParams]);
 
-  const fetchJobs = async (
-    page: number,
-    limit: number,
-    userId?: string,
-    type?: JobType,
-    status?: SearchParams['status']
-  ) => {
-    setError(undefined);
-    try {
-      const offset = (page - 1) * limit;
-      const statusParams = JobStatusFilterParams.find(
-        (v) => v.value === status
-      )?.params;
-      const { data } = await axios.get<Paginated<Job>>('/api/jobs', {
-        params: {
-          offset,
-          limit,
-          type,
-          user_id: userId,
-          parent_job_id: parentJobId,
-          ...statusParams,
-        },
-      });
-      setTotal(data.total);
-      setJobs(data.items);
-    } catch (err: any) {
-      setError(stringifyError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    const tid = setTimeout(() => {
-      const userId = isAdmin ? customUserId : currentUser?.id;
-      fetchJobs(currentPage, perPage, userId, type, status);
-    }, 50);
+    const fetchJobs = async () => {
+      setError(undefined);
+      try {
+        const offset = (currentPage - 1) * perPage;
+        const userId = isAdmin ? customUserId : currentUser?.id;
+        const statusParams = JobStatusFilterParams.find(
+          (v) => v.value === status
+        )?.params;
+        const { data } = await axios.get<Paginated<Job>>('/api/jobs', {
+          params: {
+            offset,
+            limit: perPage,
+            type,
+            user_id: userId,
+            parent_job_id: parentJobId,
+            ...statusParams,
+          },
+        });
+        setTotal(data.total);
+        setJobs(data.items);
+      } catch (err: any) {
+        setError(stringifyError(err));
+      } finally {
+        setLoading(false);
+      }
+    };
+    const tid = setTimeout(fetchJobs, 50);
     return () => clearTimeout(tid);
   }, [
+    parentJobId,
     customUserId,
     currentUser?.id,
     isAdmin,
@@ -110,7 +102,7 @@ export function useJobList(
       }
     }
     return false;
-  }, [error, status, jobs]);
+  }, [error, jobs]);
 
   useEffect(() => {
     // refresh if it has incomplete jobs

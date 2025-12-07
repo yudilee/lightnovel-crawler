@@ -16,7 +16,7 @@ export const Favicon: React.FC<
     if (!url) return null;
     const search = qs.stringify({ url, token });
     return `${API_BASE_URL}/api/meta/favicon?${search}`;
-  }, [url]);
+  }, [url, token]);
 
   return <Avatar size={24} {...props} src={faviconLink} />;
 };
