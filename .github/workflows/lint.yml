@@ -11,11 +11,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint_test:
+  lncrawl:
     if: github.repository == 'dipu-bd/lightnovel-crawler'
     runs-on: ubuntu-latest
-    name: Lint & Test (Python ${{ matrix.python-version }})
+    name: lncrawl (Python ${{ matrix.python-version }})
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
 
@@ -45,3 +46,39 @@ jobs:
         run: |
           pip install dist/lightnovel_crawler*.whl
           lncrawl -ll sources list
+
+  lncrawl_web:
+    if: github.repository == 'dipu-bd/lightnovel-crawler'
+    runs-on: ubuntu-latest
+    name: lncrawl-web (Node.js ${{ matrix.node }})
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["20.x", "node"]
+    defaults:
+      run:
+        working-directory: lncrawl-web
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: "🟢 Set up Node.js ${{ matrix.node }}"
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: yarn
+          cache-dependency-path: lncrawl-web/yarn.lock
+
+      - name: "📦 Install dependencies"
+        run: yarn install --frozen-lockfile
+
+      - name: "🔍 Run lint"
+        run: yarn lint
+        env:
+          CI: true
+
+      - name: "🏗️ Run build"
+        run: yarn build
+        env:
+          CI: true
