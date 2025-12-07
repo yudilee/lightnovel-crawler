@@ -249,7 +249,7 @@ def process_info(info: CrawlerInfo):
 logger.info("Loading crawlers")
 futures = []
 visited = set()
-taskman = TaskManager(20)
+taskman = TaskManager(42)
 for info in ctx.sources.load_crawlers(*sorted(SOURCES_FOLDER.glob("**/*.py"))):
     if info.id in visited:
         continue
