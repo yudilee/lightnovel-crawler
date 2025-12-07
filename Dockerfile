@@ -1,5 +1,19 @@
 ##
-# Setup Runner
+# Web assets
+##
+FROM node:alpine AS node
+
+WORKDIR /app/lncrawl-web
+COPY lncrawl-web/package.json package.json
+COPY lncrawl-web/yarn.lock yarn.lock
+RUN yarn
+
+RUN mkdir -p ../lncrawl
+COPY lncrawl-web .
+RUN yarn build
+
+##
+# Application
 ##
 FROM python:3.10-slim-bookworm AS runner
 
@@ -17,33 +31,17 @@ RUN apt-get update -yq \
 RUN wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin \
     && ln -s /opt/calibre/ebook-convert /usr/local/bin/ebook-convert
 
-# Update pip
-RUN python -m pip install -U pip
-
-##
-# Web assets builder
-##
-FROM node:alpine AS node
-
-WORKDIR /app/lncrawl-web
-COPY lncrawl-web/package.json package.json
-COPY lncrawl-web/yarn.lock yarn.lock
-RUN yarn
-
-RUN mkdir -p ../lncrawl
-COPY lncrawl-web .
-RUN yarn build
-
-##
-# Application
-##
-FROM runner
+# Install uv and upgrade pip
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+RUN uv pip install --system -U pip
 
 WORKDIR /app
 
 # Install requirements
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+COPY requirements.txt ./
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv pip install --system -r requirements.txt
 
 # Copy sources
 COPY sources sources
