@@ -77,7 +77,7 @@ def batch_import_crawlers(*files: Path):
     )
 
 
-def import_crawlers(file: Path) -> Generator[type[Crawler], None, None]:
+def import_crawlers(file: Path) -> Generator[Type[Crawler], None, None]:
     # validate the file
     if not file.is_file():
         return
