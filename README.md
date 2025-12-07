@@ -12,42 +12,21 @@
 
 ## Table of contents
 
-- [Lightnovel Crawler](#lightnovel-crawler)
-  - [Table of contents](#table-of-contents)
-  - [Installation](#installation)
-    - [Standalone Bundle (Windows, Linux)](#standalone-bundle-windows-linux)
-    - [PIP (Windows, Mac, and Linux)](#pip-windows-mac-and-linux)
-    - [PIP (Directly from GitHub)](#pip-directly-from-github)
-    - [Docker](#docker)
-    - [Termux (Android)](#termux-android)
-    - [Chatbots](#chatbots)
-      - [Discord](#discord)
-      - [Telegram](#telegram)
-    - [Heroku Deployment](#heroku-deployment)
-  - [Running from source](#running-from-source)
-  - [Running the Bots](#running-the-bots)
-  - [General Usage](#general-usage)
-    - [Available options](#available-options)
-    - [Example Usage](#example-usage)
-    - [Additional Help](#additional-help)
-    - [Login to www.wuxiaworld.com](#login-to-wwwwuxiaworldcom)
-  - [Development](#development)
-    - [Adding new source](#adding-new-source)
-    - [Adding new Bot](#adding-new-bot)
-  - [Supported sources](#supported-sources)
-    - [`~` Unknown](#-unknown)
-    - [`ar` Arabic](#ar-arabic)
-    - [`en` English](#en-english)
-    - [`es` Spanish; Castilian](#es-spanish-castilian)
-    - [`fr` French](#fr-french)
-    - [`id` Indonesian](#id-indonesian)
-    - [`pt` Portuguese](#pt-portuguese)
-    - [`ru` Russian](#ru-russian)
-    - [`vi` Vietnamese](#vi-vietnamese)
-    - [`zh` Chinese](#zh-chinese)
-  - [Rejected sources](#rejected-sources)
-  - [Supported output formats](#supported-output-formats)
-  - [Sponsors](#sponsors)
+- [Installation](#installation)
+  - [Standalone Bundle (Windows, Linux)](#standalone-bundle-windows-linux)
+  - [PIP (Windows, Mac, and Linux)](#pip-windows-mac-and-linux)
+  - [PIP (Directly from GitHub)](#pip-directly-from-github)
+  - [Docker](#docker)
+- [Running from source](#running-from-source)
+- [General Usage](#general-usage)
+  - [Available options](#available-options)
+  - [Example Usage](#example-usage)
+  - [Additional Help](#additional-help)
+  - [Adding new source](#adding-new-source)
+- [Supported sources](#supported-sources)
+- [Rejected sources](#rejected-sources)
+- [Supported output formats](#supported-output-formats)
+- [Sponsors](#sponsors)
 
 <a href="https://github.com/dipu-bd/lightnovel-crawler"><img src="res/lncrawl-icon.png" width="128px" align="right"/></a>
 
@@ -198,10 +177,11 @@ $ docker compose -f ./scripts/local-compose.yml up
 ### Available options
 
 <!-- auto generated command line output -->
+
 ```text
 $ lncrawl -h
-Usage: lncrawl [OPTIONS] COMMAND [ARGS]...                                     
-                                                                                
+Usage: lncrawl [OPTIONS] COMMAND [ARGS]...
+
 ╭─ Options ────────────────────────────────────────────────────────────────────╮
 │ --verbose             -l            Log levels: -l = warn, -ll = info, -lll  │
 │                                     = debug                                  │
@@ -223,6 +203,7 @@ Usage: lncrawl [OPTIONS] COMMAND [ARGS]...
 │ telegram   Run Telegram bot.                                                 │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 ```
+
 <!-- auto generated command line output -->
 
 ### Example Usage
@@ -446,7 +427,6 @@ We are supporting 460 sources and 389 crawlers.
 </tbody>
 </table>
 
-
 ### `ar` Arabic
 
 <table>
@@ -473,7 +453,6 @@ We are supporting 460 sources and 389 crawlers.
 </tr>
 </tbody>
 </table>
-
 
 ### `en` English
 
@@ -2192,7 +2171,6 @@ We are supporting 460 sources and 389 crawlers.
 </tbody>
 </table>
 
-
 ### `es` Spanish; Castilian
 
 <table>
@@ -2219,7 +2197,6 @@ We are supporting 460 sources and 389 crawlers.
 </tr>
 </tbody>
 </table>
-
 
 ### `fr` French
 
@@ -2267,7 +2244,6 @@ We are supporting 460 sources and 389 crawlers.
 </tr>
 </tbody>
 </table>
-
 
 ### `id` Indonesian
 
@@ -2376,7 +2352,6 @@ We are supporting 460 sources and 389 crawlers.
 </tbody>
 </table>
 
-
 ### `pt` Portuguese
 
 <table>
@@ -2408,7 +2383,6 @@ We are supporting 460 sources and 389 crawlers.
 </tr>
 </tbody>
 </table>
-
 
 ### `ru` Russian
 
@@ -2482,7 +2456,6 @@ We are supporting 460 sources and 389 crawlers.
 </tbody>
 </table>
 
-
 ### `tr` Turkish
 
 <table>
@@ -2499,7 +2472,6 @@ We are supporting 460 sources and 389 crawlers.
 </tr>
 </tbody>
 </table>
-
 
 ### `vi` Vietnamese
 
@@ -2532,7 +2504,6 @@ We are supporting 460 sources and 389 crawlers.
 </tr>
 </tbody>
 </table>
-
 
 ### `zh` Chinese
 

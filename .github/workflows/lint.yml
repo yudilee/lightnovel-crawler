@@ -11,8 +11,41 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lncrawl:
+  changes:
     if: github.repository == 'dipu-bd/lightnovel-crawler'
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.python_changed.outputs.any_changed }}
+      web: ${{ steps.web_changed.outputs.any_changed }}
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - id: python_changed
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            lncrawl/**
+            sources/**
+            requirements.txt
+            pyproject.toml
+            setup.py
+            .python-version
+            .flake8
+            .github/workflows/lint.yml
+
+      - id: web_changed
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            lncrawl-web/**
+            .github/workflows/lint.yml
+
+  lncrawl:
+    needs: changes
+    if: >
+      github.repository == 'dipu-bd/lightnovel-crawler'
+      && needs.changes.outputs.python == 'true'
     runs-on: ubuntu-latest
     name: lncrawl (Python ${{ matrix.python-version }})
     strategy:
@@ -48,7 +81,10 @@ jobs:
           lncrawl -ll sources list
 
   lncrawl_web:
-    if: github.repository == 'dipu-bd/lightnovel-crawler'
+    needs: changes
+    if: >
+      github.repository == 'dipu-bd/lightnovel-crawler'
+      && needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     name: lncrawl-web (Node.js ${{ matrix.node }})
     strategy:
