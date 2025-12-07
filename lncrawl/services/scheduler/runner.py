@@ -77,7 +77,6 @@ class JobRunner:
         if self.job.is_running:
             self.children = ctx.jobs.get_children(self.job.id)
             if all(job.is_done for job in self.children):
-                print('--------------- setting done here!')
                 return self.__set_done()
 
         if self.job.type == JobType.FULL_NOVEL_BATCH:

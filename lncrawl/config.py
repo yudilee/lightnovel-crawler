@@ -345,6 +345,15 @@ class CrawlerConfig(_Section):
         self._set("cleaner_cooldown", v)
 
     @property
+    def runner_reset_interval(self) -> int:
+        '''Scheduler restart interval in seconds'''
+        return self._get("runner_reset_interval", 4 * 3600)
+
+    @runner_reset_interval.setter
+    def runner_reset_interval(self, v: Optional[int]) -> None:
+        self._set("runner_reset_interval", v)
+
+    @property
     def disk_size_limit(self) -> int:
         '''Maximum disk size limit of crawled data in bytes'''
         mb = self._get("disk_size_limit_mb", 0)

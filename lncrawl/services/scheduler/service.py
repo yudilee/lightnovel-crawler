@@ -11,7 +11,7 @@ from .runner import JobRunner
 logger = logging.getLogger(__name__)
 
 
-def run_cleaner(signal=Event()) -> None:
+def run_cleaner(signal: Event) -> None:
     Cleaner.run(signal)
 
 
@@ -21,6 +21,11 @@ def run_jobs(signal: Event):
 
 def run_artifact_maker(signal: Event):
     JobRunner.run(signal, True)
+
+
+def reset_runner(signal: Event):
+    JobRunner.cancel_all()
+    logger.info("Runner reset")
 
 
 class JobScheduler:
@@ -46,6 +51,7 @@ class JobScheduler:
         for _ in range(ctx.config.crawler.runner_concurrency):
             self._thread(run_jobs, ctx.config.crawler.runner_cooldown)
         self._thread(run_artifact_maker, ctx.config.crawler.runner_cooldown)
+        self._thread(reset_runner, ctx.config.crawler.runner_reset_interval)
         logger.info("Scheduler started")
 
     def stop(self):
@@ -82,4 +88,4 @@ class JobScheduler:
             except AbortedException:
                 return
             except Exception:
-                logger.error('Unexpected error in scheduler', stack_info=True)
+                logger.error('Unexpected error in scheduler', exc_info=True)

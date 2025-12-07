@@ -13,55 +13,9 @@ export const JobFilterBox: React.FC<
 > = ({ status, type, updateParams }) => {
   const { lg } = Grid.useBreakpoint();
   const isAdmin = useSelector(Auth.select.isAdmin);
-  const [isRunning, setIsRunning] = useState<boolean>();
-  const [messageApi, contextHolder] = message.useMessage();
-
-  const fetchStatus = async () => {
-    try {
-      const resp = await axios.get<boolean>(`/api/admin/runner/status`);
-      return Boolean(resp.data);
-    } catch {
-      return undefined;
-    }
-  };
-
-  const startRunner = async () => {
-    try {
-      await axios.post(`/api/admin/runner/start`);
-      setIsRunning(true);
-    } catch (err) {
-      messageApi.open({
-        type: 'error',
-        content: stringifyError(err, 'Something went wrong!'),
-      });
-    }
-  };
-
-  const stopRunner = async () => {
-    try {
-      await axios.post(`/api/admin/runner/stop`);
-      setIsRunning(false);
-    } catch (err) {
-      messageApi.open({
-        type: 'error',
-        content: stringifyError(err, 'Something went wrong!'),
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (!isAdmin) return;
-    fetchStatus().then(setIsRunning);
-    const iid = setInterval(() => {
-      fetchStatus().then(setIsRunning);
-    }, 5000);
-    return () => clearInterval(iid);
-  }, [isAdmin]);
 
   return (
     <Flex justify="space-between" align="center" wrap gap={5}>
-      {contextHolder}
-
       <Flex align="center" gap={5} style={lg ? { flex: 1 } : { width: '100%' }}>
         <Typography.Text
           style={{
@@ -102,29 +56,82 @@ export const JobFilterBox: React.FC<
 
       {lg && <div style={{ flex: 1 }} />}
 
-      {isAdmin && (
-        <>
-          {typeof isRunning === 'undefined' ? null : isRunning ? (
-            <Button
-              danger
-              onClick={stopRunner}
-              icon={<XFilled />}
-              style={{ width: lg ? undefined : '100%' }}
-            >
-              Stop Runner
-            </Button>
-          ) : (
-            <Button
-              type="primary"
-              onClick={startRunner}
-              icon={<PlayCircleFilled />}
-              style={{ width: lg ? undefined : '100%' }}
-            >
-              Start Runner
-            </Button>
-          )}
-        </>
-      )}
+      {isAdmin && <RunnerStatusChangeButton />}
     </Flex>
+  );
+};
+
+export const RunnerStatusChangeButton: React.FC<any> = () => {
+  const { lg } = Grid.useBreakpoint();
+  const [busy, setBusy] = useState<boolean>();
+  const [isRunning, setIsRunning] = useState<boolean>();
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const fetchStatus = async () => {
+    try {
+      const resp = await axios.get<boolean>(`/api/admin/runner/status`);
+      return Boolean(resp.data);
+    } catch {
+      return undefined;
+    }
+  };
+
+  const startRunner = async () => {
+    try {
+      setBusy(true);
+      await axios.post(`/api/admin/runner/start`);
+      setIsRunning(await fetchStatus());
+    } catch (err) {
+      messageApi.error(stringifyError(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const stopRunner = async () => {
+    try {
+      setBusy(true);
+      await axios.post(`/api/admin/runner/stop`);
+      setIsRunning(await fetchStatus());
+    } catch (err) {
+      messageApi.error(stringifyError(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStatus().then(setIsRunning);
+    const iid = setInterval(() => {
+      fetchStatus().then(setIsRunning);
+    }, 5000);
+    return () => clearInterval(iid);
+  }, []);
+
+  return (
+    <>
+      {contextHolder}
+      {typeof isRunning === 'undefined' ? null : isRunning ? (
+        <Button
+          danger
+          loading={busy}
+          onClick={stopRunner}
+          icon={<XFilled />}
+          style={{ width: lg ? undefined : '100%' }}
+        >
+          Stop Runner
+        </Button>
+      ) : (
+        <Button
+          type="primary"
+          loading={busy}
+          onClick={startRunner}
+          icon={<PlayCircleFilled />}
+          style={{ width: lg ? undefined : '100%' }}
+        >
+          Start Runner
+        </Button>
+      )}
+    </>
   );
 };
