@@ -48,8 +48,8 @@ class SourceLoader:
         # dynamically import all crawlers
         self._taskman.submit_task(
             self.load_crawlers,
-            *ctx.config.crawler.local_index_file.parent.glob('**/*.py'),
-            *ctx.config.crawler.user_index_file.parent.glob('**/*.py'),
+            *ctx.config.crawler.local_sources.glob('**/*.py'),
+            *ctx.config.crawler.user_sources.glob('**/*.py'),
         )
 
         # run background task get online update
@@ -143,7 +143,7 @@ class SourceLoader:
             current = self._index.crawlers.get(id)
             if current and current.version >= source.version:
                 continue
-            user_sources = ctx.config.crawler.user_index_file.parent.parent
+            user_sources = ctx.config.crawler.user_sources.parent
             dst_file = (user_sources / source.file_path).resolve()
             f = self._taskman.submit_task(ctx.http.download, source.url, dst_file)
             futures.append(f)

@@ -137,7 +137,7 @@ def create_one(
 
 
 def _build_path(locale: str, file_name: str):
-    file_path = ctx.config.crawler.local_index_file.parent
+    file_path = ctx.config.crawler.local_sources
     file_path /= locale or 'multi'
     if locale == 'en':
         file_path /= file_name[0]

@@ -50,7 +50,7 @@ endif
 
 # Install dependencies in .venv
 install-py: setup
-	$(PY) -m pip install -q -r requirements.txt
+	$(PY) -m pip install -r requirements.txt
 
 # Install node modules in lncrawl-web
 install-web:

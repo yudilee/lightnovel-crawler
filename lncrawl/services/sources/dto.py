@@ -32,12 +32,12 @@ class CrawlerInfo(BaseModel):
 
     @cached_property
     def user_file(self) -> Path:
-        path = ctx.config.crawler.user_index_file.parent.parent
+        path = ctx.config.crawler.local_sources.parent
         return (path / self.file_path).absolute()
 
     @cached_property
     def local_file(self) -> Path:
-        path = ctx.config.crawler.local_index_file.parent.parent
+        path = ctx.config.crawler.local_sources.parent
         return (path / self.file_path).absolute()
 
 

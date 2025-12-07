@@ -146,9 +146,10 @@ def import_crawlers(file: Path) -> Generator[Type[Crawler], None, None]:
 
 
 def create_crawler_info(crawler: Type[Crawler]):
-    file = getattr(crawler, '__file__')
+    root = ctx.config.crawler.local_sources.parent
+    file = Path(getattr(crawler, '__file__'))
     return CrawlerInfo(
-        file_path=file,
+        file_path=file.relative_to(root).as_posix(),
         id=getattr(crawler, '__id__'),
         md5=getattr(crawler, '__module__'),
         version=int(getattr(crawler, 'version')),

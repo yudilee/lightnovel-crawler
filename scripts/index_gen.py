@@ -137,7 +137,7 @@ def call_github_api(url):
 logger.info("Loading sources")
 ctx.logger.setup(2)
 ctx.config.load()
-ctx.sources.load()
+ctx.sources.load(False)
 ctx.sources.ensure_load()
 
 logger.info("Getting contributors")
@@ -250,6 +250,7 @@ logger.info("Loading crawlers")
 futures = []
 visited = set()
 taskman = TaskManager(42)
+ctx.sources._taskman = taskman
 for info in ctx.sources.load_crawlers(*sorted(SOURCES_FOLDER.glob("**/*.py"))):
     if info.id in visited:
         continue
@@ -393,7 +394,7 @@ logger.info("Generated supported sources list.")
 before, help_text, after = readme_text.split(HELP_RESULT_QUE)
 
 os.chdir(WORKDIR)
-output = subprocess.check_output(["python", "lncrawl", "-h"]).decode("utf-8")
+output = subprocess.check_output([sys.executable, "lncrawl", "-h"]).decode("utf-8")
 output = re.sub(r'\x1b\[[0-9;\r]*m', '', output.strip())
 
 help_text = "\n"

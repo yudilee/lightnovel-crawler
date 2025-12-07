@@ -285,6 +285,26 @@ class DatabaseConfig(_Section):
 class CrawlerConfig(_Section):
     section = "crawler"
 
+    @cached_property
+    def local_sources(self) -> Path:
+        for dir in [ROOT_DIR, ROOT_DIR.parent]:
+            folder = dir / "sources"
+            if folder.is_dir():
+                return folder
+        raise ValueError('No local sources')
+
+    @cached_property
+    def local_index_file(self) -> Path:
+        return self.local_sources / "_index.json"
+
+    @cached_property
+    def user_sources(self) -> Path:
+        return APP_DIR / "sources"
+
+    @cached_property
+    def user_index_file(self) -> Path:
+        return self.user_sources / "_index.json"
+
     @property
     def ignore_images(self) -> bool:
         return self._get("ignore_images", False)
@@ -300,18 +320,6 @@ class CrawlerConfig(_Section):
     @selenium_grid.setter
     def selenium_grid(self, url: Optional[str]) -> None:
         self._set("selenium_grid", url)
-
-    @cached_property
-    def local_index_file(self) -> Path:
-        for dir in [ROOT_DIR, ROOT_DIR.parent]:
-            file = dir / "sources" / "_index.json"
-            if file.is_file():
-                return file
-        raise ValueError('No local index file')
-
-    @cached_property
-    def user_index_file(self) -> Path:
-        return APP_DIR / "sources" / "_index.json"
 
     @property
     def index_file_download_url(self) -> str:
