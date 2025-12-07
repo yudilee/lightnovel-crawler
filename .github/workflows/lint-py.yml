@@ -1,0 +1,69 @@
+name: Lint & Test
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+    paths:
+      - "lncrawl/**"
+      - "sources/**/*.py"
+      - "requirements.txt"
+      - "pyproject.toml"
+      - "setup.py"
+      - ".flake8"
+      - ".github/workflows/lint-py.yml"
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - "lncrawl/**"
+      - "sources/**/*.py"
+      - "requirements.txt"
+      - "pyproject.toml"
+      - "setup.py"
+      - ".flake8"
+      - ".github/workflows/lint-py.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lncrawl:
+    if: github.repository == 'dipu-bd/lightnovel-crawler'
+    runs-on: ubuntu-latest
+    name: lncrawl (Python ${{ matrix.python-version }})
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: 📦 Install Dependencies
+        run: uv pip install --system -r requirements.txt
+
+      - name: 🧹 Lint with flake8
+        run: flake8 -v --count --show-source --statistics
+
+      - name: 🏗️ Build Wheel Package
+        run: python -m build --wheel --no-isolation
+
+      - name: 🧪 Install lncrawl
+        run: pip install dist/lightnovel_crawler*.whl
+
+      - name: 🧪 Run lncrawl
+        run: lncrawl -ll sources list

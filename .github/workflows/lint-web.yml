@@ -1,0 +1,57 @@
+name: Lint & Test
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+    paths:
+      - "lncrawl-web/**"
+      - ".github/workflows/lint-web.yml"
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - "lncrawl-web/**"
+      - ".github/workflows/lint-web.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lncrawl_web:
+    if: github.repository == 'dipu-bd/lightnovel-crawler'
+    runs-on: ubuntu-latest
+    name: lncrawl-web (Node.js ${{ matrix.node }})
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["20.x", "node"]
+    defaults:
+      run:
+        working-directory: lncrawl-web
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: "🟢 Set up Node.js ${{ matrix.node }}"
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: yarn
+          cache-dependency-path: lncrawl-web/yarn.lock
+
+      - name: "📦 Install dependencies"
+        run: yarn install --frozen-lockfile
+
+      - name: "🧪 Run lint"
+        run: yarn lint
+        env:
+          CI: true
+
+      - name: "🧪 Run build"
+        run: yarn build
+        env:
+          CI: true
