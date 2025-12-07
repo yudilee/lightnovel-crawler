@@ -1,5 +1,3 @@
-# requirements.txt
-#
 # NOTE: This file intentionally includes:
 #   - runtime requirements
 #   - server requirements
@@ -9,7 +7,7 @@
 
 # === App / CLI requirements ===
 zstd
-typer[all]
+typer
 httpx[http2,brotli]
 regex
 packaging

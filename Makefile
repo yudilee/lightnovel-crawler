@@ -2,15 +2,15 @@
 # Required variables
 ifeq ($(OS),Windows_NT)
 	PYTHON := python
-	PY := .venv/Scripts/python
-	PIP := .venv/Scripts/pip
-	FLAKE8 := .venv/Scripts/flake8
+	VENV := .venv-win
+	PY := $(VENV)/Scripts/python
+	FLAKE8 := $(VENV)/Scripts/flake8
 # 	NVM :=
 else
 	PYTHON := python3
-	PY := .venv/bin/python
-	PIP := .venv/bin/pip
-	FLAKE8 := .venv/bin/flake8
+	VENV := .venv-posix
+	PY := $(VENV)/bin/python
+	FLAKE8 := $(VENV)/bin/flake8
 	NVM := "$$NVM_DIR"/nvm-exec
 endif
 
@@ -27,25 +27,30 @@ version:
 # Clean target
 clean:
 ifeq ($(OS),Windows_NT)
-	@powershell -Command "try { Remove-Item -ErrorAction SilentlyContinue -Recurse -Force .venv, logs, build, dist } catch {}; exit 0"
+	@powershell -Command "try { Remove-Item -ErrorAction SilentlyContinue -Recurse -Force $(VENV), logs, build, dist } catch {}; exit 0"
 	@powershell -Command "Get-ChildItem -ErrorAction SilentlyContinue -Recurse -Directory -Filter '*.egg-info' | Remove-Item -Recurse -Force"
 	@powershell -Command "Get-ChildItem -ErrorAction SilentlyContinue -Recurse -Directory -Filter '__pycache__' | Remove-Item -Recurse -Force"
 	@powershell -Command "Get-ChildItem -ErrorAction SilentlyContinue -Recurse -Directory -Filter 'node_modules' | Remove-Item -Recurse -Force"
 else
-	@rm -rf .venv logs build dist
+	@rm -rf $(VENV) logs build dist
 	@find . -name '*.egg-info' -type d -exec rm -rf '{}'
 	@find . -name '__pycache__' -type d -exec rm -rf '{}'
 	@find . -name 'node_modules' -type d -exec rm -rf '{}'
 endif
 
+
 # Setup virtual environment in .venv
 setup:
-	$(PYTHON) -m venv .venv
+ifeq ($(wildcard $(VENV)/.*),)
+	$(PYTHON) -m venv $(VENV)
 	$(PY) -m pip install -q -U pip
+else
+	$(info $(VENV) already exists.)
+endif
 
 # Install dependencies in .venv
 install-py: setup
-	$(PIP) install -q -r requirements.txt
+	$(PY) -m pip install -q -r requirements.txt
 
 # Install node modules in lncrawl-web
 install-web:
@@ -74,6 +79,9 @@ watch-server:
 
 start-web:
 	$(YARN) dev
+
+start:
+	+$(MAKE) -j2 watch-server start-web
 
 # Lint project files
 lint-py:
