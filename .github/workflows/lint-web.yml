@@ -1,4 +1,4 @@
-name: Lint & Test
+name: Lint & Test (Web)
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
   lncrawl_web:
     if: github.repository == 'dipu-bd/lightnovel-crawler'
     runs-on: ubuntu-latest
-    name: lncrawl-web (Node.js ${{ matrix.node }})
+    name: Node.js ${{ matrix.node }}
     strategy:
       fail-fast: false
       matrix:

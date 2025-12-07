@@ -1,4 +1,4 @@
-name: Lint & Test
+name: Lint & Test (Python)
 
 on:
   push:
@@ -33,7 +33,7 @@ jobs:
   lncrawl:
     if: github.repository == 'dipu-bd/lightnovel-crawler'
     runs-on: ubuntu-latest
-    name: lncrawl (Python ${{ matrix.python-version }})
+    name: Python ${{ matrix.python-version }}
     strategy:
       fail-fast: false
       matrix:
