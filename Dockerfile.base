@@ -1,0 +1,37 @@
+FROM ghcr.io/astral-sh/uv:python3.10-bookworm-slim AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+
+# System dependencies
+RUN apt-get update -yq \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends \
+    wget \
+    ca-certificates \
+    tar \
+    xz-utils \
+    make \
+    cmake \
+    g++ \
+    libffi-dev \
+    libegl1 \
+    libopengl0 \
+    libxcb-cursor0 \
+    libnss3 \
+    libgl1-mesa-glx \
+    libxcomposite1 \
+    libxrandr2 \
+    libxi6 \
+    fontconfig \
+    libxkbcommon-x11-0 \
+    libxtst6 \
+    libxkbfile1 \
+    libxcomposite-dev \
+    libxdamage-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install calibre
+RUN wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin \
+    && ln -s /opt/calibre/ebook-convert /usr/local/bin/ebook-convert
