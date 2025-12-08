@@ -12,8 +12,12 @@ jobs:
     name: Deploy Server
     runs-on: ubuntu-latest
 
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_NAME: ghcr.io/${{ github.repository }}
+
     steps:
-      - name: 🛎️ Checkout Repository
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
       - name: 🛡️ Setup SSH Key
@@ -27,10 +31,10 @@ jobs:
       - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 🔐 Login to GitHub Container Registry
+      - name: 🔐 Login to GHCR
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -40,7 +44,7 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest
+          tags: ${{ env.IMAGE_NAME }}:latest
           labels: |
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -52,7 +56,7 @@ jobs:
         run: |
           gzip < /tmp/lncrawl.tar | ssh "${{ secrets.DEPLOY_SERVER }}" 'gunzip | docker load'
 
-      - name: 📤 Upload Compose File
+      - name: 🏷️ Upload Compose File
         run: |
           scp ./scripts/server-compose.yml "${{ secrets.DEPLOY_SERVER }}:~/lncrawl/compose.yml"
 

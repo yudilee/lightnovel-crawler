@@ -33,7 +33,7 @@ jobs:
         working-directory: lncrawl-web
 
     steps:
-      - name: 📥 Checkout Repository
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
       - name: "🟢 Set up Node.js ${{ matrix.node }}"
