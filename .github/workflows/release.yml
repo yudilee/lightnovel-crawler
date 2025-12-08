@@ -195,7 +195,7 @@ jobs:
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${GITHUB_REF##*/}
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
             ${{ env.IMAGE_NAME }}:${{ steps.package_version.outputs.version }}
           labels: |
             org.opencontainers.image.source=${{ github.event.repository.html_url }}

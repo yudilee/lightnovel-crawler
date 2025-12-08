@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - "Dockerfile.base"
+      - ".github/workflows/docker-base.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -45,7 +46,7 @@ jobs:
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${GITHUB_REF##*/}
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
           labels: |
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
             org.opencontainers.image.revision=${{ github.sha }}
