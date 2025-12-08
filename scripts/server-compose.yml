@@ -43,7 +43,7 @@ services:
           memory: 256M
 
   server:
-    image: ghcr.io/dipu-bd/lightnovel-crawler
+    image: ghcr.io/dipu-bd/lightnovel-crawler:server
     restart: unless-stopped
     ports:
       - "23457:8080"

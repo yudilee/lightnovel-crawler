@@ -44,17 +44,12 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          tags: ${{ env.IMAGE_NAME }}:latest
+          tags: ${{ env.IMAGE_NAME }}:server
           labels: |
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
             org.opencontainers.image.revision=${{ github.sha }}
-          outputs: type=docker,dest=/tmp/lncrawl.tar
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: 📦 Transfer Docker Image
-        run: |
-          gzip < /tmp/lncrawl.tar | ssh "${{ secrets.DEPLOY_SERVER }}" 'gunzip | docker load'
 
       - name: 🏷️ Upload Compose File
         run: |
@@ -63,9 +58,6 @@ jobs:
       - name: 🚀 Deploy over SSH
         run: |
           ssh "${{ secrets.DEPLOY_SERVER }}" << 'EOF'
-            mkdir -p ~/lncrawl/output_path
-            cd ~/lncrawl
-            touch .env
-            chown 1000:1000 .env output_path
-            docker compose -f ~/lncrawl/compose.yml up -d
+            mkdir -p ~/lncrawl/appdata
+            docker compose -f ~/lncrawl/compose.yml up -d --build
           EOF
