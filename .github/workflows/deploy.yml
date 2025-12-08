@@ -1,7 +1,7 @@
-name: Deployment CI
+name: Server Deployment
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -9,8 +9,11 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy Server
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write # required for GHCR pushes
 
     env:
       REGISTRY: ghcr.io

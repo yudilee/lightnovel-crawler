@@ -1,13 +1,17 @@
 name: Build Base Image
 
 on:
+  workflow_dispatch: {}
   push:
     paths:
       - "Dockerfile.base"
-  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-and-push:
+  docker-base:
     runs-on: ubuntu-latest
 
     permissions:

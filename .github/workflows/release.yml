@@ -161,6 +161,10 @@ jobs:
     name: Build & Publish Docker
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write # required for GHCR pushes
+
     env:
       REGISTRY: ghcr.io
       IMAGE_NAME: ghcr.io/${{ github.repository }}
