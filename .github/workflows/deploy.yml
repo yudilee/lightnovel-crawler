@@ -62,5 +62,6 @@ jobs:
         run: |
           ssh "${{ secrets.DEPLOY_SERVER }}" << 'EOF'
             mkdir -p ~/lncrawl/appdata
-            docker compose -f ~/lncrawl/compose.yml up -d --build
+            docker pull ${{ env.IMAGE_NAME }}:server
+            docker compose -f ~/lncrawl/compose.yml up -d
           EOF
