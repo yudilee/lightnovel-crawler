@@ -10,12 +10,10 @@ import {
 import { Button, Divider, List, Modal } from 'antd';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 
 export const SwitchUserButton: React.FC<{
   hideLoginSuggest?: boolean;
 }> = ({ hideLoginSuggest }) => {
-  const navigate = useNavigate();
   const availableUsers = useSelector(Auth.select.availableUsers);
 
   const [show, setShow] = useState<boolean>(false);
@@ -28,7 +26,6 @@ export const SwitchUserButton: React.FC<{
   const handleSwitch = (user: User) => {
     setShow(false);
     store.dispatch(Auth.action.switchUser(user.id));
-    requestAnimationFrame(() => navigate('/profile'));
   };
 
   const handleRemove = (user: User) => {
