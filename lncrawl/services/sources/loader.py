@@ -43,7 +43,7 @@ class SourceLoader:
         self._taskman = TaskManager(10)
 
         # load offline sources first
-        self.load_index(utils.load_offline_source())
+        self.load_index(utils.load_offline_source(sync_remote))
 
         # dynamically import all crawlers
         self._taskman.submit_task(

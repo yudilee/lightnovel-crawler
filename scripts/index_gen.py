@@ -40,7 +40,6 @@ WORKDIR = Path(__file__).parent.parent.absolute()
 SOURCES_FOLDER = WORKDIR / "sources"
 INDEX_FILE = SOURCES_FOLDER / "_index.json"
 INDEX_ZIP_FILE = SOURCES_FOLDER / "_index.zip"
-REJECTED_FILE = SOURCES_FOLDER / "_rejected.json"
 CONTRIB_CACHE_FILE = WORKDIR / ".github" / "contribs.json"
 
 README_FILE = WORKDIR / "README.md"
@@ -389,7 +388,7 @@ for url, cause in sorted(INDEX_DATA["rejected"].items(), key=lambda x: x[0]):
 rejected += "</tbody>\n</table>\n\n"
 readme_text = REJECTED_SOURCE_LIST_QUE.join([before, rejected, after])
 
-logger.info("Generated supported sources list.")
+logger.info("Generated rejected sources list.")
 
 before, help_text, after = readme_text.split(HELP_RESULT_QUE)
 

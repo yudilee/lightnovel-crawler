@@ -2,6 +2,7 @@ import gzip
 import hashlib
 import importlib.util
 import io
+import json
 import logging
 import shutil
 from pathlib import Path
@@ -33,10 +34,19 @@ def fetch_online_source() -> CrawlerIndex:
         return CrawlerIndex.model_validate_json(json_str)
 
 
-def load_offline_source() -> CrawlerIndex:
+def load_offline_source(check_user=True) -> CrawlerIndex:
     # get local index
     local_file = ctx.config.crawler.local_index_file
     local_index = load_source(local_file)
+
+    # get local rejected
+    rejected_file = local_file.parent / '_rejected.json'
+    if rejected_file.is_file():
+        json_str = rejected_file.read_text(encoding='utf-8')
+        local_index.rejected = json.loads(json_str)
+
+    if not check_user:
+        return local_index
 
     # get user index. use local index if not available
     user_file = ctx.config.crawler.user_index_file
