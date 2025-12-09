@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { ReaderVerticalContent } from './ReaderLayoutVerticalContent';
 import { ReaderNavBar } from './ReaderNavBar';
 import { JobDetailsCard } from '../JobDetails/JobDetailsCard';
+import { store } from '@/store';
 
 export const ReaderVerticalLayout: React.FC<{
   data: ReadChapter;
@@ -19,6 +20,7 @@ export const ReaderVerticalLayout: React.FC<{
   const fontSize = useSelector(Reader.select.fontSize);
   const lineHeight = useSelector(Reader.select.lineHeight);
   const fontFamily = useSelector(Reader.select.fontFamily);
+  const autoFetch = useSelector(Reader.select.autoFetch);
 
   return (
     <Flex
@@ -56,10 +58,21 @@ export const ReaderVerticalLayout: React.FC<{
               <Button href={`/job/${job.id}`}>View Request</Button>
             </>
           ) : (
-            <Empty
-              description="No contents available"
-              styles={{ description: { color: theme.color } }}
-            />
+            <>
+              <Empty
+                description="No contents available"
+                styles={{ description: { color: theme.color } }}
+              />
+              {!autoFetch && (
+                <Button
+                  onClick={() =>
+                    store.dispatch(Reader.action.setAutoFetch(true))
+                  }
+                >
+                  Enable Auto Fetch
+                </Button>
+              )}
+            </>
           )}
         </Flex>
       )}

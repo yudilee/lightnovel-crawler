@@ -1,6 +1,10 @@
-import type { Chapter, ReadHistory } from '@/types';
-import { RightCircleOutlined } from '@ant-design/icons';
-import { Button, Collapse, theme } from 'antd';
+import { Reader } from '@/store/_reader';
+import type { Chapter, Job, ReadHistory } from '@/types';
+import { stringifyError } from '@/utils/errors';
+import { DownloadOutlined, RightCircleOutlined } from '@ant-design/icons';
+import { Button, Collapse, message, theme } from 'antd';
+import axios from 'axios';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { ChapterDetailsCard } from './ChapterDetailsCard';
 
@@ -10,45 +14,74 @@ export const ChapterListCard: React.FC<{
 }> = ({ chapters, history = {} }) => {
   const navigate = useNavigate();
   const { token } = theme.useToken();
+  const [messageApi, contextHolder] = message.useMessage();
+  const autoFetch = useSelector(Reader.select.autoFetch);
+
+  const createFetchJob = async (id: string) => {
+    try {
+      const { data } = await axios.get<Job>(`/api/chapter/${id}/fetch`);
+      navigate(`/job/${data.id}`);
+    } catch (err) {
+      messageApi.error(stringifyError(err));
+    }
+  };
 
   return (
-    <Collapse
-      ghost
-      accordion
-      size="small"
-      style={{
-        marginTop: 10,
-        borderRadius: 0,
-      }}
-      items={chapters.map((chapter) => ({
-        key: chapter.id,
-        label: chapter.title,
-        children: <ChapterDetailsCard inner chapter={chapter} />,
-        styles: {
-          body: { padding: 0 },
-          header: {
-            borderRadius: 0,
-            textTransform: 'capitalize',
-            opacity: history[chapter.id] ? 0.5 : 1,
-            borderTop: `1px solid ${token.colorSplit}`,
+    <>
+      {contextHolder}
+      <Collapse
+        ghost
+        accordion
+        size="small"
+        style={{
+          marginTop: 10,
+          borderRadius: 0,
+        }}
+        items={chapters.map((chapter) => ({
+          key: chapter.id,
+          label: chapter.title,
+          children: <ChapterDetailsCard inner chapter={chapter} />,
+          styles: {
+            body: { padding: 0 },
+            header: {
+              borderRadius: 0,
+              textTransform: 'capitalize',
+              opacity: history[chapter.id] ? 0.5 : 1,
+              borderTop: `1px solid ${token.colorSplit}`,
+            },
           },
-        },
-        extra: (
-          <Button
-            size="small"
-            shape="round"
-            style={{ width: 75 }}
-            icon={<RightCircleOutlined />}
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              navigate(`/read/${chapter.id}`);
-            }}
-          >
-            Read
-          </Button>
-        ),
-      }))}
-    />
+          extra:
+            autoFetch || chapter.is_available ? (
+              <Button
+                size="small"
+                shape="round"
+                style={{ width: 75 }}
+                icon={<RightCircleOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  navigate(`/read/${chapter.id}`);
+                }}
+              >
+                Read
+              </Button>
+            ) : (
+              <Button
+                size="small"
+                shape="round"
+                style={{ width: 75 }}
+                icon={<DownloadOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  createFetchJob(chapter.id);
+                }}
+              >
+                Get
+              </Button>
+            ),
+        }))}
+      />
+    </>
   );
 };

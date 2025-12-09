@@ -38,14 +38,15 @@ const _cache = new LRUCache<string, any>({
 async function handleFetch<T>(
   name: string,
   id: string | null | undefined,
-  setValue: (value: T | undefined) => any
+  setValue: (value: T | undefined) => any,
+  refreshCache?: boolean
 ) {
   if (!id) {
     setValue(undefined);
     return;
   }
   const url = `/api/${name}/${id}`;
-  if (!_cache.has(url)) {
+  if (refreshCache || !_cache.has(url)) {
     try {
       const res = await axios.get<T>(url);
       _cache.set(url, res.data);
@@ -89,24 +90,24 @@ export const JobDetailsPage: React.FC<any> = () => {
   }, [id, refreshId]);
 
   useEffect(() => {
-    handleFetch('user', job?.user_id, setUser);
-  }, [job?.user_id]);
+    handleFetch('user', job?.user_id, setUser, job?.is_done);
+  }, [job?.user_id, job?.is_done]);
 
   useEffect(() => {
-    handleFetch('novel', job?.extra.novel_id, setNovel);
-  }, [job?.extra.novel_id]);
+    handleFetch('novel', job?.extra.novel_id, setNovel, job?.is_done);
+  }, [job?.extra.novel_id, job?.is_done]);
 
   useEffect(() => {
-    handleFetch('volume', job?.extra.volume_id, setVolume);
-  }, [job?.extra.volume_id]);
+    handleFetch('volume', job?.extra.volume_id, setVolume, job?.is_done);
+  }, [job?.extra.volume_id, job?.is_done]);
 
   useEffect(() => {
-    handleFetch('chapter', job?.extra.chapter_id, setChapter);
-  }, [job?.extra.chapter_id]);
+    handleFetch('chapter', job?.extra.chapter_id, setChapter, job?.is_done);
+  }, [job?.extra.chapter_id, job?.is_done]);
 
   useEffect(() => {
-    handleFetch('artifact', job?.extra.artifact_id, setArtifact);
-  }, [job?.extra.artifact_id]);
+    handleFetch('artifact', job?.extra.artifact_id, setArtifact, job?.is_done);
+  }, [job?.extra.artifact_id, job?.is_done]);
 
   useEffect(() => {
     if (job && !job.is_done) {
@@ -151,9 +152,13 @@ export const JobDetailsPage: React.FC<any> = () => {
 
   return (
     <Space direction="vertical" size={lg ? 'middle' : 'small'}>
-      {job.parent_job_id && (
+      {job.parent_job_id ? (
         <Link to={`/job/${job.parent_job_id}`}>
           <LeftOutlined /> Parent Request
+        </Link>
+      ) : (
+        <Link to={`/jobs`}>
+          <LeftOutlined /> All Requests
         </Link>
       )}
 

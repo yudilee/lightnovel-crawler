@@ -125,9 +125,9 @@ export const VolumeDetailsCard: React.FC<{
             type="primary"
             onClick={createVolumeJob}
             icon={<DownloadOutlined />}
-            style={{ width: lg ? 100 : '100%' }}
+            style={{ width: lg ? 115 : '100%' }}
           >
-            {lg ? 'Get All' : 'Get all chapters'}
+            {lg ? 'Download' : 'Download all chapters'}
           </Button>
         )}
       </Flex>
