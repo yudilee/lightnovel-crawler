@@ -17,7 +17,7 @@ export const SignupPage: React.FC<any> = () => {
     setError(undefined);
     try {
       const result = await axios.post(`/api/auth/signup`, data);
-      store.dispatch(Auth.action.setAuth(result.data));
+      store.dispatch(Auth.action.login(result.data));
     } catch (err) {
       setError(stringifyError(err, 'Oops! Something went wrong.'));
     } finally {

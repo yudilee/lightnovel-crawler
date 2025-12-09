@@ -1,7 +1,7 @@
 import { store } from '@/store';
 import { Auth } from '@/store/_auth';
 import { stringifyError } from '@/utils/errors';
-import { LogoutOutlined, WarningOutlined } from '@ant-design/icons';
+import { WarningOutlined } from '@ant-design/icons';
 import {
   Alert,
   Button,
@@ -15,9 +15,9 @@ import {
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { UserAvatar } from '../Tags/UserAvatar';
 
-export const UserInfoCard: React.FC<any> = () => {
+export const EmailVerifyButton: React.FC<any> = () => {
+  const isVerified = useSelector(Auth.select.isVerified);
   const [messageApi, contextHolder] = message.useMessage();
   const [showVerify, setShowVerify] = useState<boolean>(false);
 
@@ -28,9 +28,6 @@ export const UserInfoCard: React.FC<any> = () => {
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState<boolean>(false);
 
-  const authUser = useSelector(Auth.select.user);
-  const isVerified = useSelector(Auth.select.isVerified);
-
   useEffect(() => {
     if (resendTimeout <= 0) return;
     const tid = setTimeout(() => {
@@ -38,10 +35,6 @@ export const UserInfoCard: React.FC<any> = () => {
     }, 998);
     return () => clearTimeout(tid);
   }, [resendTimeout]);
-
-  const handleLogout = () => {
-    store.dispatch(Auth.action.clearAuth());
-  };
 
   const sendOTP = async () => {
     try {
@@ -94,47 +87,21 @@ export const UserInfoCard: React.FC<any> = () => {
     }
   };
 
+  if (isVerified) {
+    return null;
+  }
+
   return (
-    <Flex
-      vertical
-      gap="5px"
-      align="center"
-      justify="center"
-      style={{
-        textAlign: 'center',
-        paddingTop: '25px',
-        paddingBottom: '10px',
-      }}
-    >
-      <UserAvatar
-        size={72}
-        user={authUser}
-        style={{ backgroundColor: 'blueviolet' }}
-      />
-      <Typography.Text strong>{authUser?.name}</Typography.Text>
-
-      <div />
-
-      {!isVerified && (
-        <Button
-          block
-          danger
-          shape="round"
-          onClick={startVerifyEmail}
-          icon={<WarningOutlined />}
-          children="Verify Email"
-        />
-      )}
-
-      <div />
-      <div />
+    <>
+      {contextHolder}
 
       <Button
         block
-        type="default"
-        onClick={handleLogout}
-        icon={<LogoutOutlined />}
-        children="Logout"
+        danger
+        shape="round"
+        onClick={startVerifyEmail}
+        icon={<WarningOutlined />}
+        children="Verify Email"
       />
 
       <Modal
@@ -149,7 +116,6 @@ export const UserInfoCard: React.FC<any> = () => {
         cancelButtonProps={{ type: 'text' }}
         okButtonProps={{ loading, disabled: !otp || !token }}
       >
-        {contextHolder}
         <Flex vertical gap={15}>
           <Typography.Text>
             A 6-digit verification code was sent to your email address. Please
@@ -174,6 +140,6 @@ export const UserInfoCard: React.FC<any> = () => {
           {Boolean(error) && <Alert type="error" showIcon message={error} />}
         </Flex>
       </Modal>
-    </Flex>
+    </>
   );
 };

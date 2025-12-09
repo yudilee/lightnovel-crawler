@@ -20,6 +20,7 @@ import { useSelector } from 'react-redux';
 import { ProfileGenerateTokenButton } from './ProfileGenerateTokenButton';
 import { ProfileNameChangeButton } from './ProfileNameChangeButton';
 import { ProfilePasswordChangeButton } from './ProfilePasswordChangeButton';
+import { useEffect } from 'react';
 
 export const UserProfilePage: React.FC<any> = () => {
   const { xs } = Grid.useBreakpoint();
@@ -29,6 +30,10 @@ export const UserProfilePage: React.FC<any> = () => {
     const result = await axios.get<User>(`/api/auth/me`);
     store.dispatch(Auth.action.setUser(result.data));
   };
+
+  useEffect(() => {
+    updateUser();
+  }, []);
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto' }}>

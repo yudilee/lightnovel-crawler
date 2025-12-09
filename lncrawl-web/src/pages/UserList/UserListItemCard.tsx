@@ -28,8 +28,10 @@ const getGravatarProfile = async (email: string) => {
 
 export const UserListItemCard: React.FC<{
   user: User;
+  hideActions?: boolean;
   onChange?: () => any;
-}> = ({ user, onChange }) => {
+  onClick?: React.MouseEventHandler<HTMLDivElement>;
+}> = ({ user, hideActions, onChange, onClick }) => {
   const { lg } = Grid.useBreakpoint();
 
   const [displayName, setDisplayName] = useState<string>();
@@ -46,6 +48,8 @@ export const UserListItemCard: React.FC<{
 
   return (
     <Card
+      onClick={onClick}
+      hoverable={Boolean(onClick)}
       style={{ marginBottom: 5 }}
       styles={{
         body: { padding: lg ? undefined : 15 },
@@ -123,22 +127,23 @@ export const UserListItemCard: React.FC<{
             </Flex>
           </Flex>
         </Col>
-
-        <Col
-          flex="auto"
-          style={{ width: '120px' }}
-          onClick={(e) => e.preventDefault()}
-        >
-          <Flex
-            wrap
-            gap="10px"
-            align="center"
-            justify="end"
-            style={{ minWidth: 100 }}
+        {!hideActions && (
+          <Col
+            flex="auto"
+            style={{ width: '120px' }}
+            onClick={(e) => e.preventDefault()}
           >
-            <UserActionButtons user={user} onChange={onChange} />
-          </Flex>
-        </Col>
+            <Flex
+              wrap
+              gap="10px"
+              align="center"
+              justify="end"
+              style={{ minWidth: 100 }}
+            >
+              <UserActionButtons user={user} onChange={onChange} />
+            </Flex>
+          </Col>
+        )}
       </Row>
     </Card>
   );

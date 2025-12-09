@@ -24,8 +24,10 @@ export const App: React.FC<any> = () => {
         store.dispatch(Auth.action.setUser(result.data));
       } catch {}
     };
-    updateUser();
-  }, []);
+    if (loggedIn) {
+      updateUser();
+    }
+  }, [loggedIn]);
 
   const routes = useMemo(() => {
     if (!loggedIn) {

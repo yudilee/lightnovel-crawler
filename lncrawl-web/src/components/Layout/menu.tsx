@@ -8,7 +8,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { type MenuProps } from 'antd';
-import { UserInfoCard } from './UserInfo';
+import { UserInfoCard } from '../UserInfoCard';
 
 export const buildMenu = (isAdmin: boolean): MenuProps['items'] => [
   {

@@ -17,7 +17,7 @@ export function setupAxios() {
   // auto logout
   axios.interceptors.response.use(null, (error: AxiosError) => {
     if (error.response?.status === 401) {
-      store.dispatch(Auth.action.clearAuth());
+      store.dispatch(Auth.action.logout());
     }
     throw error;
   });

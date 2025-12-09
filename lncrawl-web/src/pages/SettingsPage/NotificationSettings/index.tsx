@@ -56,7 +56,7 @@ export const NotificationSettings: React.FC<any> = () => {
       const value = !(notifications && notifications[item]);
       const update = { ...notifications, [item]: value };
       await axios.put(`/api/settings/notifications`, { email_alerts: update });
-      dispatch(Auth.action.updateEmailAlertConfig(update));
+      dispatch(Auth.action.setEmailAlerts(update));
     } catch (err) {
       messageApi.error(stringifyError(err, 'Failed to update notification'));
     } finally {

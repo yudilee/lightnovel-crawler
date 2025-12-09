@@ -1,3 +1,4 @@
+import { SwitchUserButton } from '@/components/UserInfoCard/SwitchUserButton';
 import { store } from '@/store';
 import { Auth } from '@/store/_auth';
 import { stringifyError } from '@/utils/errors';
@@ -17,7 +18,7 @@ export const LoginPage: React.FC<any> = () => {
     setError(undefined);
     try {
       const result = await axios.post(`/api/auth/login`, data);
-      store.dispatch(Auth.action.setAuth(result.data));
+      store.dispatch(Auth.action.login(result.data));
     } catch (err) {
       setError(stringifyError(err, 'Oops! Something went wrong.'));
     } finally {
@@ -36,6 +37,7 @@ export const LoginPage: React.FC<any> = () => {
       <Form.Item name="email" label="Email" rules={[{ required: true }]}>
         <Input placeholder="Enter email" autoComplete="current-user" />
       </Form.Item>
+
       <Form.Item
         name={'password'}
         label="Password"
@@ -75,7 +77,10 @@ export const LoginPage: React.FC<any> = () => {
         />
       </FormItem>
 
+      <SwitchUserButton hideLoginSuggest />
+
       <Divider />
+
       <Flex justify="center">
         <Typography.Link href="/signup">Create new account</Typography.Link>
       </Flex>

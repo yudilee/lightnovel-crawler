@@ -1,3 +1,5 @@
+import { store } from '@/store';
+import { Auth } from '@/store/_auth';
 import type { User } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { EditOutlined, SaveOutlined } from '@ant-design/icons';
@@ -26,9 +28,9 @@ export const ProfileNameChangeButton: React.FC<{
   const handleUpdateName = async (values: { name: string }) => {
     try {
       setUpdating(true);
-      await axios.put('/api/auth/me/name', {
-        name: values.name.trim(),
-      });
+      const name = values.name.trim();
+      await axios.put('/api/auth/me/name', { name });
+      store.dispatch(Auth.action.setUser({ ...user, name }));
       messageApi.success('Name updated successfully');
       setEditOpen(false);
       if (onChange) onChange();

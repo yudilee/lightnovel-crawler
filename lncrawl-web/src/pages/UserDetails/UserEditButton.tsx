@@ -1,5 +1,7 @@
 import { UserRoleTag } from '@/components/Tags/UserRoleTag';
 import { UserTierTag } from '@/components/Tags/UserTierTag';
+import { store } from '@/store';
+import { Auth } from '@/store/_auth';
 import { UserRole, UserTier, type User } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { EditOutlined, SaveOutlined } from '@ant-design/icons';
@@ -41,17 +43,22 @@ export const UserEditButton: React.FC<
       if (values.password?.trim()) {
         changes.password = values.password.trim();
       }
-      if (values.role && values.role !== user.role) {
+      if (typeof values.role === 'string' && values.role !== user.role) {
         changes.role = values.role;
       }
-      if (values.tier && values.tier !== user.tier) {
+      if (typeof values.tier === 'number' && values.tier !== user.tier) {
         changes.tier = values.tier;
+      }
+      if (values.name?.trim() && values.name?.trim() !== user.name) {
+        changes.name = values.name;
       }
       if (!Object.keys(changes).length) {
         messageApi.info('No value was updated');
         return;
       }
       await axios.put(`/api/user/${user.id}`, changes);
+      delete changes.password;
+      store.dispatch(Auth.action.setUser({ ...user, ...changes }));
       messageApi.success('User updated successfully');
       setEditOpen(false);
       if (onChange) onChange();
@@ -87,10 +94,10 @@ export const UserEditButton: React.FC<
         destroyOnHidden
       >
         <Form
-          size="large"
           layout="vertical"
           initialValues={user}
           onFinish={handleUpdateName}
+          labelCol={{ style: { padding: 0 } }}
         >
           <Form.Item
             name="name"
@@ -104,19 +111,16 @@ export const UserEditButton: React.FC<
               },
             ]}
           >
-            <Input placeholder="Enter full name" autoComplete="name" />
-          </Form.Item>
-
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[{ type: 'email', message: 'Please enter a valid email' }]}
-          >
-            <Input placeholder="Enter email" autoComplete="new-user" />
+            <Input
+              size="large"
+              placeholder="Enter full name"
+              autoComplete="name"
+            />
           </Form.Item>
 
           <Form.Item name="role" label="Role">
             <Select
+              size="large"
               placeholder="Select role"
               options={Object.values(UserRole).map((value) => ({
                 value,
@@ -127,6 +131,7 @@ export const UserEditButton: React.FC<
 
           <Form.Item name="tier" label="Tier">
             <Select
+              size="large"
               placeholder="Select tier"
               options={Object.values(UserTier).map((value) => ({
                 value,
@@ -144,6 +149,7 @@ export const UserEditButton: React.FC<
             hasFeedback
           >
             <Input.Password
+              size="large"
               placeholder="New password"
               autoComplete="new-password"
             />
