@@ -48,6 +48,7 @@ def app_upgrade(
         config=ctx.db.alembic_config,
         revision=revision,
     )
+    app_status()
 
 
 @app.command("down", help="Downgrade to a former revision.")
@@ -61,14 +62,16 @@ def app_downgrade(
         config=ctx.db.alembic_config,
         revision=revision,
     )
+    app_status()
 
 
 @app.command("status", help="Display the current revision.")
-def app_current():
-    head = ctx.db.base_revision()
+def app_status():
+    latest = ctx.db.latest_revision()
     current = ctx.db.current_revision()
-    print(f"Current: [yellow]{current}[/yellow]", end="")
-    if head and head == current:
-        print(" (head)")
-    else:
-        print(f"\nLatest: [yellow]{head}[/yellow]")
+    print(f"Current: [yellow]{current}[/yellow]", end=" ")
+    if latest:
+        if latest == current:
+            print("(latest)")
+        else:
+            print(f"(Latest: [yellow]{latest}[/yellow])")

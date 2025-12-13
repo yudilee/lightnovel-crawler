@@ -1,7 +1,7 @@
 from typing import Optional
 
+import sqlmodel as sa
 from pydantic import computed_field
-from sqlmodel import Field
 
 from ..context import ctx
 from ._base import BaseTable
@@ -11,24 +11,24 @@ from .enums import OutputFormat
 class Artifact(BaseTable, table=True):
     __tablename__ = 'artifacts'  # type: ignore
 
-    novel_id: str = Field(
+    novel_id: str = sa.Field(
         index=True,
         foreign_key="novels.id",
         ondelete='CASCADE'
     )
-    job_id: Optional[str] = Field(
+    job_id: Optional[str] = sa.Field(
         foreign_key="jobs.id",
         ondelete='SET NULL'
     )
-    user_id: Optional[str] = Field(
+    user_id: Optional[str] = sa.Field(
         foreign_key="users.id",
         ondelete='SET NULL'
     )
-    format: OutputFormat = Field(
+    format: OutputFormat = sa.Field(
         index=True,
         description="The output format of the artifact"
     )
-    file_name: str = Field(
+    file_name: str = sa.Field(
         description='Artifact output file name'
     )
 

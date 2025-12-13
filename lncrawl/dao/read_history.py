@@ -1,38 +1,38 @@
 from typing import Optional
 
-from sqlmodel import BigInteger, Field, Index, SQLModel, UniqueConstraint
+import sqlmodel as sa
 
 from ..utils.time_utils import current_timestamp
 
 
-class ReadHistory(SQLModel, table=True):
+class ReadHistory(sa.SQLModel, table=True):
     __tablename__ = 'read_history'  # type: ignore
     __table_args__ = (
-        UniqueConstraint("user_id", "chapter_id"),
-        Index("ix_read_history_user_created", 'user_id', 'created_at'),
+        sa.UniqueConstraint("user_id", "chapter_id"),
+        sa.Index("ix_read_history_user_created", 'user_id', 'created_at'),
     )
 
-    id: Optional[int] = Field(
+    id: Optional[int] = sa.Field(
         default=None,
         primary_key=True,
     )
-    created_at: int = Field(
+    created_at: int = sa.Field(
         default_factory=current_timestamp,
-        sa_type=BigInteger
+        sa_type=sa.BigInteger
     )
-    user_id: str = Field(
+    user_id: str = sa.Field(
         foreign_key="users.id",
         ondelete='CASCADE'
     )
-    chapter_id: str = Field(
+    chapter_id: str = sa.Field(
         foreign_key="chapters.id",
         ondelete='CASCADE'
     )
-    novel_id: str = Field(
+    novel_id: str = sa.Field(
         foreign_key="novels.id",
         ondelete='CASCADE'
     )
-    volume_id: Optional[str] = Field(
+    volume_id: Optional[str] = sa.Field(
         default=None,
         foreign_key="volumes.id",
         ondelete='SET NULL',

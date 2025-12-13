@@ -1,5 +1,5 @@
+import sqlmodel as sa
 from pydantic import computed_field
-from sqlmodel import Field, Index
 
 from ..context import ctx
 from ._base import BaseTable
@@ -8,22 +8,22 @@ from ._base import BaseTable
 class ChapterImage(BaseTable, table=True):
     __tablename__ = 'chapter_images'  # type: ignore
     __table_args__ = (
-        Index("ix_chapter_image_chapter", 'chapter_id'),
+        sa.Index("ix_chapter_image_chapter", 'chapter_id'),
     )
 
-    novel_id: str = Field(
+    novel_id: str = sa.Field(
         foreign_key="novels.id",
         ondelete='CASCADE'
     )
-    chapter_id: str = Field(
+    chapter_id: str = sa.Field(
         foreign_key="chapters.id",
         ondelete='CASCADE'
     )
 
-    url: str = Field(
+    url: str = sa.Field(
         description="Image URL"
     )
-    is_done: bool = Field(
+    is_done: bool = sa.Field(
         default=False,
         description="Whether the image has been downloaded"
     )

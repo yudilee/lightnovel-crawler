@@ -1,7 +1,7 @@
 from typing import Optional
 
+import sqlmodel as sa
 from pydantic import computed_field
-from sqlmodel import BigInteger, Boolean, Field, Index
 
 from ._base import BaseTable
 from .enums import JobPriority, JobStatus, JobType
@@ -10,66 +10,66 @@ from .enums import JobPriority, JobStatus, JobType
 class Job(BaseTable, table=True):
     __tablename__ = 'jobs'  # type: ignore
     __table_args__ = (
-        Index("ix_jobs_is_done", 'is_done'),
-        Index("ix_jobs_parent_job_id", 'parent_job_id'),
-        Index("ix_jobs_depends_on", 'depends_on', 'is_done'),
-        Index("ix_jobs_scheduler", 'status', 'done', 'type'),
-        Index("ix_jobs_ordering", 'priority', 'user_id', 'updated_at'),
+        sa.Index("ix_jobs_is_done", 'is_done'),
+        sa.Index("ix_jobs_parent_job_id", 'parent_job_id'),
+        sa.Index("ix_jobs_depends_on", 'depends_on', 'is_done'),
+        sa.Index("ix_jobs_scheduler", 'status', 'done', 'type'),
+        sa.Index("ix_jobs_ordering", 'priority', 'user_id', 'updated_at'),
     )
 
-    user_id: str = Field(
+    user_id: str = sa.Field(
         foreign_key="users.id",
         ondelete='CASCADE'
     )
-    parent_job_id: Optional[str] = Field(
+    parent_job_id: Optional[str] = sa.Field(
         default=None,
         foreign_key="jobs.id",
         ondelete='CASCADE',
         nullable=True,
     )
-    depends_on: Optional[str] = Field(
+    depends_on: Optional[str] = sa.Field(
         default=None,
         foreign_key="jobs.id",
         ondelete='CASCADE',
         nullable=True,
     )
 
-    type: JobType = Field(
+    type: JobType = sa.Field(
         description="The job type",
     )
-    priority: JobPriority = Field(
+    priority: JobPriority = sa.Field(
         default=JobPriority.LOW,
         description="The job priority"
     )
-    status: JobStatus = Field(
+    status: JobStatus = sa.Field(
         default=JobStatus.PENDING,
         description="Current status"
     )
-    is_done: bool = Field(
+    is_done: bool = sa.Field(
         default=False,
-        sa_type=Boolean,
+        sa_type=sa.Boolean,
         description="Whether the job has completed"
     )
-    error: Optional[str] = Field(
+    error: Optional[str] = sa.Field(
         default=None,
         description='Error state in case of failure'
     )
-    started_at: Optional[int] = Field(
+    started_at: Optional[int] = sa.Field(
         default=None,
-        sa_type=BigInteger,
+        sa_type=sa.BigInteger,
         description="Job start time (UNIX ms)"
     )
-    finished_at: Optional[int] = Field(
+    finished_at: Optional[int] = sa.Field(
         default=None,
-        sa_type=BigInteger,
+        sa_type=sa.BigInteger,
         description="Job finish time (UNIX ms)"
     )
 
-    done: int = Field(
+    done: int = sa.Field(
         default=0,
         description="Currently completed items"
     )
-    total: int = Field(
+    total: int = sa.Field(
         default=1,
         description="Total items to complete"
     )

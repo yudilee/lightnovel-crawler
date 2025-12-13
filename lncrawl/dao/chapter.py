@@ -1,7 +1,7 @@
 from typing import Optional
 
+import sqlmodel as sa
 from pydantic import computed_field
-from sqlmodel import Field, Index, UniqueConstraint
 
 from ..context import ctx
 from ._base import BaseTable
@@ -10,33 +10,33 @@ from ._base import BaseTable
 class Chapter(BaseTable, table=True):
     __tablename__ = 'chapters'  # type: ignore
     __table_args__ = (
-        UniqueConstraint("novel_id", "serial"),
-        Index("ix_chapter_novel_id", 'novel_id'),
-        Index("ix_chapter_novel_serial", 'novel_id', 'serial'),
-        Index("ix_chapter_novel_volume", 'novel_id', 'volume_id'),
+        sa.UniqueConstraint("novel_id", "serial"),
+        sa.Index("ix_chapter_novel_id", 'novel_id'),
+        sa.Index("ix_chapter_novel_serial", 'novel_id', 'serial'),
+        sa.Index("ix_chapter_novel_volume", 'novel_id', 'volume_id'),
     )
 
-    novel_id: str = Field(
+    novel_id: str = sa.Field(
         foreign_key="novels.id",
         ondelete='CASCADE'
     )
-    serial: int = Field(
+    serial: int = sa.Field(
         description="Serial number of the volume",
     )
-    volume_id: Optional[str] = Field(
+    volume_id: Optional[str] = sa.Field(
         default=None,
         foreign_key="volumes.id",
         ondelete='SET NULL',
         nullable=True,
     )
 
-    url: str = Field(
+    url: str = sa.Field(
         description="Full URL of the chapter content page"
     )
-    title: str = Field(
+    title: str = sa.Field(
         description="Title of the chapter"
     )
-    is_done: bool = Field(
+    is_done: bool = sa.Field(
         default=False,
         description="Whether the content has been crawled"
     )

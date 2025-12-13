@@ -1,17 +1,17 @@
 from typing import Optional
 
-from sqlmodel import Field, SQLModel
+import sqlmodel as sa
 
 
-class Tag(SQLModel, table=True):
+class Tag(sa.SQLModel, table=True):
     __tablename__ = 'tags'  # type: ignore
 
-    name: str = Field(
+    name: str = sa.Field(
         nullable=False,
         primary_key=True,
         description="Unique tag name"
     )
-    description: Optional[str] = Field(
+    description: Optional[str] = sa.Field(
         default=None,
         description="Tag description"
     )

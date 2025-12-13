@@ -1,31 +1,31 @@
 from typing import Any, Dict
 
+import sqlmodel as sa
 from sqlalchemy import event
-from sqlmodel import JSON, BigInteger, Field, SQLModel
 
 from ..utils.text_tools import generate_uuid
 from ..utils.time_utils import current_timestamp
 
 
-class BaseTable(SQLModel):
-    id: str = Field(
+class BaseTable(sa.SQLModel):
+    id: str = sa.Field(
         default_factory=generate_uuid,
         primary_key=True,
-        description="ID"
+        description="ID",
     )
-    created_at: int = Field(
+    created_at: int = sa.Field(
         index=True,
         default_factory=current_timestamp,
-        sa_type=BigInteger
+        sa_type=sa.BigInteger
     )
-    updated_at: int = Field(
+    updated_at: int = sa.Field(
         index=True,
         default_factory=current_timestamp,
-        sa_type=BigInteger
+        sa_type=sa.BigInteger
     )
-    extra: Dict[str, Any] = Field(
+    extra: Dict[str, Any] = sa.Field(
         default_factory=dict,
-        sa_type=JSON,
+        sa_type=sa.JSON,
         description="Additional metadata",
     )
 
