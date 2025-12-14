@@ -1,4 +1,4 @@
-import { JobStatus } from '@/types';
+import { JobStatus, type Job } from '@/types';
 import {
   CheckOutlined,
   CloseOutlined,
@@ -8,8 +8,8 @@ import {
 } from '@ant-design/icons';
 import { Tag } from 'antd';
 
-export const JobStatusTag: React.FC<{ value: JobStatus }> = ({ value }) => {
-  switch (value) {
+export const JobStatusTag: React.FC<{ job: Job }> = ({ job }) => {
+  switch (job.status) {
     case JobStatus.PENDING:
       return <Tag icon={<HourglassOutlined />}>Pending</Tag>;
     case JobStatus.RUNNING:
@@ -21,7 +21,7 @@ export const JobStatusTag: React.FC<{ value: JobStatus }> = ({ value }) => {
     case JobStatus.SUCCESS:
       return (
         <Tag icon={<CheckOutlined />} color="orange">
-          Success
+          {job.total > 1 ? 'Completed' : 'Success'}
         </Tag>
       );
     case JobStatus.CANCELED:

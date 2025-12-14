@@ -36,7 +36,7 @@ export const JobDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
       <JobProgressLine job={job} size={['100%', 18]} style={{ marginTop: 8 }} />
 
       <Flex wrap gap={4} style={{ marginTop: 5 }}>
-        <JobStatusTag value={job.status} />
+        <JobStatusTag job={job} />
         {!job.is_pending && (
           <Tag icon={<ClockCircleOutlined />} color="default">
             <b>Started:</b> {formatDate(job.started_at)}
