@@ -95,6 +95,11 @@ class AppContext:
         return ReadHistoryService()
 
     @cached_property
+    def libraries(self):
+        from .services.libraries import LibraryService
+        return LibraryService()
+
+    @cached_property
     def crawler(self):
         from .services.crawler import CrawlerService
         return CrawlerService()

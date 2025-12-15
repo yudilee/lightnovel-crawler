@@ -163,7 +163,7 @@ export const JobDetailsPage: React.FC<any> = () => {
       )}
 
       <JobDetailsCard job={job} />
-      {user && <UserDetailsCard user={user} />}
+      {user && <UserDetailsCard user={user} title="Initiated By" />}
       {novel && <NovelDetailsCard novel={novel} withPageLink />}
       {volume && <VolumeDetailsCard volume={volume} hideChapters />}
       {chapter && <ChapterDetailsCard chapter={chapter} />}

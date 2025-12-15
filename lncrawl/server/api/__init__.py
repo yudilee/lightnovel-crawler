@@ -7,6 +7,7 @@ from .auth import router as auth
 from .chapters import router as chapter
 from .history import router as history
 from .jobs import router as job
+from .libraries import router as library
 from .meta import router as metadata
 from .novels import router as novel
 from .settings import router as settings
@@ -46,6 +47,13 @@ router.include_router(
     novel,
     prefix='/novel',
     tags=['Novels'],
+    dependencies=[Depends(ensure_user)],
+)
+
+router.include_router(
+    library,
+    prefix='/library',
+    tags=['Libraries'],
     dependencies=[Depends(ensure_user)],
 )
 

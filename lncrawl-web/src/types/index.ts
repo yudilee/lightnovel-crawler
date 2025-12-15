@@ -10,11 +10,14 @@ import type {
 
 export * from './enums';
 
-export interface User {
+interface _Base {
   id: string;
   created_at: number;
   updated_at: number;
+  extra: Record<string, unknown>;
+}
 
+export interface User extends _Base {
   name: string;
   email: string;
   role: UserRole;
@@ -39,10 +42,7 @@ export interface Paginated<T> {
   items: T[];
 }
 
-export interface Job {
-  id: string;
-  created_at: number;
-  updated_at: number;
+export interface Job extends _Base {
   parent_job_id?: string;
 
   user_id: string;
@@ -82,9 +82,7 @@ export interface Job {
   };
 }
 
-export interface Novel {
-  id: string;
-
+export interface Novel extends _Base {
   url: string;
   domain: string;
 
@@ -104,18 +102,31 @@ export interface Novel {
   cover_file: string;
   cover_available: boolean;
 
-  created_at: number;
-  updated_at: number;
   extra: {
     crawler_version?: number;
   };
 }
 
-export interface Chapter {
+export interface Library extends _Base {
   id: string;
-  created_at: number;
-  updated_at: number;
+  user_id: string;
+  name: string;
+  description?: string;
+  is_public: boolean;
+}
 
+export interface LibraryOwner {
+  id: string;
+  name?: string;
+}
+
+export interface LibrarySummary {
+  owner: User;
+  library: Library;
+  novel_count: number;
+}
+
+export interface Chapter extends _Base {
   novel_id: string;
   volume_id: string;
   url: string;
@@ -131,21 +142,16 @@ export interface Chapter {
   };
 }
 
-export interface Volume {
+export interface Volume extends _Base {
   id: string;
   novel_id: string;
   title: string;
   serial: number;
   chapter_count: number;
-  created_at: number;
-  updated_at: number;
 }
 
-export interface Artifact {
-  id: string;
+export interface Artifact extends _Base {
   format: OutputFormat;
-  created_at: number;
-  updated_at: number;
   novel_id: string;
   job_id?: string;
   user_id?: string;

@@ -75,16 +75,15 @@ export const UserListPage: React.FC<any> = () => {
         )}
       />
 
-      {(users.length > 0 || currentPage > 1) && total / perPage > 1 && (
-        <Pagination
-          current={currentPage}
-          total={total}
-          pageSize={perPage}
-          showSizeChanger={false}
-          onChange={(page) => updateParams({ page })}
-          style={{ textAlign: 'center', marginTop: 32 }}
-        />
-      )}
+      <Pagination
+        current={currentPage}
+        total={total}
+        pageSize={perPage}
+        showSizeChanger={false}
+        onChange={(page) => updateParams({ page })}
+        style={{ textAlign: 'center', marginTop: 32 }}
+        hideOnSinglePage
+      />
     </>
   );
 };

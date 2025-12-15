@@ -141,6 +141,7 @@ class ServerErrors:
     no_such_file = ServerError(404, "No such file")
     no_such_novel = ServerError(404, "No such novel")
     no_such_tag = ServerError(404, "No such tag")
+    no_such_library = ServerError(404, "No such library")
     no_such_secret = ServerError(404, "No such secret")
     no_such_volume = ServerError(404, "No such volume")
     no_such_chapter = ServerError(404, "No such chapter")

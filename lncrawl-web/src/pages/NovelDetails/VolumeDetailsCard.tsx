@@ -12,7 +12,6 @@ import {
   Button,
   Card,
   Descriptions,
-  Divider,
   Flex,
   Grid,
   message,
@@ -139,18 +138,16 @@ export const VolumeDetailsCard: React.FC<{
       ) : chapters.length > 0 ? (
         <>
           <ChapterListCard chapters={chapters} history={history} />
-          <Divider size="small" />
-          {(chapters.length > 0 || page > 1) && total / perPage > 1 && (
-            <Pagination
-              total={total}
-              current={page}
-              pageSize={perPage}
-              onChange={(page, perPage) => {
-                setPage(page);
-                setPerPage(perPage);
-              }}
-            />
-          )}
+          <Pagination
+            total={total}
+            current={page}
+            pageSize={perPage}
+            onChange={(page, perPage) => {
+              setPage(page);
+              setPerPage(perPage);
+            }}
+            hideOnSinglePage
+          />
         </>
       ) : null}
     </Card>

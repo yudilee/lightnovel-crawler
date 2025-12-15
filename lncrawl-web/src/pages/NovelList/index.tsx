@@ -10,6 +10,7 @@ import {
   Spin,
   Typography,
 } from 'antd';
+import { AddToLibraryButton } from '@/components/Library/AddToLibraryButton';
 import { useNovelList } from './hooks';
 import { NovelFilterBox } from './NovelFilterBox';
 import { NovelListItemCard } from './NovelListItemCard';
@@ -61,7 +62,20 @@ export const NovelListPage: React.FC<any> = () => {
       <Row gutter={[16, 16]}>
         {novels.map((novel) => (
           <Col key={novel.id} xs={8} lg={6} xl={4}>
-            <NovelListItemCard novel={novel} />
+            <div style={{ position: 'relative' }}>
+              <div
+                style={{ position: 'absolute', right: 4, top: 4, zIndex: 2 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <AddToLibraryButton
+                  novelId={novel.id}
+                  buttonText="Add"
+                  buttonType="primary"
+                  size="small"
+                />
+              </div>
+              <NovelListItemCard novel={novel} />
+            </div>
           </Col>
         ))}
       </Row>
@@ -72,16 +86,15 @@ export const NovelListPage: React.FC<any> = () => {
         </Flex>
       )}
 
-      {(novels.length > 0 || currentPage > 1) && total / perPage > 1 && (
-        <Pagination
-          current={currentPage}
-          total={total}
-          pageSize={perPage}
-          showSizeChanger={false}
-          onChange={(page) => updateParams({ page })}
-          style={{ textAlign: 'center', marginTop: 32 }}
-        />
-      )}
+      <Pagination
+        current={currentPage}
+        total={total}
+        pageSize={perPage}
+        showSizeChanger={false}
+        onChange={(page) => updateParams({ page })}
+        style={{ textAlign: 'center', marginTop: 32 }}
+        hideOnSinglePage
+      />
     </>
   );
 };

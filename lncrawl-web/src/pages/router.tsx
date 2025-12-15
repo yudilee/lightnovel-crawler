@@ -10,6 +10,8 @@ import { NovelDetailsPage } from './NovelDetails';
 import { NovelListPage } from './NovelList';
 import { NovelReaderPage } from './NovelReaderPage';
 import { ResetPasswordPage } from './ResetPassword';
+import { LibraryDetailsPage } from './LibraryDetails';
+import { LibraryListPage } from './LibraryList';
 import { SettingsPage } from './SettingsPage';
 import { SignupPage } from './Signup';
 import { SupportedSourcesPage } from './SupportedSources';
@@ -66,6 +68,14 @@ export const USER_ROUTES: RouteObject[] = [
       {
         path: 'novels',
         element: <NovelListPage />,
+      },
+      {
+        path: 'libraries',
+        element: <LibraryListPage />,
+      },
+      {
+        path: 'library/:id',
+        element: <LibraryDetailsPage />,
       },
       {
         path: 'novel/:id',

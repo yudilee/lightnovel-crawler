@@ -3,6 +3,7 @@ import {
   ControlOutlined,
   DeploymentUnitOutlined,
   FileDoneOutlined,
+  FolderOpenOutlined,
   SettingOutlined,
   TeamOutlined,
   UserOutlined,
@@ -31,6 +32,11 @@ export const buildMenu = (isAdmin: boolean): MenuProps['items'] => [
     key: '/novels',
     label: 'Novels',
     icon: <BookOutlined />,
+  },
+  {
+    key: '/libraries',
+    label: 'Libraries',
+    icon: <FolderOpenOutlined />,
   },
   {
     key: '/meta/sources',
