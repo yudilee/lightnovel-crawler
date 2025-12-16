@@ -40,7 +40,7 @@ endif
 
 # Setup virtual environment in .venv
 setup:
-ifeq ($(wildcard $(VENV)/.*),)
+ifeq ($(wildcard $(VENV)/pyvenv.cfg),)
 	$(PYTHON) -m venv $(VENV)
 	$(PY) -m pip install -q -U pip
 else
