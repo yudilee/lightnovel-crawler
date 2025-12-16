@@ -1,23 +1,15 @@
 import { Auth } from '@/store/_auth';
 import type { Library, User } from '@/types';
 import { stringifyError } from '@/utils/errors';
-import {
-  Button,
-  Card,
-  Flex,
-  Result,
-  Space,
-  Spin,
-  Switch,
-  Tag,
-  Typography,
-  message,
-} from 'antd';
+import { Space, message } from 'antd';
 import axios from 'axios';
 import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { UserDetailsCard } from '../JobDetails/UserDetailsCard';
+import { ErrorState } from './ErrorState';
+import { LibraryInfoCard } from './LibraryInfoCard';
+import { LoadingState } from './LoadingState';
 import { LibraryNovelList } from './NovelList';
 
 export const LibraryDetailsPage: React.FC = () => {
@@ -53,7 +45,7 @@ export const LibraryDetailsPage: React.FC = () => {
     if (id) {
       loadDetails();
     }
-  }, [id, refresh, messageApi]);
+  }, [id, refresh]);
 
   useEffect(() => {
     const loadOwner = async () => {
@@ -80,26 +72,17 @@ export const LibraryDetailsPage: React.FC = () => {
     }
   };
 
+  const handleLibraryUpdated = (updatedLibrary: Library) => {
+    setLibrary(updatedLibrary);
+  };
+
   if (loading) {
-    return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Spin size="large" style={{ marginTop: 100 }} />
-      </Flex>
-    );
+    return <LoadingState />;
   }
 
   if (error || !library) {
     return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Result
-          status="error"
-          title="Failed to load novel list"
-          subTitle={error}
-          extra={[
-            <Button onClick={() => setRefresh((v) => v + 1)}>Retry</Button>,
-          ]}
-        />
-      </Flex>
+      <ErrorState error={error} onRetry={() => setRefresh((v) => v + 1)} />
     );
   }
 
@@ -107,31 +90,13 @@ export const LibraryDetailsPage: React.FC = () => {
     <Space direction="vertical" style={{ width: '100%' }}>
       {contextHolder}
 
-      <Card>
-        <Flex align="center" justify="space-between" wrap>
-          <Space align="center">
-            <Typography.Title level={3} style={{ margin: 0 }}>
-              {library.name || 'Library'}
-            </Typography.Title>
-            <Tag color={library.is_public ? 'green' : 'blue'}>
-              {library.is_public ? 'Public' : 'Private'}
-            </Tag>
-          </Space>
-          {isOwner && (
-            <Space align="center">
-              <Typography.Text>Public</Typography.Text>
-              <Switch
-                checked={library.is_public}
-                onChange={handleTogglePublic}
-                disabled={loading}
-              />
-            </Space>
-          )}
-        </Flex>
-        <Typography.Paragraph type="secondary">
-          {library.description || 'No description'}
-        </Typography.Paragraph>
-      </Card>
+      <LibraryInfoCard
+        library={library}
+        isOwner={isOwner}
+        loading={loading}
+        onTogglePublic={handleTogglePublic}
+        onLibraryUpdated={handleLibraryUpdated}
+      />
 
       {owner && <UserDetailsCard user={owner} title="Owner" />}
 
