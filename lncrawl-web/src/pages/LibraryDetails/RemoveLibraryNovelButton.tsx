@@ -7,7 +7,8 @@ import axios from 'axios';
 export const RemoveLibraryNovelButton: React.FC<{
   novel: Novel;
   library: Library;
-}> = ({ novel, library }) => {
+  onRemoved?: () => void;
+}> = ({ novel, library, onRemoved }) => {
   const [messageApi, contextHolder] = message.useMessage();
 
   const handleRemove = async (novel: Novel) => {
@@ -37,6 +38,7 @@ export const RemoveLibraryNovelButton: React.FC<{
           e.stopPropagation();
           e.preventDefault();
           handleRemove(novel);
+          onRemoved?.();
         }}
       />
     </>

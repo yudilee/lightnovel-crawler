@@ -1,7 +1,10 @@
 import type { LibrarySummary } from '@/types';
-import { BookOutlined, UserOutlined } from '@ant-design/icons';
-import { Card, Col, Divider, Flex, Space, Tag, Typography } from 'antd';
+import { Card, Col } from 'antd';
 import type React from 'react';
+import { LibraryCardBackground } from './LibraryCardBackground';
+import { LibraryCardDescription } from './LibraryCardDescription';
+import { LibraryCardFooter } from './LibraryCardFooter';
+import { LibraryCardHeader } from './LibraryCardHeader';
 
 type LibraryCardProps = {
   item: LibrarySummary;
@@ -15,40 +18,65 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({
   loading,
   isOwner,
   onSelect,
-}) => (
-  <Col key={item.library.id} xs={24} sm={12} md={8} lg={6} xl={6}>
-    <Card
-      hoverable
-      loading={loading}
-      onClick={() => onSelect?.(item.library.id)}
-      title={
-        <Space align="center">
-          <BookOutlined />
-          <span>{item.library.name}</span>
-        </Space>
-      }
-      extra={
-        <Tag color={item.library.is_public ? 'green' : 'blue'}>
-          {item.library.is_public ? 'Public' : 'Private'}
-        </Tag>
-      }
-      style={{ height: '100%' }}
-    >
-      <Typography.Paragraph type="secondary" ellipsis={{ rows: 3 }}>
-        {item.library.description || 'No description'}
-      </Typography.Paragraph>
-      <Divider style={{ margin: '8px 0' }} />
-      <Flex align="center" wrap>
-        <span>{item.novel_count} Novels</span>
-        <Divider type="vertical" />
-        <Space size="small">
-          <UserOutlined />
-          <Typography.Text type="secondary">
-            {item.owner.name || 'Unknown'}
-            {isOwner ? ' (you)' : ''}
-          </Typography.Text>
-        </Space>
-      </Flex>
-    </Card>
-  </Col>
-);
+}) => {
+  return (
+    <Col key={item.library.id} xs={24} sm={12} md={24} lg={12} xl={8}>
+      <Card
+        hoverable
+        loading={loading}
+        onClick={() => onSelect?.(item.library.id)}
+        style={{
+          height: '100%',
+          overflow: 'hidden',
+          position: 'relative',
+          padding: 0,
+          borderRadius: 12,
+          border: 'none',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+        }}
+        styles={{
+          body: {
+            padding: 0,
+            height: '100%',
+            minHeight: 150,
+          },
+        }}
+      >
+        <LibraryCardBackground
+          libraryId={item.library.id}
+          novelCount={item.novel_count}
+        />
+
+        {/* Content */}
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: 20,
+            color: 'white',
+          }}
+        >
+          <LibraryCardHeader library={item.library} />
+          <LibraryCardDescription description={item.library.description} />
+          <LibraryCardFooter
+            novelCount={item.novel_count}
+            ownerName={item.owner.name}
+            isOwner={isOwner}
+          />
+        </div>
+      </Card>
+    </Col>
+  );
+};

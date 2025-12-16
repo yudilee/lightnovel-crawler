@@ -1,9 +1,8 @@
-import { Auth } from '@/store/_auth';
 import type { Library, Novel, Paginated } from '@/types';
 import {
   Button,
-  Card,
   Col,
+  Divider,
   Empty,
   Flex,
   Pagination,
@@ -14,8 +13,7 @@ import {
   Typography,
 } from 'antd';
 import axios from 'axios';
-import { useEffect, useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
 import { NovelListItemCard } from '../NovelList/NovelListItemCard';
 import { RemoveLibraryNovelButton } from './RemoveLibraryNovelButton';
 
@@ -23,20 +21,14 @@ const PAGE_SIZE = 12;
 
 export const LibraryNovelList: React.FC<{
   library: Library;
-}> = ({ library }) => {
-  const user = useSelector(Auth.select.user);
-
+  isOwner: boolean;
+}> = ({ library, isOwner }) => {
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState<boolean>(true);
   const [refresh, setRefresh] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
   const [total, setTotal] = useState<number>(0);
   const [novels, setNovels] = useState<Novel[]>([]);
-
-  const isOwner = useMemo(
-    () => Boolean(user?.id === library.user_id),
-    [user?.id, library.user_id]
-  );
 
   useEffect(() => {
     setLoading(true);
@@ -87,12 +79,14 @@ export const LibraryNovelList: React.FC<{
   }
 
   return (
-    <Card
-      title="📚 Novels"
-      extra={
+    <>
+      <Flex align="center" justify="space-between">
+        <Typography.Title level={4}>📚 Novels</Typography.Title>
         <Typography.Text type="secondary">{total || 0} total</Typography.Text>
-      }
-    >
+      </Flex>
+
+      <Divider size="small" />
+
       <Space direction="vertical" style={{ width: '100%' }} size="middle">
         {novels.length ? (
           <Row gutter={[12, 12]}>
@@ -100,7 +94,11 @@ export const LibraryNovelList: React.FC<{
               <Col key={novel.id} xs={12} sm={12} md={8} lg={6} xl={4}>
                 <div style={{ position: 'relative' }}>
                   {isOwner && (
-                    <RemoveLibraryNovelButton novel={novel} library={library} />
+                    <RemoveLibraryNovelButton
+                      novel={novel}
+                      library={library}
+                      onRemoved={() => setRefresh((v) => v + 1)}
+                    />
                   )}
                   <NovelListItemCard novel={novel} />
                 </div>
@@ -122,6 +120,6 @@ export const LibraryNovelList: React.FC<{
           hideOnSinglePage
         />
       </Space>
-    </Card>
+    </>
   );
 };

@@ -25,8 +25,8 @@ export const LibraryDetailsPage: React.FC = () => {
   const [library, setLibrary] = useState<Library>();
 
   const isOwner = useMemo(
-    () => Boolean(library && user?.id === library.user_id),
-    [user?.id, library]
+    () => Boolean(isAdmin || (library && user?.id === library.user_id)),
+    [isAdmin, user?.id, library]
   );
 
   useEffect(() => {
@@ -48,17 +48,18 @@ export const LibraryDetailsPage: React.FC = () => {
   }, [id, refresh]);
 
   useEffect(() => {
+    if (!isAdmin || !library?.user_id) {
+      return;
+    }
     const loadOwner = async () => {
       try {
-        const { data } = await axios.get<User>(`/api/user/${library?.user_id}`);
+        const { data } = await axios.get<User>(`/api/user/${library.user_id}`);
         setOwner(data);
       } catch (err) {
         messageApi.error(stringifyError(err));
       }
     };
-    if (library?.user_id && isAdmin) {
-      loadOwner();
-    }
+    loadOwner();
   }, [library?.user_id, isAdmin, messageApi]);
 
   const handleTogglePublic = async (checked: boolean) => {
@@ -98,9 +99,9 @@ export const LibraryDetailsPage: React.FC = () => {
         onLibraryUpdated={handleLibraryUpdated}
       />
 
-      {owner && <UserDetailsCard user={owner} title="Owner" />}
+      {isAdmin && owner && <UserDetailsCard user={owner} title="Owner" />}
 
-      <LibraryNovelList library={library} />
+      <LibraryNovelList library={library} isOwner={isOwner} />
     </Space>
   );
 };
