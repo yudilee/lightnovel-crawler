@@ -30,3 +30,9 @@ class LibrarySummary(BaseModel):
     library: Library = Field(description="Library info")
     owner: LibraryOwner = Field(description="Library owner")
     novel_count: int = Field(description="Number of novels")
+
+
+class LibraryItem(BaseModel):
+    id: str = Field(description="Library ID")
+    name: str = Field(description="Library name")
+    description: Optional[str] = Field(default=None, description="Library description")

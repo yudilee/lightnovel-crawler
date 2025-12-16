@@ -1,8 +1,10 @@
+from typing import List
+
 from fastapi import APIRouter, Path, Query, Security
 
 from ...context import ctx
 from ...dao import Library, Novel, User
-from ...server.models.library import (LibraryAddNovelRequest,
+from ...server.models.library import (LibraryAddNovelRequest, LibraryItem,
                                       LibraryCreateRequest, LibrarySummary,
                                       LibraryUpdateRequest)
 from ...server.models.pagination import Paginated
@@ -20,7 +22,7 @@ def list_all_libraries(
     offset: int = Query(default=0),
     limit: int = Query(default=20, le=100),
 ) -> Paginated[LibrarySummary]:
-    return ctx.libraries.list_all(offset=offset, limit=limit)
+    return ctx.libraries.list(offset, limit)
 
 
 @router.get(
@@ -32,7 +34,7 @@ def list_public_libraries(
     offset: int = Query(default=0),
     limit: int = Query(default=20, le=100),
 ) -> Paginated[LibrarySummary]:
-    return ctx.libraries.list_public(offset=offset, limit=limit)
+    return ctx.libraries.list(offset, limit, public_only=True)
 
 
 @router.get(
@@ -44,7 +46,15 @@ def list_my_libraries(
     limit: int = Query(default=20, le=100),
     user: User = Security(ensure_user),
 ) -> Paginated[LibrarySummary]:
-    return ctx.libraries.list_user(user.id, offset=offset, limit=limit)
+    return ctx.libraries.list(offset, limit, user_id=user.id)
+
+
+@router.get(
+    "/my/list",
+    summary="Get library name suggestions",
+)
+def all_my_libraries(user: User = Security(ensure_user)) -> List[LibraryItem]:
+    return ctx.libraries.list_all(user.id)
 
 
 @router.post(

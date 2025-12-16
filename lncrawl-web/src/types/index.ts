@@ -115,6 +115,12 @@ export interface Library extends _Base {
   is_public: boolean;
 }
 
+export interface LibraryItem {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 export interface LibraryOwner {
   id: string;
   name?: string;

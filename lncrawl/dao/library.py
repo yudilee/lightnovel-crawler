@@ -10,8 +10,8 @@ class Library(BaseTable, table=True):
     user_id: str = sa.Field(
         foreign_key="users.id",
         description="Owner user id",
-        index=True,
         ondelete="CASCADE",
+        index=True,
     )
 
     name: str = sa.Field(

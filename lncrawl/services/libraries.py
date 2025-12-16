@@ -1,11 +1,11 @@
-from typing import Optional
+from typing import List, Optional
 
 import sqlmodel as sa
 
 from ..context import ctx
 from ..dao import Library, LibraryNovel, Novel, User, UserRole
 from ..exceptions import ServerErrors
-from ..server.models.library import LibraryOwner, LibrarySummary
+from ..server.models.library import LibraryItem, LibraryOwner, LibrarySummary
 from ..server.models.pagination import Paginated
 
 
@@ -35,74 +35,44 @@ class LibraryService:
             return
         raise ServerErrors.forbidden
 
-    def list_all(
+    def list(
         self,
-        *,
         offset: int = 0,
         limit: int = 20,
+        *,
+        public_only: bool = False,
+        user_id: Optional[str] = None,
     ) -> Paginated[LibrarySummary]:
         with ctx.db.session() as sess:
-            stmt = (
-                sa.select(
-                    Library,
-                    User,
-                    sa.func.count(LibraryNovel.novel_id).label("novel_count"),
-                )
-                .join(User, User.id == Library.user_id)
-                .join(LibraryNovel, LibraryNovel.library_id == Library.id, isouter=True)
-                .group_by(Library.id, User.id)
-                .order_by(sa.desc(Library.updated_at))
-                .offset(offset)
-                .limit(limit)
-            )
             cnt = sa.select(sa.func.count()).select_from(Library)
-
-            rows = sess.exec(stmt).all()
-            total = sess.exec(cnt).one()
-
-            items = [
-                LibrarySummary(
-                    library=Library(**row[0].model_dump()),
-                    owner=_owner_info(row[1]),
-                    novel_count=row[2],
-                )
-                for row in rows
-            ]
-
-            return Paginated(
-                total=total,
-                offset=offset,
-                limit=limit,
-                items=items,
+            stmt = sa.select(
+                Library,
+                User,
+                sa.func.count(sa.col(LibraryNovel.novel_id)).label("novel_count"),
+            )
+            stmt = stmt.join(
+                User,
+                sa.col(User.id) == sa.col(Library.user_id)
+            )
+            stmt = stmt.join(
+                LibraryNovel,
+                sa.col(LibraryNovel.library_id) == sa.col(Library.id),
+                isouter=True
             )
 
-    def list_user(
-        self,
-        user_id: str,
-        *,
-        offset: int = 0,
-        limit: int = 20,
-    ) -> Paginated[LibrarySummary]:
-        with ctx.db.session() as sess:
+            if user_id:
+                cnt = cnt.where(Library.user_id == user_id)
+                stmt = stmt.where(Library.user_id == user_id)
+            if public_only:
+                cnt = cnt.where(sa.col(Library.is_public).is_(True))
+                stmt = stmt.where(sa.col(Library.is_public).is_(True))
+
             stmt = (
-                sa.select(
-                    Library,
-                    User,
-                    sa.func.count(LibraryNovel.novel_id).label("novel_count"),
-                )
-                .join(User, User.id == Library.user_id)
-                .join(LibraryNovel, LibraryNovel.library_id == Library.id, isouter=True)
-                .where(Library.user_id == user_id)
-                .group_by(Library.id, User.id)
+                stmt.group_by(Library.id, User.id)
                 .order_by(sa.desc(Library.updated_at))
                 .offset(offset)
                 .limit(limit)
             )
-            cnt = (
-                sa.select(sa.func.count())
-                .select_from(Library)
-                .where(Library.user_id == user_id)
-            )
 
             rows = sess.exec(stmt).all()
             total = sess.exec(cnt).one()
@@ -123,51 +93,21 @@ class LibraryService:
                 items=items,
             )
 
-    def list_public(
-        self,
-        *,
-        offset: int = 0,
-        limit: int = 20,
-    ) -> Paginated[LibrarySummary]:
+    def list_all(self, user_id: Optional[str] = None) -> List[LibraryItem]:
         with ctx.db.session() as sess:
-            stmt = (
-                sa.select(
-                    Library,
-                    User,
-                    sa.func.count(LibraryNovel.novel_id).label("novel_count"),
+            stmt = sa.select(Library)
+            if user_id:
+                stmt = stmt.where(Library.user_id == user_id)
+            stmt = stmt.order_by(sa.desc(Library.updated_at))
+            libraries = sess.exec(stmt).all()
+            return [
+                LibraryItem(
+                    id=item.id,
+                    name=item.name,
+                    description=item.description,
                 )
-                .join(User, User.id == Library.user_id)
-                .join(LibraryNovel, LibraryNovel.library_id == Library.id, isouter=True)
-                .where(Library.is_public.is_(True))
-                .group_by(Library.id, User.id)
-                .order_by(sa.desc(Library.updated_at))
-                .offset(offset)
-                .limit(limit)
-            )
-            cnt = (
-                sa.select(sa.func.count())
-                .select_from(Library)
-                .where(Library.is_public.is_(True))
-            )
-
-            rows = sess.exec(stmt).all()
-            total = sess.exec(cnt).one()
-
-            items = [
-                LibrarySummary(
-                    library=Library(**row[0].model_dump()),
-                    owner=_owner_info(row[1]),
-                    novel_count=row[2],
-                )
-                for row in rows
+                for item in libraries
             ]
-
-            return Paginated(
-                total=total,
-                offset=offset,
-                limit=limit,
-                items=items,
-            )
 
     def create(
         self,
@@ -249,7 +189,7 @@ class LibraryService:
             )
             stmt = (
                 sa.select(Novel)
-                .join(LibraryNovel, LibraryNovel.novel_id == Novel.id)
+                .join(LibraryNovel, sa.col(LibraryNovel.novel_id) == sa.col(Novel.id))
                 .where(LibraryNovel.library_id == library_id)
                 .order_by(sa.desc(Novel.updated_at))
                 .offset(offset)
