@@ -6,16 +6,16 @@ _Last updated: 2025-12-16_
 ---
 
 ## 1. Overview
-Lightnovel-Crawler (“the Service”) is an open-source web application operated by **Sudipto Chandra** (individual).
+Lightnovel-Crawler (“the Service”) is an open-source application which includes both an web application and a python package.
 
-The Service allows registered users to provide URLs to online novels, fetch text and images from those sources, and generate downloadable eBooks.
+The web application allows registered users to provide URLs to online novels, fetch text and images from those sources, and generate downloadable eBooks.
 
-This Privacy Policy explains what data is collected, how it is stored, and how it is used.
+This Privacy Policy explains what data is collected, how it is stored, and how it is used in the web application.
 
 ---
 
 ## 2. Data Controller
-- **Owner:** Sudipto Chandra  
+- **Owner:** Anonymous 
 - **Contact:** lncrawl@pm.me  
 - **Jurisdiction:** Not bound to any specific country  
 
