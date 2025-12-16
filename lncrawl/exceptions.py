@@ -120,7 +120,6 @@ class ServerErrors:
     wrong_otp = ServerError(403, 'Wrong OTP')
     token_invalid = ServerError(403, 'Invalid token')
     token_expired = ServerError(403, 'Token expired')
-    wrong_password = ServerError(401, 'Wrong password')
     inactive_user = ServerError(403, 'User is inactive')
     user_exists = ServerError(409, "User already exists")
     email_not_verified = ServerError(401, "Email is not verified")

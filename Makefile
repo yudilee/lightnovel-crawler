@@ -1,20 +1,19 @@
-
 # Required variables
 ifeq ($(OS),Windows_NT)
 	PYTHON := python
 	VENV := .venv-win
 	PY := $(VENV)/Scripts/python
 	FLAKE8 := $(VENV)/Scripts/flake8
-# 	NVM :=
+	YARN := yarn --cwd lncrawl-web
 else
 	PYTHON := python3
 	VENV := .venv-posix
 	PY := $(VENV)/bin/python
 	FLAKE8 := $(VENV)/bin/flake8
 	NVM := "$$NVM_DIR"/nvm-exec
+	YARN := $(NVM) yarn --cwd lncrawl-web
 endif
 
-YARN := cd lncrawl-web && $(NVM) yarn
 VERSION := $(shell $(PYTHON) -c "print(open('lncrawl/VERSION').read().strip())")
 
 # Default target (help/info)

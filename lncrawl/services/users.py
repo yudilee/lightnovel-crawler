@@ -6,9 +6,9 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
+import sqlmodel as sa
 from jose import jwt
 from passlib.context import CryptContext
-from sqlmodel import String, asc, cast, col, func, or_, select
 
 from ..context import ctx
 from ..dao import NotificationItem, User, UserRole, UserTier, VerifiedEmail
@@ -41,7 +41,7 @@ class UserService:
         password = ctx.config.db.admin_password
         with ctx.db.session() as sess:
             user = sess.exec(
-                select(User).where(User.email == email)
+                sa.select(User).where(User.email == email).limit(1)
             ).first()
             if not user:
                 logger.info('Adding admin user')
@@ -111,19 +111,19 @@ class UserService:
         search: Optional[str] = None
     ) -> Paginated[User]:
         with ctx.db.session() as sess:
-            stmt = select(User)
-            cnt = select(func.count()).select_from(User)
+            stmt = sa.select(User)
+            cnt = sa.select(sa.func.count()).select_from(User)
 
             # Apply filters
             conditions: List[Any] = []
             if search:
                 q = f'%{search}%'
                 conditions.append(
-                    or_(
-                        col(User.name).ilike(q),
-                        col(User.email).ilike(q),
-                        cast(User.role, String).ilike(q),
-                        cast(User.tier, String).ilike(q),
+                    sa.or_(
+                        sa.col(User.name).ilike(q),
+                        sa.col(User.email).ilike(q),
+                        sa.cast(User.role, sa.String).ilike(q),
+                        sa.cast(User.tier, sa.String).ilike(q),
                     )
                 )
 
@@ -132,7 +132,7 @@ class UserService:
                 stmt = stmt.where(*conditions)
 
             # Apply sorting
-            stmt = stmt.order_by(asc(User.created_at))
+            stmt = stmt.order_by(sa.asc(User.created_at))
 
             # Apply pagination
             stmt = stmt.offset(offset).limit(limit)
@@ -162,17 +162,19 @@ class UserService:
 
     def verify(self, creds: LoginRequest) -> User:
         with ctx.db.session() as sess:
-            q = select(User).where(User.email == creds.email)
+            q = sa.select(User).where(User.email == creds.email)
             user = sess.exec(q).first()
-            if not (user and user.is_active):
+            if not user:
+                raise ServerErrors.no_such_user
+            if not self._check(creds.password, user.password):
+                raise ServerErrors.unauthorized
+            if not user.is_active:
                 raise ServerErrors.inactive_user
-        if not self._check(creds.password, user.password):
-            raise ServerErrors.unauthorized
-        return user
+            return user
 
     def create(self, body: CreateRequest) -> User:
         with ctx.db.session() as sess:
-            q = select(func.count()).where(User.email == body.email)
+            q = sa.select(sa.func.count()).where(User.email == body.email)
             if sess.exec(q).one() != 0:
                 raise ServerErrors.user_exists
             user = User(
@@ -219,7 +221,7 @@ class UserService:
 
     def change_password(self, user: User, body: PasswordUpdateRequest) -> None:
         if not self._check(body.old_password, user.password):
-            raise ServerErrors.wrong_password
+            raise ServerErrors.unauthorized
         request = UpdateRequest(password=body.new_password)
         self.update(user.id, request)
 
@@ -241,7 +243,7 @@ class UserService:
 
         with ctx.db.session() as sess:
             user = sess.exec(
-                select(User).where(User.email == email)
+                sa.select(User).where(User.email == email)
             ).first()
             if not user:
                 raise ServerErrors.no_such_user
@@ -290,7 +292,7 @@ class UserService:
 
     def send_password_reset_link(self, email: str) -> None:
         with ctx.db.session() as sess:
-            q = select(User).where(User.email == email)
+            q = sa.select(User).where(User.email == email)
             user = sess.exec(q).first()
             if not user:
                 raise ServerErrors.no_such_user
