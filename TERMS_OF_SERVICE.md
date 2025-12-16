@@ -108,7 +108,7 @@ To the maximum extent permitted by law:
 
 ## 12. Open Source
 - The Service is open source
-- Licensed under the **GPLv3 License**
+- Licensed under the **GPL-v3 License**
 - Source code availability does not imply support or warranty
 
 ---
