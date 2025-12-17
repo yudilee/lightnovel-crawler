@@ -72,11 +72,11 @@ export const LibraryListPage: React.FC = () => {
 
       <Flex justify="space-between" align="center" wrap>
         <Typography.Title level={2} style={{ margin: 0 }}>
-          Libraries
+          {isAdmin ? 'All Libraries' : 'Public Libraries'}
         </Typography.Title>
       </Flex>
 
-      <Divider size="small" />
+      <Divider size="small" style={{ marginBottom: 24 }} />
 
       <Row gutter={[16, 16]}>
         {libraries.map((item) => (

@@ -71,12 +71,12 @@ export const MyLibrariesPage: React.FC = () => {
 
       <Flex justify="space-between" align="center" wrap>
         <Typography.Title level={2} style={{ margin: 0 }}>
-          Libraries
+          My Libraries
         </Typography.Title>
         <CreateLibraryButton />
       </Flex>
 
-      <Divider size="small" />
+      <Divider size="small" style={{ marginBottom: 24 }} />
 
       <Row gutter={[16, 16]}>
         {libraries.map((item) => (
