@@ -1,8 +1,7 @@
 import type { Library } from '@/types';
 import { getGradientForId } from '@/utils/gradients';
-import { BookOutlined } from '@ant-design/icons';
-import { Card, Flex, Space, Switch, Tag, Typography } from 'antd';
-import { useMemo } from 'react';
+import { BookOutlined, UserOutlined } from '@ant-design/icons';
+import { Card, Divider, Flex, Grid, Switch, Typography } from 'antd';
 import { DeleteLibraryButton } from './DeleteLibraryButton';
 import { EditLibraryButton } from './EditLibraryButton';
 
@@ -21,17 +20,14 @@ export const LibraryInfoCard: React.FC<LibraryInfoCardProps> = ({
   onTogglePublic,
   onLibraryUpdated,
 }) => {
-  const gradientBackground = useMemo(
-    () => getGradientForId(library.id),
-    [library.id]
-  );
+  const { lg } = Grid.useBreakpoint();
 
   return (
     <Card
       style={{
         position: 'relative',
         overflow: 'hidden',
-        background: gradientBackground,
+        background: getGradientForId(library.id),
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         textShadow: '0 2px 4px rgba(0,0,0,0.5)',
       }}
@@ -39,32 +35,76 @@ export const LibraryInfoCard: React.FC<LibraryInfoCardProps> = ({
         body: {
           display: 'flex',
           position: 'relative',
-          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: lg ? 16 : 8,
+          padding: lg ? 16 : 8,
+          flexWrap: lg ? 'nowrap' : 'wrap',
+          justifyContent: lg ? 'space-between' : 'center',
         },
       }}
     >
       {/* Cover Image */}
-      <BookOutlined style={{ fontSize: 48, color: '#fff', marginRight: 16 }} />
+      <BookOutlined
+        style={{
+          fontSize: 48,
+          marginTop: 8,
+          color: library.is_public ? '#39f' : '#0f0',
+        }}
+      />
 
       {/* Content */}
       <Flex vertical justify="center" style={{ width: '100%' }}>
-        <Space>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            {library.name || 'Library'}
-          </Typography.Title>
-          <Tag color={library.is_public ? 'green' : 'blue'}>
-            {library.is_public ? 'Public' : 'Private'}
-          </Tag>
-        </Space>
-        <Typography.Paragraph type="secondary" style={{ margin: 0, flex: 1 }}>
-          {library.description || 'No description'}
-        </Typography.Paragraph>
+        <Typography.Title
+          level={3}
+          style={{ margin: 0, textAlign: lg ? 'left' : 'center' }}
+        >
+          {library.name || 'Library'}
+        </Typography.Title>
+
+        {library.extra?.owner_name && (
+          <Typography.Text
+            type="secondary"
+            style={{
+              fontSize: 12,
+              marginBottom: lg ? 8 : 0,
+            }}
+          >
+            <Flex gap={4} align="center" justify={lg ? 'flex-start' : 'center'}>
+              <UserOutlined />
+              {library.extra.owner_name}
+            </Flex>
+          </Typography.Text>
+        )}
+
+        {library.description ? (
+          <>
+            {!lg && <Divider size="small" />}
+            {library.description.split('\n\n').map((line, index) => (
+              <Typography.Text
+                key={index}
+                style={{
+                  margin: '4px 0',
+                  display: 'block',
+                }}
+              >
+                {line}
+              </Typography.Text>
+            ))}
+          </>
+        ) : null}
       </Flex>
+
+      {!lg && <Divider size="small" />}
 
       {/* Owner Controls */}
       {isOwner && (
-        <Flex vertical align="flex-end" gap={7} style={{ width: 250 }}>
-          <Flex align="center" gap={8} wrap justify="end">
+        <Flex
+          vertical
+          gap={7}
+          style={{ width: 250 }}
+          align={lg ? 'flex-end' : 'center'}
+        >
+          <Flex align="center" gap={8} wrap justify={lg ? 'end' : 'center'}>
             <Typography.Text>Public</Typography.Text>
             <Switch
               checked={library.is_public}
@@ -73,7 +113,7 @@ export const LibraryInfoCard: React.FC<LibraryInfoCardProps> = ({
             />
           </Flex>
 
-          <Flex gap={4} align="center" wrap justify="end">
+          <Flex gap={4} align="center" wrap justify={lg ? 'end' : 'center'}>
             <EditLibraryButton library={library} onSuccess={onLibraryUpdated} />
             <DeleteLibraryButton library={library} />
           </Flex>

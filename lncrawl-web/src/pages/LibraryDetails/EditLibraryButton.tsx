@@ -13,7 +13,8 @@ interface FormValues {
 export const EditLibraryButton: React.FC<{
   library: Library;
   disabled?: boolean;
-}> = ({ library, disabled }) => {
+  onSuccess?: (library: Library) => void;
+}> = ({ library, disabled, onSuccess }) => {
   const [form] = Form.useForm<FormValues>();
   const [messageApi, contextHolder] = message.useMessage();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -29,12 +30,16 @@ export const EditLibraryButton: React.FC<{
     if (!library.id) return;
     setIsSubmitting(true);
     try {
-      await axios.patch(`/api/library/${library.id}`, {
-        name: values.name,
-        description: values.description || undefined,
-      });
+      const { data } = await axios.patch<Library>(
+        `/api/library/${library.id}`,
+        {
+          name: values.name,
+          description: values.description || undefined,
+        }
+      );
       messageApi.success('Library updated successfully');
       setIsModalOpen(false);
+      onSuccess?.(data);
     } catch (err) {
       messageApi.error(stringifyError(err));
     } finally {

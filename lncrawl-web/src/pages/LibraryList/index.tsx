@@ -7,11 +7,12 @@ import {
 import { Flex, Space, Tabs, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CreateLibraryButton } from './CreateLibraryButton';
 import { LibraryList } from './LibraryList';
 
 export const LibraryListPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const isAdmin = useSelector(Auth.select.isAdmin);
 
@@ -22,8 +23,8 @@ export const LibraryListPage: React.FC = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    setSearchParams({});
-  }, [isAdmin]);
+    navigate('/libraries');
+  }, [isAdmin, navigate]);
 
   return (
     <Space size="large" direction="vertical" style={{ width: '100%' }}>
