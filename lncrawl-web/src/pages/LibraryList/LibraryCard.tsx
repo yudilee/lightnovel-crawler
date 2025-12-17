@@ -1,33 +1,33 @@
-import type { LibrarySummary } from '@/types';
+import { Auth } from '@/store/_auth';
+import type { Library } from '@/types';
 import { getGradientForId } from '@/utils/gradients';
 import { BookOutlined, UserOutlined } from '@ant-design/icons';
 import { Card, Col, Divider, Flex, Space, Tag, Typography } from 'antd';
 import type React from 'react';
 import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
-type LibraryCardProps = {
-  item: LibrarySummary;
-  loading?: boolean;
-  isOwner?: boolean;
-  onSelect?: (id: string) => void;
-};
+export const LibraryCard: React.FC<{ library: Library }> = ({ library }) => {
+  const navigate = useNavigate();
+  const user = useSelector(Auth.select.user);
+  const isAdmin = useSelector(Auth.select.isAdmin);
 
-export const LibraryCard: React.FC<LibraryCardProps> = ({
-  item,
-  loading,
-  isOwner,
-  onSelect,
-}) => {
   const gradientBackground = useMemo(
-    () => getGradientForId(item.library.id),
-    [item.library.id]
+    () => getGradientForId(library.id),
+    [library.id]
   );
+
+  const isOwner = useMemo(
+    () => isAdmin || library.user_id === user?.id,
+    [library.user_id, isAdmin, user?.id]
+  );
+
   return (
-    <Col key={item.library.id} xs={24} sm={12} md={24} lg={12} xl={8}>
+    <Col key={library.id} xs={24} sm={12} md={24} lg={12} xl={8}>
       <Card
         hoverable
-        loading={loading}
-        onClick={() => onSelect?.(item.library.id)}
+        onClick={() => navigate(`/library/${library.id}`)}
         style={{
           height: '100%',
           border: 'none',
@@ -65,11 +65,11 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({
           <Space align="center" style={{ flex: 1 }}>
             <BookOutlined style={{ fontSize: 20, color: '#fff' }} />
             <Typography.Title level={5} style={{ margin: 0 }} ellipsis>
-              {item.library.name}
+              {library.name}
             </Typography.Title>
           </Space>
-          <Tag color={item.library.is_public ? 'green' : 'blue'}>
-            {item.library.is_public ? 'Public' : 'Private'}
+          <Tag color={library.is_public ? 'green' : 'blue'}>
+            {library.is_public ? 'Public' : 'Private'}
           </Tag>
         </Flex>
 
@@ -78,7 +78,7 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({
           ellipsis={{ rows: 3 }}
           style={{ fontSize: 13, flex: 1 }}
         >
-          {item.library.description || 'No description available'}
+          {library.description || 'No description available'}
         </Typography.Paragraph>
 
         {/* Footer */}
@@ -95,7 +95,7 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({
           <Space size="small">
             <UserOutlined style={{ fontSize: 14 }} />
             <Typography.Text style={{ fontSize: 14 }}>
-              {item.owner.name || 'Unknown'}
+              {library.extra.owner_name || 'Unknown'}
               {isOwner ? ' (you)' : ''}
             </Typography.Text>
           </Space>
@@ -103,7 +103,8 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({
           <Space size="small">
             <BookOutlined style={{ fontSize: 14 }} />
             <Typography.Text strong style={{ fontSize: 14 }}>
-              {item.novel_count} {item.novel_count === 1 ? 'Novel' : 'Novels'}
+              {library.extra.novel_count || 0}{' '}
+              {library.extra.novel_count === 1 ? 'Novel' : 'Novels'}
             </Typography.Text>
           </Space>
         </Flex>

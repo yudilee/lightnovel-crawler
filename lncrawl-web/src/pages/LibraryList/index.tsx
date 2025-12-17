@@ -1,20 +1,17 @@
 import { ErrorState } from '@/components/Loading/ErrorState';
 import { LoadingState } from '@/components/Loading/LoadingState';
 import { Auth } from '@/store/_auth';
-import type { LibrarySummary, Paginated } from '@/types';
+import type { Library, Paginated } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { Divider, Flex, Pagination, Row, Typography, message } from 'antd';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import { LibraryCard } from './LibraryCard';
 
 const PAGE_SIZE = 18;
 
 export const LibraryListPage: React.FC = () => {
-  const navigate = useNavigate();
-  const user = useSelector(Auth.select.user);
   const isAdmin = useSelector(Auth.select.isAdmin);
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -23,7 +20,7 @@ export const LibraryListPage: React.FC = () => {
   const [error, setError] = useState<string>();
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [libraries, setLibraries] = useState<LibrarySummary[]>([]);
+  const [libraries, setLibraries] = useState<Library[]>([]);
 
   useEffect(() => {
     const loadLibraries = async () => {
@@ -31,7 +28,7 @@ export const LibraryListPage: React.FC = () => {
       setError(undefined);
       try {
         const offset = (page - 1) * PAGE_SIZE;
-        const shared = await axios.get<Paginated<LibrarySummary>>(
+        const { data } = await axios.get<Paginated<Library>>(
           isAdmin ? '/api/library/all' : '/api/library/public',
           {
             params: {
@@ -40,8 +37,8 @@ export const LibraryListPage: React.FC = () => {
             },
           }
         );
-        setLibraries(shared.data.items);
-        setTotal(shared.data.total);
+        setLibraries(data.items);
+        setTotal(data.total);
       } catch (err) {
         setError(stringifyError(err));
       } finally {
@@ -79,14 +76,8 @@ export const LibraryListPage: React.FC = () => {
       <Divider size="small" style={{ marginBottom: 24 }} />
 
       <Row gutter={[16, 16]}>
-        {libraries.map((item) => (
-          <LibraryCard
-            key={item.library.id}
-            item={item}
-            loading={loading}
-            isOwner={item.owner.id === user!.id}
-            onSelect={(id) => navigate(`/library/${id}`)}
-          />
+        {libraries.map((library) => (
+          <LibraryCard key={library.id} library={library} />
         ))}
       </Row>
 

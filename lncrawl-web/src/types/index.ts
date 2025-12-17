@@ -113,23 +113,18 @@ export interface Library extends _Base {
   name: string;
   description?: string;
   is_public: boolean;
+
+  extra: {
+    owner_name?: string;
+    novel_count?: number;
+  };
 }
 
 export interface LibraryItem {
   id: string;
   name: string;
   description?: string;
-}
-
-export interface LibraryOwner {
-  id: string;
-  name?: string;
-}
-
-export interface LibrarySummary {
-  owner: User;
-  library: Library;
-  novel_count: number;
+  is_public: boolean;
 }
 
 export interface Chapter extends _Base {

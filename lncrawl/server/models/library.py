@@ -2,13 +2,6 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from ...dao import Library
-
-
-class LibraryOwner(BaseModel):
-    id: str = Field(description="Owner user id")
-    name: Optional[str] = Field(default=None, description="Owner name")
-
 
 class LibraryCreateRequest(BaseModel):
     name: str = Field(description="Library name")
@@ -22,17 +15,8 @@ class LibraryUpdateRequest(BaseModel):
     is_public: Optional[bool] = Field(default=None, description="Is public")
 
 
-class LibraryAddNovelRequest(BaseModel):
-    novel_id: str = Field(description="Novel id to add")
-
-
-class LibrarySummary(BaseModel):
-    library: Library = Field(description="Library info")
-    owner: LibraryOwner = Field(description="Library owner")
-    novel_count: int = Field(description="Number of novels")
-
-
 class LibraryItem(BaseModel):
     id: str = Field(description="Library ID")
     name: str = Field(description="Library name")
+    is_public: bool = Field(description="Is public")
     description: Optional[str] = Field(default=None, description="Library description")

@@ -1,7 +1,16 @@
 import type { Library } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { ArrowLeftOutlined } from '@ant-design/icons';
-import { Button, Flex, Form, Input, Switch, message } from 'antd';
+import {
+  Button,
+  Flex,
+  Form,
+  Input,
+  Space,
+  Switch,
+  Typography,
+  message,
+} from 'antd';
 import axios from 'axios';
 import { useState } from 'react';
 
@@ -14,11 +23,11 @@ interface FormValues {
 interface Props {
   novelId: string;
   onBack: () => void;
-  onSuccess: (library: Library) => void;
+  onSuccess: () => void;
 }
 
 export const CreateLibraryView: React.FC<Props> = ({
-  novelId: _novelId,
+  novelId,
   onBack,
   onSuccess,
 }) => {
@@ -39,8 +48,9 @@ export const CreateLibraryView: React.FC<Props> = ({
         description: values.description?.trim(),
         is_public: Boolean(values.is_public),
       });
-      messageApi.success('Library created successfully');
-      onSuccess(data);
+      await axios.put(`/api/library/${data.id}/novel/${novelId}`);
+      messageApi.success('Novel added to library successfully');
+      onSuccess();
     } catch (err) {
       messageApi.error(stringifyError(err));
     } finally {
@@ -51,11 +61,14 @@ export const CreateLibraryView: React.FC<Props> = ({
   return (
     <>
       {contextHolder}
+
       <Form<FormValues>
         form={form}
+        size="large"
         layout="vertical"
         onFinish={handleSubmit}
         initialValues={{ is_public: false }}
+        labelCol={{ style: { padding: 0 } }}
       >
         <Form.Item
           label="Name"
@@ -69,8 +82,11 @@ export const CreateLibraryView: React.FC<Props> = ({
           <Input.TextArea placeholder="Optional description" rows={3} />
         </Form.Item>
 
-        <Form.Item label="Make public" name="is_public" valuePropName="checked">
-          <Switch />
+        <Form.Item label="Visibility" name="is_public" valuePropName="checked">
+          <Space>
+            <Switch />
+            <Typography.Text>Visible to everyone</Typography.Text>
+          </Space>
         </Form.Item>
 
         <Form.Item>
@@ -79,7 +95,7 @@ export const CreateLibraryView: React.FC<Props> = ({
               Back
             </Button>
             <Button type="primary" htmlType="submit" loading={saving}>
-              Create Library
+              Create & Add
             </Button>
           </Flex>
         </Form.Item>

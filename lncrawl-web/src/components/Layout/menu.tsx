@@ -64,7 +64,7 @@ export const buildMenu = ({
     className: getClassName(currentPath, '/libraries/my'),
     style: {
       paddingLeft: 32,
-      display: currentPath.startsWith('/libraries') ? undefined : 'none',
+      display: /^\/librar(y|ies).*$/.test(currentPath) ? undefined : 'none',
     },
   },
   {

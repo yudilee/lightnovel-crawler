@@ -4,8 +4,7 @@ from fastapi import APIRouter, Path, Query, Security
 
 from ...context import ctx
 from ...dao import Library, Novel, User
-from ...server.models.library import (LibraryAddNovelRequest, LibraryItem,
-                                      LibraryCreateRequest, LibrarySummary,
+from ...server.models.library import (LibraryCreateRequest, LibraryItem,
                                       LibraryUpdateRequest)
 from ...server.models.pagination import Paginated
 from ..security import ensure_admin, ensure_user
@@ -21,8 +20,8 @@ router = APIRouter()
 def list_all_libraries(
     offset: int = Query(default=0),
     limit: int = Query(default=20, le=100),
-) -> Paginated[LibrarySummary]:
-    return ctx.libraries.list(offset, limit)
+) -> Paginated[Library]:
+    return ctx.libraries.list_page(offset, limit)
 
 
 @router.get(
@@ -33,8 +32,8 @@ def list_all_libraries(
 def list_public_libraries(
     offset: int = Query(default=0),
     limit: int = Query(default=20, le=100),
-) -> Paginated[LibrarySummary]:
-    return ctx.libraries.list(offset, limit, public_only=True)
+) -> Paginated[Library]:
+    return ctx.libraries.list_page(offset, limit, public_only=True)
 
 
 @router.get(
@@ -45,8 +44,8 @@ def list_my_libraries(
     offset: int = Query(default=0),
     limit: int = Query(default=20, le=100),
     user: User = Security(ensure_user),
-) -> Paginated[LibrarySummary]:
-    return ctx.libraries.list(offset, limit, user_id=user.id)
+) -> Paginated[Library]:
+    return ctx.libraries.list_page(offset, limit, user_id=user.id)
 
 
 @router.get(
@@ -66,7 +65,7 @@ def create_library(
     user: User = Security(ensure_user),
 ) -> Library:
     return ctx.libraries.create(
-        user_id=user.id,
+        user=user,
         name=payload.name,
         description=payload.description,
         is_public=payload.is_public,
@@ -131,16 +130,16 @@ def list_library_novels(
     )
 
 
-@router.post(
-    "/{library_id}/novels",
+@router.put(
+    "/{library_id}/novel/{novel_id}",
     summary="Add a novel to library",
 )
 def add_novel_to_library(
-    payload: LibraryAddNovelRequest,
     library_id: str = Path(),
+    novel_id: str = Path(),
     user: User = Security(ensure_user),
 ) -> bool:
-    return ctx.libraries.add_novel(library_id, user, payload.novel_id)
+    return ctx.libraries.add_novel(library_id, user, novel_id)
 
 
 @router.delete(

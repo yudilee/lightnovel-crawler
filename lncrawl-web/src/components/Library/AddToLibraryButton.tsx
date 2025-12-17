@@ -1,8 +1,11 @@
 import { PlusOutlined } from '@ant-design/icons';
 import type { ButtonProps } from 'antd';
-import { Button } from 'antd';
+import { Button, Modal } from 'antd';
 import { useState } from 'react';
-import { AddToLibraryModal } from './AddToLibraryModal';
+import { CreateLibraryView } from './CreateLibraryView';
+import { LibrarySelectionView } from './LibrarySelectionView';
+
+type View = 'selection' | 'create';
 
 interface Props {
   novelId: string;
@@ -19,6 +22,13 @@ export const AddToLibraryButton: React.FC<Props> = ({
 }) => {
   const [open, setOpen] = useState(false);
 
+  const [view, setView] = useState<View>('selection');
+
+  const handleCancel = () => {
+    setView('selection');
+    setOpen(false);
+  };
+
   return (
     <>
       <Button
@@ -30,11 +40,26 @@ export const AddToLibraryButton: React.FC<Props> = ({
         {buttonText}
       </Button>
 
-      <AddToLibraryModal
-        novelId={novelId}
+      <Modal
+        title="Add to Library"
         open={open}
-        onCancel={() => setOpen(false)}
-      />
+        footer={null}
+        onCancel={handleCancel}
+      >
+        {view === 'selection' ? (
+          <LibrarySelectionView
+            novelId={novelId}
+            onCreateNew={() => setView('create')}
+            onSuccess={handleCancel}
+          />
+        ) : (
+          <CreateLibraryView
+            novelId={novelId}
+            onSuccess={handleCancel}
+            onBack={() => setView('selection')}
+          />
+        )}
+      </Modal>
     </>
   );
 };

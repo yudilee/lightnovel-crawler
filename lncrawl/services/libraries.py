@@ -5,15 +5,8 @@ import sqlmodel as sa
 from ..context import ctx
 from ..dao import Library, LibraryNovel, Novel, User, UserRole
 from ..exceptions import ServerErrors
-from ..server.models.library import LibraryItem, LibraryOwner, LibrarySummary
+from ..server.models.library import LibraryItem
 from ..server.models.pagination import Paginated
-
-
-def _owner_info(user: User) -> LibraryOwner:
-    return LibraryOwner(
-        id=user.id,
-        name=user.name,
-    )
 
 
 class LibraryService:
@@ -35,97 +28,75 @@ class LibraryService:
             return
         raise ServerErrors.forbidden
 
-    def list(
+    def list_page(
         self,
         offset: int = 0,
         limit: int = 20,
         *,
         public_only: bool = False,
         user_id: Optional[str] = None,
-    ) -> Paginated[LibrarySummary]:
+    ) -> Paginated[Library]:
         with ctx.db.session() as sess:
+            stmt = sa.select(Library)
             cnt = sa.select(sa.func.count()).select_from(Library)
-            stmt = sa.select(
-                Library,
-                User,
-                sa.func.count(sa.col(LibraryNovel.novel_id)).label("novel_count"),
-            )
-            stmt = stmt.join(
-                User,
-                sa.col(User.id) == sa.col(Library.user_id)
-            )
-            stmt = stmt.join(
-                LibraryNovel,
-                sa.col(LibraryNovel.library_id) == sa.col(Library.id),
-                isouter=True
-            )
 
             if user_id:
-                cnt = cnt.where(Library.user_id == user_id)
                 stmt = stmt.where(Library.user_id == user_id)
+                cnt = cnt.where(Library.user_id == user_id)
+
             if public_only:
-                cnt = cnt.where(sa.col(Library.is_public).is_(True))
                 stmt = stmt.where(sa.col(Library.is_public).is_(True))
+                cnt = cnt.where(sa.col(Library.is_public).is_(True))
 
-            stmt = (
-                stmt.group_by(Library.id, User.id)
-                .order_by(sa.desc(Library.updated_at))
-                .offset(offset)
-                .limit(limit)
-            )
+            stmt = stmt.order_by(sa.desc(Library.updated_at))
 
-            rows = sess.exec(stmt).all()
+            stmt = stmt.offset(offset)
+            stmt = stmt.limit(limit)
+
+            items = sess.exec(stmt).all()
             total = sess.exec(cnt).one()
-
-            items = [
-                LibrarySummary(
-                    library=Library(**row[0].model_dump()),
-                    owner=_owner_info(row[1]),
-                    novel_count=row[2],
-                )
-                for row in rows
-            ]
 
             return Paginated(
                 total=total,
                 offset=offset,
                 limit=limit,
-                items=items,
+                items=list(items),
             )
 
-    def list_all(self, user_id: Optional[str] = None) -> List[LibraryItem]:
+    def list_all(
+        self,
+        user_id: Optional[str] = None,
+    ) -> List[LibraryItem]:
         with ctx.db.session() as sess:
-            stmt = sa.select(Library)
+            stmt = sa.select(Library.id, Library.name, Library.description, Library.is_public)
             if user_id:
                 stmt = stmt.where(Library.user_id == user_id)
-            stmt = stmt.order_by(sa.desc(Library.updated_at))
             libraries = sess.exec(stmt).all()
             return [
-                LibraryItem(
-                    id=item.id,
-                    name=item.name,
-                    description=item.description,
-                )
+                LibraryItem.model_validate(item)
                 for item in libraries
             ]
 
     def create(
         self,
-        user_id: str,
+        user: User,
         name: str,
         description: Optional[str] = None,
         is_public: bool = False,
     ) -> Library:
         with ctx.db.session() as sess:
             library = Library(
-                user_id=user_id,
+                user_id=user.id,
                 name=name.strip(),
                 description=description.strip() if description else None,
                 is_public=is_public,
+                extra={
+                    "novel_count": 0,
+                    "owner_name": user.name,
+                },
             )
             sess.add(library)
             sess.commit()
-            sess.refresh(library)
             return library
 
     def update(
@@ -143,13 +114,20 @@ class LibraryService:
 
             if name is not None:
                 library.name = name.strip()
+
             if description is not None:
                 library.description = description.strip() if description else None
+
             if is_public is not None:
                 library.is_public = is_public
 
+            owner = sess.get_one(User, library.user_id)
+            if library.extra.get("owner_name") != owner.name:
+                extra = library.extra.copy()
+                extra["owner_name"] = owner.name
+                library.extra = extra
+
             sess.commit()
-            sess.refresh(library)
             return library
 
     def delete(self, library_id: str, user: User) -> bool:
@@ -160,14 +138,18 @@ class LibraryService:
             sess.commit()
             return True
 
-    def get(
-        self,
-        library_id: str,
-        user: User,
-    ) -> Library:
+    def get(self, library_id: str, user: User) -> Library:
         with ctx.db.session() as sess:
             library = self._get_library(sess, library_id)
             self._ensure_visible(library, user)
+
+            owner = sess.get_one(User, library.user_id)
+            if library.extra.get("owner_name") != owner.name:
+                extra = library.extra.copy()
+                extra["owner_name"] = owner.name
+                library.extra = extra
+                sess.commit()
+
             return library
 
     def list_novels(
@@ -199,6 +181,12 @@ class LibraryService:
             total = sess.exec(cnt).one()
             items = sess.exec(stmt).all()
 
+            if library.extra.get("novel_count") != total:
+                extra = library.extra.copy()
+                extra["novel_count"] = total
+                library.extra = extra
+                sess.commit()
+
             return Paginated(
                 total=total,
                 offset=offset,
@@ -215,18 +203,28 @@ class LibraryService:
             if not novel:
                 raise ServerErrors.no_such_novel
 
-            exists_stmt = sa.select(LibraryNovel).where(
-                sa.and_(
+            existing = sess.scalar(
+                sa.select(sa.exists())
+                .where(
                     LibraryNovel.library_id == library_id,
                     LibraryNovel.novel_id == novel_id,
                 )
             )
-            existing = sess.exec(exists_stmt).first()
             if existing:
                 return True
 
             link = LibraryNovel(library_id=library_id, novel_id=novel_id)
             sess.add(link)
+
+            extra = library.extra.copy()
+            extra["novel_count"] = library.extra.get("novel_count", 0) + 1
+
+            owner = sess.get_one(User, library.user_id)
+            if extra.get("owner_name") != owner.name:
+                extra["owner_name"] = owner.name
+
+            library.extra = extra
+
             sess.commit()
             return True
 
@@ -235,10 +233,24 @@ class LibraryService:
             library = self._get_library(sess, library_id)
             self._ensure_owner(library, user)
 
-            link = sess.get(LibraryNovel, {"library_id": library_id, "novel_id": novel_id})
-            if not link:
-                return True
+            row = sess.exec(
+                sa.delete(LibraryNovel)
+                .where(
+                    sa.col(LibraryNovel.library_id) == library_id,
+                    sa.col(LibraryNovel.novel_id) == novel_id,
+                )
+            )
+            if row.rowcount == 0:
+                return False
 
-            sess.delete(link)
+            extra = library.extra.copy()
+            extra["novel_count"] = library.extra.get("novel_count", 0) - 1
+
+            owner = sess.get_one(User, library.user_id)
+            if extra.get("owner_name") != owner.name:
+                extra["owner_name"] = owner.name
+
+            library.extra = extra
+
             sess.commit()
             return True

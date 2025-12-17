@@ -1,15 +1,15 @@
 import { store } from '@/store';
 import { Auth } from '@/store/_auth';
-import type { Library, LibraryItem } from '@/types';
+import type { LibraryItem } from '@/types';
 import { stringifyError } from '@/utils/errors';
-import { BookOutlined, PlusOutlined } from '@ant-design/icons';
-import { Button, Card, Input, List, message, Space, Typography } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import { Button, Input, List, message, Space, Typography } from 'antd';
 import axios from 'axios';
 import { useEffect, useMemo, useState } from 'react';
+import { LibraryItemCard } from './LibraryItemCard';
 
 interface Props {
   novelId: string;
-  library?: Library;
   onCreateNew: () => void;
   onSuccess: () => void;
 }
@@ -64,9 +64,7 @@ export const LibrarySelectionView: React.FC<Props> = ({
   const handleLibrarySelect = async (libraryId: string) => {
     setLoading(true);
     try {
-      await axios.post(`/api/library/${libraryId}/novels`, {
-        novel_id: novelId,
-      });
+      await axios.put(`/api/library/${libraryId}/novel/${novelId}`);
       messageApi.success('Added to library');
       onSuccess();
     } catch (err) {
@@ -79,7 +77,7 @@ export const LibrarySelectionView: React.FC<Props> = ({
   return (
     <>
       {contextHolder}
-      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+      <Space direction="vertical" size="small" style={{ width: '100%' }}>
         <Input.Search
           allowClear
           size="large"
@@ -88,50 +86,42 @@ export const LibrarySelectionView: React.FC<Props> = ({
           placeholder="Search libraries..."
         />
 
-        {error ? (
-          <Typography.Text type="danger" style={{ fontSize: 12 }}>
-            Error: {error}
-          </Typography.Text>
-        ) : (
-          <List
-            size="small"
-            loading={loading}
-            dataSource={filteredLibraries}
-            locale={{
-              emptyText: 'No libraries found',
-            }}
-            style={{
-              maxHeight: 300,
-              overflowY: 'auto',
-            }}
-            renderItem={(library) => (
-              <Card
-                hoverable
-                size="small"
-                style={{ width: '100%', marginBottom: 2 }}
-                onClick={() => handleLibrarySelect(library.id)}
-              >
-                <Card.Meta
-                  title={library.name}
-                  avatar={<BookOutlined />}
-                  description={
-                    library.description ? (
-                      <Typography.Text type="secondary" ellipsis>
-                        {library.description}
-                      </Typography.Text>
-                    ) : null
-                  }
-                />
-              </Card>
-            )}
-          />
-        )}
+        <Typography.Text>Pick a library to add the novel to:</Typography.Text>
+
+        <List
+          size="small"
+          loading={loading}
+          dataSource={filteredLibraries}
+          locale={{
+            emptyText: error ? (
+              <>
+                <Typography.Text type="danger">
+                  Failed to load libraries.
+                </Typography.Text>
+                <br />
+                {error}
+              </>
+            ) : (
+              <>No libraries found</>
+            ),
+          }}
+          style={{
+            maxHeight: 300,
+            overflowY: 'auto',
+          }}
+          renderItem={(library) => (
+            <LibraryItemCard
+              library={library}
+              onClick={() => handleLibrarySelect(library.id)}
+            />
+          )}
+        />
 
         <Button
+          block
           icon={<PlusOutlined />}
           onClick={onCreateNew}
           type="dashed"
-          block
           size="large"
         >
           Create New Library
