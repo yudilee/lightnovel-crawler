@@ -1,15 +1,7 @@
+import { ErrorState } from '@/components/Loading/ErrorState';
+import { LoadingState } from '@/components/Loading/LoadingState';
 import { TeamOutlined } from '@ant-design/icons';
-import {
-  Button,
-  Divider,
-  Flex,
-  Input,
-  List,
-  Pagination,
-  Result,
-  Spin,
-  Typography,
-} from 'antd';
+import { Divider, Flex, Input, List, Pagination, Typography } from 'antd';
 import { useUserList } from './hooks';
 import { UserListItemCard } from './UserListItemCard';
 
@@ -27,23 +19,16 @@ export const UserListPage: React.FC<any> = () => {
   } = useUserList();
 
   if (loading) {
-    return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Spin size="large" style={{ marginTop: 100 }} />
-      </Flex>
-    );
+    return <LoadingState />;
   }
 
   if (error) {
     return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Result
-          status="error"
-          title="Failed to load novel list"
-          subTitle={error}
-          extra={[<Button onClick={refresh}>Retry</Button>]}
-        />
-      </Flex>
+      <ErrorState
+        error={error}
+        title="Failed to load novel list"
+        onRetry={refresh}
+      />
     );
   }
 

@@ -1,16 +1,7 @@
-import {
-  Button,
-  Col,
-  Divider,
-  Empty,
-  Flex,
-  Pagination,
-  Result,
-  Row,
-  Spin,
-  Typography,
-} from 'antd';
 import { AddToLibraryButton } from '@/components/Library/AddToLibraryButton';
+import { ErrorState } from '@/components/Loading/ErrorState';
+import { LoadingState } from '@/components/Loading/LoadingState';
+import { Col, Divider, Empty, Flex, Pagination, Row, Typography } from 'antd';
 import { useNovelList } from './hooks';
 import { NovelFilterBox } from './NovelFilterBox';
 import { NovelListItemCard } from './NovelListItemCard';
@@ -29,23 +20,16 @@ export const NovelListPage: React.FC<any> = () => {
   } = useNovelList();
 
   if (loading) {
-    return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Spin size="large" style={{ marginTop: 100 }} />
-      </Flex>
-    );
+    return <LoadingState />;
   }
 
   if (error) {
     return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Result
-          status="error"
-          title="Failed to load novel list"
-          subTitle={error}
-          extra={[<Button onClick={refresh}>Retry</Button>]}
-        />
-      </Flex>
+      <ErrorState
+        error={error}
+        title="Failed to load novel list"
+        onRetry={refresh}
+      />
     );
   }
 

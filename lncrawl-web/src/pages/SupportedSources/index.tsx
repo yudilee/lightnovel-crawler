@@ -1,22 +1,15 @@
+import { ErrorState } from '@/components/Loading/ErrorState';
+import { LoadingState } from '@/components/Loading/LoadingState';
 import { Auth } from '@/store/_auth';
+import { stringifyError } from '@/utils/errors';
+import { formatDate, parseDate } from '@/utils/time';
 import { ReloadOutlined } from '@ant-design/icons';
-import {
-  Button,
-  Flex,
-  message,
-  Result,
-  Space,
-  Spin,
-  Tabs,
-  Typography,
-} from 'antd';
+import { Button, message, Space, Tabs, Typography } from 'antd';
+import axios from 'axios';
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { SupportedSourceList } from './SupportedSourceList';
 import { useSupportedSources } from './hooks';
-import { stringifyError } from '@/utils/errors';
-import axios from 'axios';
-import { formatDate, parseDate } from '@/utils/time';
 
 export const SupportedSourcesPage: React.FC<any> = () => {
   const isAdmin = useSelector(Auth.select.isAdmin);
@@ -38,23 +31,16 @@ export const SupportedSourcesPage: React.FC<any> = () => {
   };
 
   if (loading) {
-    return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Spin size="large" style={{ marginTop: 100 }} />
-      </Flex>
-    );
+    return <LoadingState />;
   }
 
   if (error) {
     return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Result
-          status="error"
-          title="Failed to load novel list"
-          subTitle={error}
-          extra={[<Button onClick={refresh}>Retry</Button>]}
-        />
-      </Flex>
+      <ErrorState
+        error={error}
+        title="Failed to load novel list"
+        onRetry={refresh}
+      />
     );
   }
   return (

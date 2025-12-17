@@ -1,17 +1,10 @@
-import {
-  Button,
-  Divider,
-  Empty,
-  Flex,
-  List,
-  Pagination,
-  Result,
-  Spin,
-} from 'antd';
+import { ErrorState } from '@/components/Loading/ErrorState';
+import { LoadingState } from '@/components/Loading/LoadingState';
+import { Divider, Empty, List, Pagination } from 'antd';
+import type { JSX } from 'react';
 import { useJobList } from './hooks';
 import { JobFilterBox } from './JobFilterBox';
 import { JobListItemCard } from './JobListItemCard';
-import type { JSX } from 'react';
 
 export const JobListPage: React.FC<{
   title?: JSX.Element;
@@ -42,11 +35,7 @@ export const JobListPage: React.FC<{
   } = useJobList(autoRefresh, userId, parentJobId);
 
   if (loading) {
-    return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Spin size="large" style={{ marginTop: 100 }} />
-      </Flex>
-    );
+    return <LoadingState />;
   }
 
   if (hideIfEmpty && !jobs?.length) {
@@ -55,14 +44,11 @@ export const JobListPage: React.FC<{
 
   if (error) {
     return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Result
-          status="error"
-          title="Failed to load job list"
-          subTitle={error}
-          extra={[<Button onClick={refresh}>Retry</Button>]}
-        />
-      </Flex>
+      <ErrorState
+        error={error}
+        title="Failed to load job list"
+        onRetry={refresh}
+      />
     );
   }
 

@@ -1,18 +1,15 @@
-import { Divider, Flex, Result, Typography } from 'antd';
+import { ErrorState } from '@/components/Loading/ErrorState';
+import { DeploymentUnitOutlined } from '@ant-design/icons';
+import { Divider, Typography } from 'antd';
+import { useParams } from 'react-router-dom';
 import { JobListPage } from '../JobList';
 import { UserDetailSection } from './UserDetailSection';
-import { useParams } from 'react-router-dom';
-import { DeploymentUnitOutlined } from '@ant-design/icons';
 
 export const UserDetailsPage: React.FC<any> = () => {
   const { id } = useParams<{ id: string }>();
 
   if (!id) {
-    return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Result status="error" title="ID parameter is missing" />
-      </Flex>
-    );
+    return <ErrorState title="ID parameter is missing" />;
   }
 
   return (

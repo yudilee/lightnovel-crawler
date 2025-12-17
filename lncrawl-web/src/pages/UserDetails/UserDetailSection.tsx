@@ -1,3 +1,5 @@
+import { ErrorState } from '@/components/Loading/ErrorState';
+import { LoadingState } from '@/components/Loading/LoadingState';
 import { UserAvatar } from '@/components/Tags/UserAvatar';
 import { UserRoleTag } from '@/components/Tags/UserRoleTag';
 import { UserStatusTag } from '@/components/Tags/UserStatusTag';
@@ -22,9 +24,7 @@ import {
   Grid,
   message,
   Popconfirm,
-  Result,
   Space,
-  Spin,
   Typography,
 } from 'antd';
 import axios from 'axios';
@@ -74,25 +74,19 @@ export const UserDetailSection: React.FC<{ userId: string }> = ({ userId }) => {
   };
 
   if (loading) {
-    return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Spin size="large" style={{ marginTop: 100 }} />
-      </Flex>
-    );
+    return <LoadingState />;
   }
 
   if (error || !user) {
     return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Result
-          status="error"
-          title="Failed to load user details"
-          subTitle={error}
-          extra={[
-            <Button onClick={() => setRefreshId((v) => v + 1)}>Retry</Button>,
-          ]}
-        />
-      </Flex>
+      <ErrorState
+        error={error}
+        title="Failed to load user details"
+        onRetry={() => {
+          setLoading(true);
+          setRefreshId((v) => v + 1);
+        }}
+      />
     );
   }
 

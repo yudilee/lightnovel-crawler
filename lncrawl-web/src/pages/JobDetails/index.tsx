@@ -1,4 +1,6 @@
 import { ArtifactListCard } from '@/components/ArtifactList/ArtifactListCard';
+import { ErrorState } from '@/components/Loading/ErrorState';
+import { LoadingState } from '@/components/Loading/LoadingState';
 import {
   type Artifact,
   type Chapter,
@@ -9,26 +11,17 @@ import {
 } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { DeploymentUnitOutlined, LeftOutlined } from '@ant-design/icons';
-import {
-  Button,
-  Divider,
-  Flex,
-  Grid,
-  Result,
-  Space,
-  Spin,
-  Typography,
-} from 'antd';
+import { Divider, Grid, Space, Typography } from 'antd';
 import axios from 'axios';
 import { LRUCache } from 'lru-cache';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { JobListPage } from '../JobList';
-import { NovelDetailsCard } from '../NovelDetails/NovelDetailsCard';
 import { ChapterDetailsCard } from '../NovelDetails/ChapterDetailsCard';
+import { NovelDetailsCard } from '../NovelDetails/NovelDetailsCard';
+import { VolumeDetailsCard } from '../NovelDetails/VolumeDetailsCard';
 import { JobDetailsCard } from './JobDetailsCard';
 import { UserDetailsCard } from './UserDetailsCard';
-import { VolumeDetailsCard } from '../NovelDetails/VolumeDetailsCard';
 
 const _cache = new LRUCache<string, any>({
   max: 1000,
@@ -121,32 +114,19 @@ export const JobDetailsPage: React.FC<any> = () => {
   }, [job]);
 
   if (loading) {
-    return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Spin size="large" style={{ marginTop: 100 }} />
-      </Flex>
-    );
+    return <LoadingState />;
   }
 
   if (!job) {
     return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Result
-          status="error"
-          title="Failed to load job data"
-          subTitle={error}
-          extra={[
-            <Button
-              onClick={() => {
-                setLoading(true);
-                setRefreshId((v) => v + 1);
-              }}
-            >
-              Retry
-            </Button>,
-          ]}
-        />
-      </Flex>
+      <ErrorState
+        error={error}
+        title="Failed to load job data"
+        onRetry={() => {
+          setLoading(true);
+          setRefreshId((v) => v + 1);
+        }}
+      />
     );
   }
 

@@ -1,15 +1,14 @@
+import { ErrorState } from '@/components/Loading/ErrorState';
+import { LoadingState } from '@/components/Loading/LoadingState';
 import type { Library, Novel, Paginated } from '@/types';
 import {
-  Button,
   Col,
   Divider,
   Empty,
   Flex,
   Pagination,
-  Result,
   Row,
   Space,
-  Spin,
   Typography,
 } from 'antd';
 import axios from 'axios';
@@ -56,25 +55,16 @@ export const LibraryNovelList: React.FC<{
   }, [library.id, refresh, page]);
 
   if (loading) {
-    return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Spin size="large" style={{ marginTop: 100 }} />
-      </Flex>
-    );
+    return <LoadingState />;
   }
 
   if (error) {
     return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Result
-          status="error"
-          title="Failed to load novel list"
-          subTitle={error}
-          extra={[
-            <Button onClick={() => setRefresh((v) => v + 1)}>Retry</Button>,
-          ]}
-        />
-      </Flex>
+      <ErrorState
+        error={error}
+        title="Failed to load novels"
+        onRetry={() => setRefresh((v) => v + 1)}
+      />
     );
   }
 

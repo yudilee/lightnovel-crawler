@@ -1,6 +1,8 @@
+import { ErrorState } from '@/components/Loading/ErrorState';
+import { LoadingState } from '@/components/Loading/LoadingState';
 import { type Artifact, type Novel } from '@/types';
 import { stringifyError } from '@/utils/errors';
-import { Button, Flex, Grid, message, Result, Space, Spin } from 'antd';
+import { Grid, message, Space } from 'antd';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -58,25 +60,19 @@ export const NovelDetailsPage: React.FC<any> = () => {
   }, [novel?.id, messageApi]);
 
   if (loading) {
-    return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Spin size="large" style={{ marginTop: 100 }} />
-      </Flex>
-    );
+    return <LoadingState />;
   }
 
   if (error || !novel || !id) {
     return (
-      <Flex align="center" justify="center" style={{ height: '100%' }}>
-        <Result
-          status="error"
-          title="Failed to load novel details"
-          subTitle={error}
-          extra={[
-            <Button onClick={() => setRefreshId((v) => v + 1)}>Retry</Button>,
-          ]}
-        />
-      </Flex>
+      <ErrorState
+        error={error}
+        title="Failed to load novel details"
+        onRetry={() => {
+          setLoading(true);
+          setRefreshId((v) => v + 1);
+        }}
+      />
     );
   }
 
