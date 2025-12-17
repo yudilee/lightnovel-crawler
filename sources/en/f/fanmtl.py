@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
-from typing import Generator, Optional
+from typing import Generator, List, Optional
+from concurrent.futures import Future
 from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup, Tag
@@ -17,21 +18,21 @@ class FanMTLCrawler(ChapterOnlyBrowserTemplate):
 
     def initialize(self):
         self.init_executor(1)
-        self.cleaner.bad_css.update(
-            {
-                'div[align="center"]',
-            }
-        )
+        self.cleaner.bad_css.update({
+            'div[align="center"]',
+        })
 
     def parse_title(self, soup: BeautifulSoup) -> str:
         possible_title = soup.select_one(".novel-info .novel-title")
         assert possible_title, "No novel title"
         return possible_title.text.strip()
 
-    def parse_cover(self, soup: BeautifulSoup) -> str:
+    def parse_cover(self, soup: BeautifulSoup) -> Optional[str]:
         possible_image = soup.select_one(".novel-header figure.cover img")
-        if possible_image:
-            return self.absolute_url(possible_image["src"])
+        if not possible_image:
+            return None
+        src = possible_image.get("data-src") or possible_image["src"]
+        return self.absolute_url(src)
 
     def parse_authors(self, soup: BeautifulSoup) -> Generator[str, None, None]:
         possible_author = soup.select_one('.novel-info .author span[itemprop="author"]')
@@ -44,7 +45,7 @@ class FanMTLCrawler(ChapterOnlyBrowserTemplate):
         common_page_url = last_page_url.split("?")[0]
         params = parse_qs(urlparse(last_page_url).query)
         page_count = int(params["page"][0]) + 1
-        futures = []
+        futures: List[Future[BeautifulSoup]] = []
         for page in range(page_count):
             page_url = f"{common_page_url}?page={page}&wjm={params['wjm'][0]}"
             futures.append(self.executor.submit(self.get_soup, page_url))
@@ -52,10 +53,12 @@ class FanMTLCrawler(ChapterOnlyBrowserTemplate):
             yield from soup.select("ul.chapter-list li a")
 
     def parse_chapter_item(self, tag: Tag, id: int) -> Chapter:
+        chapter_title = tag.select_one(".chapter-title")
+        assert chapter_title, "No chapter title"
         return Chapter(
             id=id,
             url=self.absolute_url(tag["href"]),
-            title=tag.select_one(".chapter-title").text.strip(),
+            title=chapter_title.get_text(strip=True),
         )
 
     def select_chapter_body(self, soup: BeautifulSoup) -> Optional[Tag]:
