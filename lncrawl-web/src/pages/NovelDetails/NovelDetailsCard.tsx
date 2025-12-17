@@ -1,6 +1,8 @@
+import FallbackImage from '@/assets/no-image.svg';
 import { API_BASE_URL } from '@/config';
 import { Auth } from '@/store/_auth';
 import type { Novel } from '@/types';
+import { getGradientForId } from '@/utils/gradients';
 import { formatDate } from '@/utils/time';
 import { ExportOutlined } from '@ant-design/icons';
 import {
@@ -20,7 +22,6 @@ import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Favicon } from '../../components/Favicon';
 import { NovelActionButtons } from './NovelActionButtons';
-import FallbackImage from '@/assets/no-image.svg';
 
 export const NovelDetailsCard: React.FC<{
   novel: Novel;
@@ -85,6 +86,7 @@ export const NovelDetailsCard: React.FC<{
               width: 'auto',
               maxWidth: '225px',
               height: '300px',
+              background: getGradientForId(novel.id),
             }}
           />
         </Flex>

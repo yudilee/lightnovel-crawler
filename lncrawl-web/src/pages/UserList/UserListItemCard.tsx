@@ -62,7 +62,11 @@ export const UserListItemCard: React.FC<{
             {displayName ? (
               <Flex vertical>
                 <Typography.Text strong>
-                  <Link to={`/admin/user/${user.id}`}>{displayName}</Link>
+                  {hideActions ? (
+                    displayName
+                  ) : (
+                    <Link to={`/admin/user/${user.id}`}>{displayName}</Link>
+                  )}
                 </Typography.Text>
                 <Typography.Text
                   type={'secondary'}

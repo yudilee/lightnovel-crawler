@@ -3,6 +3,7 @@ import { Favicon } from '@/components/Favicon';
 import { API_BASE_URL } from '@/config';
 import { Auth } from '@/store/_auth';
 import type { Novel } from '@/types';
+import { getGradientForId } from '@/utils/gradients';
 import { Card, Flex, Image, Tooltip, Typography } from 'antd';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -27,7 +28,7 @@ export const NovelListItemCard: React.FC<{ novel: Novel }> = ({ novel }) => {
           overflow: 'clip',
           position: 'relative',
           userSelect: 'none',
-          background: '#dee2e6',
+          background: getGradientForId(novel.id),
         }}
         onClick={() => navigate(`/novel/${novel.id}`)}
         styles={{

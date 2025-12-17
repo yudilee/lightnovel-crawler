@@ -2,33 +2,63 @@ import { ErrorState } from '@/components/Loading/ErrorState';
 import { LoadingState } from '@/components/Loading/LoadingState';
 import type { Library, Paginated } from '@/types';
 import { stringifyError } from '@/utils/errors';
-import {
-  Col,
-  Divider,
-  Empty,
-  Pagination,
-  Row,
-  Typography,
-  message,
-} from 'antd';
+import { Empty, Flex, Input, Pagination, Row } from 'antd';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { LibraryCard } from './LibraryCard';
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 18;
+
+type SearchParams = {
+  tab?: string;
+  page?: number;
+  query?: string;
+};
 
 export const LibraryList: React.FC<{
+  refreshId?: number;
   type: 'public' | 'my' | 'all';
-  refreshId: number;
-  updateRefresh: () => void;
-}> = ({ type, refreshId, updateRefresh }) => {
-  const [messageApi, contextHolder] = message.useMessage();
+}> = ({ type, refreshId }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
-  const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [libraries, setLibraries] = useState<Library[]>([]);
+  const [searchValue, setSearchValue] = useState('');
+
+  const page = useMemo(() => {
+    return parseInt(searchParams.get('page') || '1', 10);
+  }, [searchParams]);
+
+  const query = useMemo(() => {
+    return searchParams.get('query') || '';
+  }, [searchParams]);
+
+  useEffect(() => {
+    setSearchValue(query);
+  }, [query]);
+
+  const updateParams = useCallback(
+    (updates: SearchParams) => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        if (updates.page && updates.page !== 1) {
+          next.set('page', String(updates.page));
+        } else if (typeof updates.page !== 'undefined') {
+          next.delete('page');
+        }
+        if (updates.query) {
+          next.set('query', String(updates.query));
+        } else if (typeof updates.query !== 'undefined') {
+          next.delete('query');
+        }
+        return next;
+      });
+    },
+    [setSearchParams]
+  );
 
   useEffect(() => {
     const loadLibraries = async () => {
@@ -40,6 +70,7 @@ export const LibraryList: React.FC<{
           `/api/library/${type}`,
           {
             params: {
+              query,
               offset,
               limit: PAGE_SIZE,
             },
@@ -55,55 +86,46 @@ export const LibraryList: React.FC<{
     };
 
     loadLibraries();
-  }, [page, refreshId, messageApi, type]);
+  }, [page, query, refreshId, type]);
 
   return (
-    <>
-      {contextHolder}
-
-      {type !== 'all' && (
-        <Typography.Title
-          level={4}
-          style={{ color: type === 'public' ? '#0f0' : '#39f' }}
-        >
-          {type === 'public' ? 'Public Libraries' : 'My Libraries'}
-        </Typography.Title>
-      )}
-
-      <Divider size="small" style={{ marginBottom: 24 }} />
+    <Flex vertical gap={16}>
+      <Input.Search
+        size="large"
+        allowClear
+        value={searchValue}
+        defaultValue={query}
+        placeholder="Search libraries"
+        onClear={() => updateParams({ query: '' })}
+        onChange={(e) => setSearchValue(e.target.value)}
+        onSearch={(value) => updateParams({ query: value })}
+      />
 
       {loading ? (
         <LoadingState />
       ) : error ? (
-        <ErrorState
-          error={error}
-          onRetry={updateRefresh}
-          title="Failed to load libraries"
+        <ErrorState error={error} title="Failed to load libraries" />
+      ) : !libraries.length ? (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description="No libraries available"
         />
       ) : (
-        <Row gutter={[16, 16]}>
+        <Row gutter={[12, 12]}>
           {libraries.map((library) => (
             <LibraryCard key={library.id} library={library} />
           ))}
-          {libraries.length === 0 && (
-            <Col span={24}>
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="No libraries available"
-              />
-            </Col>
-          )}
         </Row>
       )}
 
       <Pagination
         current={page}
         total={total}
+        hideOnSinglePage
         pageSize={PAGE_SIZE}
         showSizeChanger={false}
-        onChange={setPage}
-        hideOnSinglePage
+        onChange={(page) => updateParams({ page })}
       />
-    </>
+    </Flex>
   );
 };

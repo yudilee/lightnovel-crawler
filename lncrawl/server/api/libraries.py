@@ -19,8 +19,9 @@ router = APIRouter()
 def list_all_libraries(
     offset: int = Query(default=0),
     limit: int = Query(default=20, le=100),
+    query: str = Query(default=''),
 ) -> Paginated[Library]:
-    return ctx.libraries.list_page(offset, limit)
+    return ctx.libraries.list_page(offset, limit, query=query)
 
 
 @router.get(
@@ -31,8 +32,9 @@ def list_all_libraries(
 def list_public_libraries(
     offset: int = Query(default=0),
     limit: int = Query(default=20, le=100),
+    query: str = Query(default=''),
 ) -> Paginated[Library]:
-    return ctx.libraries.list_page(offset, limit, public_only=True)
+    return ctx.libraries.list_page(offset, limit, public_only=True, query=query)
 
 
 @router.get(
@@ -43,8 +45,9 @@ def list_my_libraries(
     offset: int = Query(default=0),
     limit: int = Query(default=20, le=100),
     user: User = Security(ensure_user),
+    query: str = Query(default=''),
 ) -> Paginated[Library]:
-    return ctx.libraries.list_page(offset, limit, user_id=user.id)
+    return ctx.libraries.list_page(offset, limit, user_id=user.id, query=query)
 
 
 @router.get(

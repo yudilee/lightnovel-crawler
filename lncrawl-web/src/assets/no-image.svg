@@ -104,6 +104,29 @@
        id="linearGradient969"
        xlink:href="#linearGradient967"
        inkscape:collect="always" />
+    <filter
+       id="dropshadow"
+       x="-50%"
+       y="-50%"
+       width="200%"
+       height="200%">
+      <feGaussianBlur
+         in="SourceAlpha"
+         stdDeviation="3" />
+      <feOffset
+         dx="2"
+         dy="2"
+         result="offsetblur" />
+      <feComponentTransfer>
+        <feFuncA
+           type="linear"
+           slope="0.5" />
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
   </defs>
   <sodipodi:namedview
      inkscape:document-rotation="0"
@@ -207,10 +230,11 @@
        height="406.00739"
        width="329.77792"
        id="rect1017"
-       style="fill:#eeeeee;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.59331;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+       style="fill:none;fill-opacity:0;fill-rule:nonzero;stroke:none;stroke-width:1.59331;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <g
        transform="translate(43.778173,191.04163)"
-       id="g1015">
+       id="g1015"
+       filter="url(#dropshadow)">
       <rect
          style="fill:#9f9f9f;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2.2995;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          id="rect1002"
@@ -294,6 +318,7 @@
        y="412.12527"
        x="562.00677"
        style="font-style:normal;font-weight:normal;font-size:32px;line-height:1.25;font-family:sans-serif;fill:#767676;fill-opacity:1;stroke:none"
+       filter="url(#dropshadow)"
        xml:space="preserve"><tspan
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:32px;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';text-align:center;text-anchor:middle"
          y="412.12527"

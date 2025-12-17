@@ -32,6 +32,7 @@ class LibraryService:
         offset: int = 0,
         limit: int = 20,
         *,
+        query: str = '',
         public_only: bool = False,
         user_id: Optional[str] = None,
     ) -> Paginated[Library]:
@@ -46,6 +47,11 @@ class LibraryService:
             if public_only:
                 stmt = stmt.where(sa.col(Library.is_public).is_(True))
                 cnt = cnt.where(sa.col(Library.is_public).is_(True))
+
+            if query:
+                q = f'%{query.lower()}%'
+                stmt = stmt.where(sa.col(Library.name).ilike(q))
+                cnt = cnt.where(sa.col(Library.name).ilike(q))
 
             stmt = stmt.order_by(sa.desc(Library.updated_at))
 

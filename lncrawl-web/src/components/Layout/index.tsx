@@ -14,9 +14,7 @@ export const MainLayout: React.FC<{
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
-    if (!collapsed && overlay) {
-      setCollapsed(true);
-    }
+    setCollapsed(overlay);
   }, [overlay, location.pathname]);
 
   return (
