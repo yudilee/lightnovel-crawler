@@ -1,15 +1,11 @@
-import type { LibrarySummary } from '@/types';
+import type { Library } from '@/types';
 import { BookOutlined } from '@ant-design/icons';
 import { Flex, Space, Tag, Typography } from 'antd';
 import type React from 'react';
 
-type LibraryCardHeaderProps = {
-  library: LibrarySummary['library'];
-};
-
-export const LibraryCardHeader: React.FC<LibraryCardHeaderProps> = ({
-  library,
-}) => {
+export const LibraryCardHeader: React.FC<{
+  library: Library;
+}> = ({ library }) => {
   return (
     <Flex
       justify="space-between"
