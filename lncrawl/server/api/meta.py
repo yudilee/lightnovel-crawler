@@ -6,7 +6,7 @@ from starlette.responses import FileResponse
 
 from ...context import ctx
 from ...utils.url_tools import extract_host
-from ..models.meta import SupportedSource
+from ..models import SupportedSource
 from ..security import ensure_user
 
 # The root router

@@ -7,7 +7,7 @@ from fastapi.security import (HTTPAuthorizationCredentials, HTTPBasic,
 from ..context import ctx
 from ..dao.user import User, UserRole
 from ..exceptions import ServerErrors
-from .models.user import LoginRequest
+from .models import LoginRequest
 
 basic_auth = HTTPBasic(auto_error=False)
 bearer_auth = HTTPBearer(auto_error=False)

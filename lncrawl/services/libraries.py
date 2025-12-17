@@ -5,8 +5,7 @@ import sqlmodel as sa
 from ..context import ctx
 from ..dao import Library, LibraryNovel, Novel, User, UserRole
 from ..exceptions import ServerErrors
-from ..server.models.library import LibraryItem
-from ..server.models.pagination import Paginated
+from ..server.models import LibraryItem, Paginated
 
 
 class LibraryService:
@@ -68,13 +67,19 @@ class LibraryService:
         user_id: Optional[str] = None,
     ) -> List[LibraryItem]:
         with ctx.db.session() as sess:
-            stmt = sa.select(Library.id, Library.name, Library.description, Library.is_public)
+            stmt = sa.select(Library)
             if user_id:
                 stmt = stmt.where(Library.user_id == user_id)
+            stmt = stmt.order_by(sa.desc(Library.updated_at))
             libraries = sess.exec(stmt).all()
             return [
-                LibraryItem.model_validate(item)
-                for item in libraries
+                LibraryItem(
+                    id=library.id,
+                    name=library.name,
+                    is_public=library.is_public,
+                    description=library.description,
+                )
+                for library in libraries
             ]
 
     def create(
@@ -204,7 +209,7 @@ class LibraryService:
                 raise ServerErrors.no_such_novel
 
             existing = sess.scalar(
-                sa.select(sa.exists())
+                sa.select(LibraryNovel)
                 .where(
                     LibraryNovel.library_id == library_id,
                     LibraryNovel.novel_id == novel_id,

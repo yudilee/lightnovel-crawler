@@ -6,8 +6,7 @@ from ..context import ctx
 from ..dao import Chapter, User, Volume
 from ..exceptions import ServerErrors
 from ..models import Chapter as ModelChapter
-from ..server.models.novel import ReadChapterResponse
-from ..server.models.pagination import Paginated
+from ..server.models import Paginated, ReadChapterResponse
 
 
 class ChapterService:

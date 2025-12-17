@@ -2,7 +2,7 @@ from fastapi import APIRouter, Path, Query, Security
 
 from ...context import ctx
 from ...dao import Chapter, Job, User, Volume
-from ..models.pagination import Paginated
+from ..models import Paginated
 from ..security import ensure_user
 
 # The root router

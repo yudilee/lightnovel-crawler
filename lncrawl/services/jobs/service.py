@@ -9,7 +9,7 @@ from ...dao import (Job, JobPriority, JobStatus, JobType, OutputFormat, User,
                     UserRole)
 from ...dao.tier import JOB_PRIORITY_LEVEL
 from ...exceptions import ServerErrors
-from ...server.models.pagination import Paginated
+from ...server.models import Paginated
 from ...utils.time_utils import current_timestamp
 from .utils import select_ancestors, select_descendends
 

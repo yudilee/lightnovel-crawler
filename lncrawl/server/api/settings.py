@@ -2,7 +2,7 @@ from fastapi import APIRouter, Body, Security
 
 from ...context import ctx
 from ...dao import NotificationItem, User
-from ...server.models.user import PutNotificationRequest, UpdateRequest
+from ...server.models import PutNotificationRequest, UpdateRequest
 from ..security import ensure_user
 
 # The root router

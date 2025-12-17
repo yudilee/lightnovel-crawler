@@ -1,12 +1,12 @@
 import shutil
 from typing import Any, List, Optional
 
-from sqlmodel import and_, desc, col, func, select
+from sqlmodel import and_, col, desc, func, select
 
 from ..context import ctx
 from ..dao import Novel
 from ..exceptions import ServerErrors
-from ..server.models.pagination import Paginated
+from ..server.models import Paginated
 
 
 class NovelService:

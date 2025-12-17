@@ -1,12 +1,13 @@
 from typing import Any, List, Optional
 
+from sqlmodel import and_, asc, col, func
 from sqlmodel import insert as sa_insert
-from sqlmodel import and_, asc, col, func, select
+from sqlmodel import select
 
 from ..context import ctx
 from ..dao import Tag
 from ..exceptions import ServerErrors
-from ..server.models.pagination import Paginated
+from ..server.models import Paginated
 
 
 class TagService:

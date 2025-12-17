@@ -4,7 +4,7 @@ from fastapi import APIRouter, Path, Query, Security
 
 from ...context import ctx
 from ...dao import Chapter, ChapterImage, Job, User
-from ..models.novel import ReadChapterResponse
+from ..models import ReadChapterResponse
 from ..security import ensure_user
 
 # The root router

@@ -5,10 +5,9 @@ from fastapi import APIRouter, Body, Path, Query, Security
 from ...context import ctx
 from ...dao import Job, JobPriority, JobStatus, JobType, User, UserRole
 from ...exceptions import ServerErrors
-from ..models.job import (FetchChaptersRequest, FetchImagesRequest,
-                          FetchNovelRequest, FetchVolumesRequest,
-                          MakeArtifactsRequest)
-from ..models.pagination import Paginated
+from ..models import (FetchChaptersRequest, FetchImagesRequest,
+                      FetchNovelRequest, FetchVolumesRequest,
+                      MakeArtifactsRequest, Paginated)
 from ..security import ensure_user
 
 # The root router

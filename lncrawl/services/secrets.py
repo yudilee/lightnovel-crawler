@@ -7,8 +7,7 @@ from sqlmodel import and_, col, func, select
 from ..context import ctx
 from ..dao import Secret
 from ..exceptions import ServerErrors
-from ..server.models.crawler import LoginData
-from ..server.models.pagination import Paginated
+from ..server.models import LoginData, Paginated
 from ..utils.url_tools import extract_host
 
 SECRET_KEY_ID = '--server-secret-key--'

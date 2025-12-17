@@ -2,10 +2,10 @@ from fastapi import APIRouter, Body, Form, Query, Security
 
 from ...context import ctx
 from ...dao import User
-from ..models.user import (ForgotPasswordRequest, LoginRequest, LoginResponse,
-                           NameUpdateRequest, PasswordUpdateRequest,
-                           ResetPasswordRequest, SignupRequest, TokenResponse,
-                           UpdateRequest)
+from ..models import (ForgotPasswordRequest, LoginRequest, LoginResponse,
+                      NameUpdateRequest, PasswordUpdateRequest,
+                      ResetPasswordRequest, SignupRequest, TokenResponse,
+                      UpdateRequest)
 from ..security import ensure_user
 
 # The root router

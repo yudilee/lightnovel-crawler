@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Body, Path, Query, Security
 
 from ...context import ctx
+from ...dao import User
 from ...exceptions import ServerErrors
-from ..models.pagination import Paginated
-from ..models.user import CreateRequest, UpdateRequest, User
+from ..models import CreateRequest, Paginated, UpdateRequest
 from ..security import ensure_user
 
 # The root router

@@ -13,10 +13,9 @@ from passlib.context import CryptContext
 from ..context import ctx
 from ..dao import NotificationItem, User, UserRole, UserTier, VerifiedEmail
 from ..exceptions import ServerErrors
-from ..server.models.pagination import Paginated
-from ..server.models.user import (CreateRequest, LoginRequest,
-                                  PasswordUpdateRequest, SignupRequest,
-                                  UpdateRequest)
+from ..server.models import (CreateRequest, LoginRequest, Paginated,
+                             PasswordUpdateRequest, SignupRequest,
+                             UpdateRequest)
 from ..utils.time_utils import current_timestamp
 
 logger = logging.getLogger(__name__)

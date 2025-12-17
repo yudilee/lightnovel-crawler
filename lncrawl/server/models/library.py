@@ -18,5 +18,5 @@ class LibraryUpdateRequest(BaseModel):
 class LibraryItem(BaseModel):
     id: str = Field(description="Library ID")
     name: str = Field(description="Library name")
-    is_public: bool = Field(description="Is public")
     description: Optional[str] = Field(default=None, description="Library description")
+    is_public: bool = Field(description="Is public")

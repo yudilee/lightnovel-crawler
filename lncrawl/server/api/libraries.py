@@ -4,9 +4,8 @@ from fastapi import APIRouter, Path, Query, Security
 
 from ...context import ctx
 from ...dao import Library, Novel, User
-from ...server.models.library import (LibraryCreateRequest, LibraryItem,
-                                      LibraryUpdateRequest)
-from ...server.models.pagination import Paginated
+from ...server.models import (LibraryCreateRequest, LibraryItem,
+                              LibraryUpdateRequest, Paginated)
 from ..security import ensure_admin, ensure_user
 
 router = APIRouter()

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Path, Query, Security
 
 from ...context import ctx
 from ...dao import Artifact, OutputFormat
-from ..models.pagination import Paginated
+from ..models import Paginated
 from ..security import ensure_user
 
 # The root router
