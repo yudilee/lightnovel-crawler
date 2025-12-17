@@ -1,20 +1,11 @@
-# NOTE: This file intentionally includes:
-#   - runtime requirements
-#   - server requirements
-#   - dev tools
-#   - type stubs
-# to keep a single entry point for installation.
-
 # === App / CLI requirements ===
 zstd
-typer
-httpx[http2,brotli]
-regex
-packaging
-html-clean
-openai
-humanize
-markdown
+typer>=0.9.0
+httpx[http2,brotli]>=0.24.0
+regex>=2023.0.0
+openai>=1.0.0
+humanize>=4.0.0
+markdown>=3.4.0
 lxml>=5.4.0,<7.0.0
 pyease-grpc>=1.6.0
 python-dotenv>=0.15.0,<2.0.0
@@ -24,7 +15,7 @@ requests_toolbelt>=1.0.0
 websocket-client>=1.7.0
 python-slugify>=4.0.0,<9.0.0
 colorama>=0.4.0,<0.5.0
-tqdm>=4.60,<5.0
+tqdm>=4.60.0,<5.0.0
 PyExecJS>=1.5.1,<2.0.0
 ebooklib>=0.17.0,<1.0.0
 pillow>=6.0.0
@@ -35,11 +26,10 @@ html5lib~=1.1
 base58~=2.1.1
 python-box>=6.0.0,<8.0.0
 pycryptodome>=3.0.0,<4.0.0
-selenium>=3.141.0
+selenium>=4.0.0,<5.0.0
 tenacity>=9.0.0
 pyparsing>=3.1.0
 pyOpenSSL>=24.0.0
-brotli>=1.1.0
 # cloudscraper>=1.2.71
 
 # === Bot / integrations ===
@@ -47,32 +37,32 @@ discord.py>=2.0.0
 python-telegram-bot[job-queue]~=20.0
 
 # === Server / API requirements ===
-uvicorn
-fastapi[standard]
-cachetools
-alembic
-sqlmodel
-psycopg[binary]
-passlib[argon2]
-python-jose[cryptography]
-python-dateutil
+uvicorn>=0.23.0
+fastapi[standard]>=0.100.0
+cachetools>=5.0.0
+alembic>=1.12.0
+sqlmodel>=0.0.14
+psycopg[binary]>=3.1.0
+passlib[argon2]>=1.7.4
+python-jose[cryptography]>=3.3.0
+python-dateutil>=2.8.0
 
 # === Dev / build / tooling ===
-wheel
-build
-black
-flake8
-tk-tools
+wheel>=0.40.0
+build>=0.10.0
+black>=23.0.0
+flake8>=6.0.0
+tk-tools>=0.1.0
 setuptools>=61.0
-pyinstaller
+pyinstaller>=5.13.0
 
 # === Type stubs (optional, for static analysis) ===
-types-tqdm
-types-colorama
-types-cachetools
-types-python-dateutil
-types-passlib
-types-python-jose
-types-setuptools
-lxml-stubs
-types-zstd
+types-tqdm>=4.65.0
+types-colorama>=0.4.0
+types-cachetools>=5.3.0
+types-python-dateutil>=2.8.0
+types-passlib>=1.7.0
+types-python-jose>=3.3.0
+types-setuptools>=65.0.0
+lxml-stubs>=0.4.0
+types-zstd>=1.5.0
