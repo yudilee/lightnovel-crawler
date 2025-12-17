@@ -8,7 +8,7 @@ import { LoginPage } from './Login';
 import { MainPage } from './MainPage';
 import { NovelDetailsPage } from './NovelDetails';
 import { NovelListPage } from './NovelList';
-import { NovelReaderPage } from './NovelReaderPage';
+import { NovelReaderPage } from './NovelReader';
 import { ResetPasswordPage } from './ResetPassword';
 import { LibraryDetailsPage } from './LibraryDetails';
 import { LibraryListPage } from './LibraryList';
@@ -17,7 +17,7 @@ import { SignupPage } from './Signup';
 import { SupportedSourcesPage } from './SupportedSources';
 import { UserDetailsPage } from './UserDetails';
 import { UserListPage } from './UserList';
-import { UserProfilePage } from './UserProfilePage';
+import { UserProfilePage } from './UserProfile';
 
 export const AUTH_ROUTES: RouteObject[] = [
   {
