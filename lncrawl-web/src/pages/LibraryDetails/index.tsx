@@ -1,3 +1,5 @@
+import { ErrorState } from '@/components/Loading/ErrorState';
+import { LoadingState } from '@/components/Loading/LoadingState';
 import { Auth } from '@/store/_auth';
 import type { Library, User } from '@/types';
 import { stringifyError } from '@/utils/errors';
@@ -7,9 +9,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { UserDetailsCard } from '../JobDetails/UserDetailsCard';
-import { ErrorState } from './ErrorState';
 import { LibraryInfoCard } from './LibraryInfoCard';
-import { LoadingState } from './LoadingState';
 import { LibraryNovelList } from './NovelList';
 
 export const LibraryDetailsPage: React.FC = () => {
@@ -78,12 +78,16 @@ export const LibraryDetailsPage: React.FC = () => {
   };
 
   if (loading) {
-    return <LoadingState />;
+    return <LoadingState message="Loading library details..." />;
   }
 
   if (error || !library) {
     return (
-      <ErrorState error={error} onRetry={() => setRefresh((v) => v + 1)} />
+      <ErrorState
+        error={error}
+        title="Failed to load library"
+        onRetry={() => setRefresh((v) => v + 1)}
+      />
     );
   }
 

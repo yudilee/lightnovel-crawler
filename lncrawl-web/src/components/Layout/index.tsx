@@ -1,16 +1,23 @@
 import LncrawlImage from '@/assets/lncrawl.svg';
 import { Avatar, Divider, Grid, Layout, Typography } from 'antd';
-import { useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { MainLayoutSidebar } from './sidebar';
 
 export const MainLayout: React.FC<{
   noPadding?: boolean;
 }> = ({ noPadding }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { md } = Grid.useBreakpoint();
   const [overlay, setOverlay] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (!collapsed && overlay) {
+      setCollapsed(true);
+    }
+  }, [overlay, location.pathname]);
 
   return (
     <Layout>
@@ -43,7 +50,7 @@ export const MainLayout: React.FC<{
               }
         }
       >
-        <MainLayoutSidebar onChange={() => setCollapsed(overlay)} />
+        <MainLayoutSidebar />
       </Layout.Sider>
       <Layout.Content
         style={{

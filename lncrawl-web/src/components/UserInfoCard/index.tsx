@@ -3,6 +3,7 @@ import { Auth } from '@/store/_auth';
 import { LogoutOutlined } from '@ant-design/icons';
 import { Button, Flex, Typography } from 'antd';
 import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { UserAvatar } from '../Tags/UserAvatar';
 import { EmailVerifyButton } from './EmailVerifyButton';
 import { SwitchUserButton } from './SwitchUserButton';
@@ -25,14 +26,18 @@ export const UserInfoCard: React.FC<any> = () => {
         padding: '25px 0 10px 0',
       }}
     >
-      <UserAvatar
-        size={72}
-        user={authUser}
-        style={{ backgroundColor: 'blueviolet' }}
-      />
-      <Typography.Text strong style={{ fontSize: 16 }}>
-        {authUser?.name}
-      </Typography.Text>
+      <Link to="/profile">
+        <Flex vertical gap={5} align="center" justify="center">
+          <UserAvatar
+            size={72}
+            user={authUser}
+            style={{ backgroundColor: 'blueviolet' }}
+          />
+          <Typography.Text strong style={{ fontSize: 16 }}>
+            {authUser?.name}
+          </Typography.Text>
+        </Flex>
+      </Link>
 
       <div />
 

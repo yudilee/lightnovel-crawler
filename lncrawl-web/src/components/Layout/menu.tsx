@@ -3,15 +3,32 @@ import {
   ControlOutlined,
   DeploymentUnitOutlined,
   FileDoneOutlined,
+  FolderAddOutlined,
   FolderOpenOutlined,
   SettingOutlined,
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { type MenuProps } from 'antd';
+import { Link } from 'react-router-dom';
 import { UserInfoCard } from '../UserInfoCard';
 
-export const buildMenu = (isAdmin: boolean): MenuProps['items'] => [
+interface BuildMenuProps {
+  isAdmin: boolean;
+  currentPath: string;
+}
+
+function getClassName(currentPath: string, path: string): string | undefined {
+  if (currentPath === path) {
+    return 'ant-menu-item-selected';
+  }
+  return undefined;
+}
+
+export const buildMenu = ({
+  isAdmin,
+  currentPath,
+}: BuildMenuProps): MenuProps['items'] => [
   {
     type: 'group',
     label: <UserInfoCard />,
@@ -24,37 +41,52 @@ export const buildMenu = (isAdmin: boolean): MenuProps['items'] => [
     type: 'divider',
   },
   {
-    key: '/',
-    label: 'Requests',
+    key: 'requests',
     icon: <DeploymentUnitOutlined />,
+    label: <Link to="/">Requests</Link>,
+    className: getClassName(currentPath, '/'),
   },
   {
-    key: '/novels',
-    label: 'Novels',
+    key: 'novels',
     icon: <BookOutlined />,
+    label: <Link to="/novels">Novels</Link>,
+    className: getClassName(currentPath, '/novels'),
   },
   {
-    key: '/libraries',
-    label: 'Libraries',
+    key: 'libraries',
     icon: <FolderOpenOutlined />,
+    label: <Link to="/libraries">Libraries</Link>,
   },
   {
-    key: '/meta/sources',
-    label: 'Crawlers',
+    key: 'my-libraries',
+    icon: <FolderAddOutlined />,
+    label: <Link to="/libraries/my">My Libraries</Link>,
+    className: getClassName(currentPath, '/libraries/my'),
+    style: {
+      paddingLeft: 32,
+      display: currentPath.startsWith('/libraries') ? undefined : 'none',
+    },
+  },
+  {
+    key: 'crawlers',
     icon: <FileDoneOutlined />,
+    label: <Link to="/meta/sources">Crawlers</Link>,
+    className: getClassName(currentPath, '/meta/sources'),
   },
   {
     type: 'divider',
   },
   {
-    key: '/profile',
-    label: 'Profile',
+    key: 'profile',
     icon: <UserOutlined />,
+    label: <Link to="/profile">Profile</Link>,
+    className: getClassName(currentPath, '/profile'),
   },
   {
-    key: '/settings',
-    label: 'Settings',
+    key: 'settings',
     icon: <SettingOutlined />,
+    label: <Link to="/settings">Settings</Link>,
+    className: getClassName(currentPath, '/settings'),
   },
   {
     type: 'divider',
@@ -67,9 +99,10 @@ export const buildMenu = (isAdmin: boolean): MenuProps['items'] => [
     style: { display: isAdmin ? undefined : 'none' },
     children: [
       {
-        key: '/admin/users',
-        label: 'Users',
+        key: 'admin-users',
         icon: <TeamOutlined />,
+        label: <Link to="/admin/users">Users</Link>,
+        className: getClassName(currentPath, '/admin/users'),
       },
     ],
   },

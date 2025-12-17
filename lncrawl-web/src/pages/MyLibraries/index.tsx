@@ -3,26 +3,26 @@ import { LoadingState } from '@/components/Loading/LoadingState';
 import { Auth } from '@/store/_auth';
 import type { LibrarySummary, Paginated } from '@/types';
 import { stringifyError } from '@/utils/errors';
-import { Divider, Flex, Pagination, Row, Typography, message } from 'antd';
+import { Divider, Flex, message, Pagination, Row, Typography } from 'antd';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { LibraryCard } from './LibraryCard';
+import { LibraryCard } from '../LibraryList/LibraryCard';
+import { CreateLibraryButton } from './CreateLibraryButton';
 
 const PAGE_SIZE = 18;
 
-export const LibraryListPage: React.FC = () => {
+export const MyLibrariesPage: React.FC = () => {
   const navigate = useNavigate();
   const user = useSelector(Auth.select.user);
-  const isAdmin = useSelector(Auth.select.isAdmin);
   const [messageApi, contextHolder] = message.useMessage();
 
-  const [refresh, setRefresh] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [refresh, setRefresh] = useState(0);
   const [libraries, setLibraries] = useState<LibrarySummary[]>([]);
 
   useEffect(() => {
@@ -31,8 +31,8 @@ export const LibraryListPage: React.FC = () => {
       setError(undefined);
       try {
         const offset = (page - 1) * PAGE_SIZE;
-        const shared = await axios.get<Paginated<LibrarySummary>>(
-          isAdmin ? '/api/library/all' : '/api/library/public',
+        const { data } = await axios.get<Paginated<LibrarySummary>>(
+          '/api/library/my',
           {
             params: {
               offset,
@@ -40,17 +40,16 @@ export const LibraryListPage: React.FC = () => {
             },
           }
         );
-        setLibraries(shared.data.items);
-        setTotal(shared.data.total);
+        setTotal(data.total);
+        setLibraries(data.items);
       } catch (err) {
         setError(stringifyError(err));
       } finally {
         setLoading(false);
       }
     };
-
     loadLibraries();
-  }, [page, refresh, messageApi, isAdmin]);
+  }, [page, refresh, messageApi]);
 
   if (loading) {
     return <LoadingState message="Loading libraries..." />;
@@ -74,6 +73,7 @@ export const LibraryListPage: React.FC = () => {
         <Typography.Title level={2} style={{ margin: 0 }}>
           Libraries
         </Typography.Title>
+        <CreateLibraryButton />
       </Flex>
 
       <Divider size="small" />

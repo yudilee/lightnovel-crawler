@@ -25,7 +25,7 @@ const gradients = [
 ];
 
 /**
- * Generate a deterministic random gradient based on a library ID
+ * Generate a deterministic random gradient based on a ID
  */
 export function getGradientForId(id: string): string {
   let hash = 0;

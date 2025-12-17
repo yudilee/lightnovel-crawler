@@ -1,10 +1,10 @@
 import type { Library } from '@/types';
+import { getGradientForId } from '@/utils/gradients';
+import { BookOutlined } from '@ant-design/icons';
 import { Card, Flex, Space, Switch, Tag, Typography } from 'antd';
 import { useMemo } from 'react';
-import { getGradientForId } from '../LibraryList/components/utils/gradients';
 import { DeleteLibraryButton } from './DeleteLibraryButton';
 import { EditLibraryButton } from './EditLibraryButton';
-import { BookOutlined } from '@ant-design/icons';
 
 interface LibraryInfoCardProps {
   library: Library;
@@ -72,6 +72,7 @@ export const LibraryInfoCard: React.FC<LibraryInfoCardProps> = ({
               disabled={loading}
             />
           </Flex>
+
           <Flex gap={4} align="center" wrap justify="end">
             <EditLibraryButton library={library} onSuccess={onLibraryUpdated} />
             <DeleteLibraryButton library={library} />
