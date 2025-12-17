@@ -43,10 +43,13 @@ export const NovelListItemCard: React.FC<{ novel: Novel }> = ({ novel }) => {
           preview={false}
           src={`${API_BASE_URL}/static/${novel.cover_file}?token=${token}`}
           fallback={FallbackImage}
-          loading="lazy"
           fetchPriority="low"
           style={{
             objectFit: 'cover',
+            height: '100%',
+            width: '100%',
+          }}
+          wrapperStyle={{
             aspectRatio: 3 / 4,
             minHeight: '100%',
             maxHeight: '50vh',

@@ -28,13 +28,12 @@ const gradients = [
  * Generate a deterministic random gradient based on a ID
  */
 export function getGradientForId(id: string): string {
+  let idx = 0;
   let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    const char = id.charCodeAt(i);
-    hash = (hash << 3) - hash + char;
-    hash = hash & hash;
+  for (let i = 0; i < 4; ++i) {
+    hash = (hash << 3) - hash + id.charCodeAt(idx);
+    idx = Math.abs(hash) % id.length;
   }
-
   const index = Math.abs(hash) % gradients.length;
   return gradients[index];
 }
