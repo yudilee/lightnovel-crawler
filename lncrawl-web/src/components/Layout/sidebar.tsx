@@ -1,30 +1,92 @@
 import { Auth } from '@/store/_auth';
+import {
+  BookOutlined,
+  ControlOutlined,
+  DeploymentUnitOutlined,
+  FileDoneOutlined,
+  FolderOpenOutlined,
+  SettingOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import { Menu } from 'antd';
-import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { useLocation } from 'react-router-dom';
-import { buildMenu } from './menu';
+import { Link, useLocation } from 'react-router-dom';
+import { UserInfoCard } from '../UserInfoCard';
+
+function getClassName(currentPath: string, path: string): string | undefined {
+  if (currentPath === path) {
+    return 'ant-menu-item-selected';
+  }
+  return undefined;
+}
 
 export const MainLayoutSidebar: React.FC<any> = () => {
-  const location = useLocation();
+  const { pathname: currentPath } = useLocation();
   const isAdmin = useSelector(Auth.select.isAdmin);
-
-  const items = useMemo(
-    () => buildMenu({ isAdmin, currentPath: location.pathname }),
-    [isAdmin, location.pathname]
-  );
 
   return (
     <Menu
       mode="inline"
-      items={items}
       inlineIndent={15}
       defaultOpenKeys={[
         'admin', // keep open by default
       ]}
-      style={{
-        height: '100%',
-      }}
-    />
+      style={{ height: '100%' }}
+    >
+      <Menu.ItemGroup
+        title={<UserInfoCard />}
+        style={{
+          background: 'none',
+          height: 'fit-content',
+        }}
+      />
+      <Menu.Divider />
+      <Menu.Item
+        icon={<DeploymentUnitOutlined />}
+        className={getClassName(currentPath, '/')}
+      >
+        <Link to="/">Requests</Link>
+      </Menu.Item>
+      <Menu.Item
+        icon={<BookOutlined />}
+        className={getClassName(currentPath, '/novels')}
+      >
+        <Link to="/novels">Novels</Link>
+      </Menu.Item>
+      <Menu.Item icon={<FolderOpenOutlined />}>
+        <Link to="/libraries">Libraries</Link>
+      </Menu.Item>
+      <Menu.Item
+        icon={<FileDoneOutlined />}
+        className={getClassName(currentPath, '/meta/sources')}
+      >
+        <Link to="/meta/sources">Crawlers</Link>
+      </Menu.Item>
+      <Menu.Divider />
+      <Menu.Item
+        icon={<UserOutlined />}
+        className={getClassName(currentPath, '/profile')}
+      >
+        <Link to="/profile">Profile</Link>
+      </Menu.Item>
+      <Menu.Item
+        icon={<SettingOutlined />}
+        className={getClassName(currentPath, '/settings')}
+      >
+        <Link to="/settings">Settings</Link>
+      </Menu.Item>
+      {isAdmin && <Menu.Divider />}
+      {isAdmin && (
+        <Menu.SubMenu title="Administration" icon={<ControlOutlined />}>
+          <Menu.Item
+            icon={<TeamOutlined />}
+            className={getClassName(currentPath, '/admin/users')}
+          >
+            <Link to="/admin/users">Users</Link>
+          </Menu.Item>
+        </Menu.SubMenu>
+      )}
+    </Menu>
   );
 };

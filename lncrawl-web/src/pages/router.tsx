@@ -4,15 +4,14 @@ import { Navigate, type RouteObject } from 'react-router-dom';
 import { AuthLayout } from '@/components/Layout/auth';
 import { ForgotPasswordPage } from './ForgotPassword';
 import { JobDetailsPage } from './JobDetails';
+import { LibraryDetailsPage } from './LibraryDetails';
+import { LibraryListPage } from './LibraryList';
 import { LoginPage } from './Login';
 import { MainPage } from './MainPage';
 import { NovelDetailsPage } from './NovelDetails';
 import { NovelListPage } from './NovelList';
 import { NovelReaderPage } from './NovelReader';
 import { ResetPasswordPage } from './ResetPassword';
-import { LibraryDetailsPage } from './LibraryDetails';
-import { LibraryListPage } from './LibraryList';
-import { MyLibrariesPage } from './MyLibraries';
 import { SettingsPage } from './SettingsPage';
 import { SignupPage } from './Signup';
 import { SupportedSourcesPage } from './SupportedSources';
@@ -72,16 +71,7 @@ export const USER_ROUTES: RouteObject[] = [
       },
       {
         path: 'libraries',
-        children: [
-          {
-            path: '',
-            element: <LibraryListPage />,
-          },
-          {
-            path: 'my',
-            element: <MyLibrariesPage />,
-          },
-        ],
+        element: <LibraryListPage />,
       },
       {
         path: 'library/:id',
