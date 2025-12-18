@@ -9,11 +9,9 @@ from typing_extensions import Annotated
 from .commands.config import app as config
 from .commands.crawl import app as crawl
 from .commands.dev import app as dev
-from .commands.discord import app as discord
 from .commands.search import app as search
 from .commands.server import app as server
 from .commands.sources import app as sources
-from .commands.telegram import app as telegram
 from .commands.version import app as version
 from .context import AppContext
 
@@ -41,8 +39,6 @@ app.add_typer(sources, name='sources')
 app.add_typer(crawl)
 app.add_typer(search)
 app.add_typer(server)
-app.add_typer(discord)
-app.add_typer(telegram)
 
 
 # Define main command
