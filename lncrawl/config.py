@@ -77,6 +77,7 @@ def _traverse(obj: object) -> None:
 
 
 def _merge(target: dict, source: dict) -> None:
+    """Merge source into target, overriding existing values."""
     for key, value in source.items():
         if isinstance(target.get(key), dict) and isinstance(value, dict):
             _merge(target[key], value)
@@ -85,15 +86,19 @@ def _merge(target: dict, source: dict) -> None:
 
 
 def _update(target: dict, source: dict) -> dict:
+    """Update target with source, returning deprecated values."""
     deprecated = {}
     for key, value in source.items():
         if key in target:
-            if isinstance(target[key], dict) and isinstance(value, dict):
-                inner = _update(target[key], value)
+            target_value = target[key]
+            if isinstance(target_value, dict) and isinstance(value, dict):
+                inner = _update(target_value, value)
                 if inner:
                     deprecated[key] = inner
+            elif isinstance(value, type(target_value)):
+                target_value = value
             else:
-                target[key] = value
+                deprecated[key] = value
         else:
             deprecated[key] = value
     return deprecated
@@ -108,7 +113,7 @@ class Config(object):
         self.config_file: Optional[Path] = None
         self._data: Dict[str, Any] = {}
         _traverse(self)
-        self._defaults = self._data
+        self._defaults = self._data.copy()
 
     @cached_property
     def app(self):
@@ -138,6 +143,10 @@ class Config(object):
     def discord(self):
         return DiscordConfig(self)
 
+    @cached_property
+    def telegram(self):
+        return TelegramConfig(self)
+
     # -------------------------------------------------------------- #
 
     def load(self, file: Optional[Path] = None) -> None:
@@ -162,11 +171,9 @@ class Config(object):
             source = json.loads(file.read_text(encoding="utf-8"))
             assert isinstance(source, dict)
 
-            self._data = {}
-            _merge(self._data, self._defaults)
-
+            self._data = self._defaults.copy()
             old_deprecated = source.pop('__deprecated__', {})
-            new_deprecated = _update(self._defaults, source)
+            new_deprecated = _update(self._data, source)
             _merge(new_deprecated, old_deprecated)
 
             if new_deprecated:
@@ -186,17 +193,21 @@ class Config(object):
 
     # -------------------------------------------------------------- #
 
-    def get(self, section: str, key: str, default: Union[T, Callable[[], Any]]) -> Any:
+    def get(self, section: str, key: str, default: Union[None, T, Callable[[], T]] = None) -> Any:
         sub: dict = self._data.setdefault(section, {})
         if key not in sub:
             if callable(default):
                 sub[key] = default()
-            else:
+            elif default is not None:
                 sub[key] = default
+            else:
+                raise ValueError(f'{section}.{key} is not set')
         return _deserialize(sub[key], type(sub[key]))
 
-    def set(self, section: str, key: str, value: Any) -> None:
+    def set(self, section: str, key: str, value: T) -> None:
         sub: dict = self._data.setdefault(section, {})
+        if sub.get(key) is not None:
+            value = _deserialize(value, type(sub[key]))
         sub[key] = _serialize(value)
         self.save()
 
@@ -235,11 +246,11 @@ class AppConfig(_Section):
         return APP_DIR
 
     @property
-    def openai_key(self) -> Optional[str]:
-        return self._get("openai_api_key", None)
+    def openai_key(self) -> str:
+        return self._get("openai_api_key", "")
 
     @openai_key.setter
-    def openai_key(self, v: Optional[str]) -> None:
+    def openai_key(self, v: str) -> None:
         self._set("openai_api_key", v)
 
 
@@ -259,7 +270,7 @@ class DatabaseConfig(_Section):
         return self._get("url", self.__url)
 
     @url.setter
-    def url(self, url: Optional[str]) -> None:
+    def url(self, url: str) -> None:
         self._set("url", url)
 
     @property
@@ -267,7 +278,7 @@ class DatabaseConfig(_Section):
         return self._get("admin_email", "admin")
 
     @admin_email.setter
-    def admin_email(self, v: Optional[str]) -> None:
+    def admin_email(self, v: str) -> None:
         self._set("admin_email", v)
 
     @property
@@ -275,7 +286,7 @@ class DatabaseConfig(_Section):
         return self._get("admin_password", "admin")
 
     @admin_password.setter
-    def admin_password(self, v: Optional[str]) -> None:
+    def admin_password(self, v: str) -> None:
         self._set("admin_password", v)
 
 
@@ -318,7 +329,7 @@ class CrawlerConfig(_Section):
         return self._get("selenium_grid", os.getenv("SELENIUM_GRID", ""))
 
     @selenium_grid.setter
-    def selenium_grid(self, url: Optional[str]) -> None:
+    def selenium_grid(self, url: str) -> None:
         self._set("selenium_grid", url)
 
     @property
@@ -331,7 +342,7 @@ class CrawlerConfig(_Section):
         return self._get("runner_concurrency", 5)
 
     @runner_concurrency.setter
-    def runner_concurrency(self, v: Optional[int]) -> None:
+    def runner_concurrency(self, v: int) -> None:
         self._set("runner_concurrency", v)
 
     @property
@@ -340,7 +351,7 @@ class CrawlerConfig(_Section):
         return self._get("runner_cooldown", 1)
 
     @runner_cooldown.setter
-    def runner_cooldown(self, v: Optional[int]) -> None:
+    def runner_cooldown(self, v: int) -> None:
         self._set("runner_cooldown", v)
 
     @property
@@ -349,7 +360,7 @@ class CrawlerConfig(_Section):
         return self._get("cleaner_cooldown", 30 * 60)
 
     @cleaner_cooldown.setter
-    def cleaner_cooldown(self, v: Optional[int]) -> None:
+    def cleaner_cooldown(self, v: int) -> None:
         self._set("cleaner_cooldown", v)
 
     @property
@@ -358,7 +369,7 @@ class CrawlerConfig(_Section):
         return self._get("runner_reset_interval", 4 * 3600)
 
     @runner_reset_interval.setter
-    def runner_reset_interval(self, v: Optional[int]) -> None:
+    def runner_reset_interval(self, v: int) -> None:
         self._set("runner_reset_interval", v)
 
     @property
@@ -368,7 +379,7 @@ class CrawlerConfig(_Section):
         return mb * 1024 * 1024
 
     @disk_size_limit.setter
-    def disk_size_limit(self, bytes_val: Optional[int]) -> None:
+    def disk_size_limit(self, bytes_val: int) -> None:
         mb = None if bytes_val is None else bytes_val // (1024 * 1024)
         self._set("disk_size_limit_mb", mb)
 
@@ -384,7 +395,7 @@ class ServerConfig(_Section):
         return self._get("base_url", "http://localhost:8080").strip("/")
 
     @base_url.setter
-    def base_url(self, v: Optional[str]) -> None:
+    def base_url(self, v: str) -> None:
         self._set("base_url", v)
 
     @property
@@ -392,7 +403,7 @@ class ServerConfig(_Section):
         return self._get("token_secret", lambda: str(uuid.uuid4()))
 
     @token_secret.setter
-    def token_secret(self, v: Optional[str]) -> None:
+    def token_secret(self, v: str) -> None:
         self._set("token_secret", v)
 
     @property
@@ -400,7 +411,7 @@ class ServerConfig(_Section):
         return self._get("token_algorithm", "HS256")
 
     @token_algo.setter
-    def token_algo(self, v: Optional[str]) -> None:
+    def token_algo(self, v: str) -> None:
         self._set("token_algorithm", v)
 
     @property
@@ -408,7 +419,7 @@ class ServerConfig(_Section):
         return self._get("token_expiry_minutes", lambda: 7 * 24 * 60)
 
     @token_expiry.setter
-    def token_expiry(self, v: Optional[int]) -> None:
+    def token_expiry(self, v: int) -> None:
         self._set("token_expiry_minutes", v)
 
 
@@ -423,7 +434,7 @@ class CloudConfig(_Section):
         return self._get("store", "ANONFILES")
 
     @store.setter
-    def store(self, v: Optional[str]) -> None:
+    def store(self, v: str) -> None:
         self._set("store", v)
 
 
@@ -438,7 +449,22 @@ class DiscordConfig(_Section):
         return self._get("token", "")
 
     @token.setter
-    def token(self, v: Optional[str]) -> None:
+    def token(self, v: str) -> None:
+        self._set("token", v)
+
+
+# ------------------------------------------------------------------ #
+#                          Telegram Section                          #
+# ------------------------------------------------------------------ #
+class TelegramConfig(_Section):
+    section = "telegram"
+
+    @property
+    def token(self) -> str:
+        return self._get("token", "")
+
+    @token.setter
+    def token(self, v: str) -> None:
         self._set("token", v)
 
 
@@ -453,7 +479,7 @@ class MailConfig(_Section):
         return self._get("smtp_server", "localhost")
 
     @smtp_server.setter
-    def smtp_server(self, v: Optional[str]) -> None:
+    def smtp_server(self, v: str) -> None:
         self._set("smtp_server", v)
 
     @property
@@ -461,7 +487,7 @@ class MailConfig(_Section):
         return self._get("smtp_port", 1025)
 
     @smtp_port.setter
-    def smtp_port(self, v: Optional[int]) -> None:
+    def smtp_port(self, v: int) -> None:
         self._set("smtp_port", v)
 
     @property
@@ -469,7 +495,7 @@ class MailConfig(_Section):
         return self._get("smtp_username", "")
 
     @smtp_username.setter
-    def smtp_username(self, v: Optional[str]) -> None:
+    def smtp_username(self, v: str) -> None:
         self._set("smtp_username", v)
 
     @property
@@ -477,7 +503,7 @@ class MailConfig(_Section):
         return self._get("smtp_password", "")
 
     @smtp_password.setter
-    def smtp_password(self, v: Optional[str]) -> None:
+    def smtp_password(self, v: str) -> None:
         self._set("smtp_password", v)
 
     @property
@@ -485,5 +511,5 @@ class MailConfig(_Section):
         return self._get("smtp_sender", "")
 
     @smtp_sender.setter
-    def smtp_sender(self, v: Optional[str]) -> None:
+    def smtp_sender(self, v: str) -> None:
         self._set("smtp_sender", v)

@@ -6,6 +6,7 @@ from typing import Optional
 import typer
 from typing_extensions import Annotated
 
+from .commands.config import app as config
 from .commands.crawl import app as crawl
 from .commands.dev import app as dev
 from .commands.discord import app as discord
@@ -35,6 +36,7 @@ app = typer.Typer(
 # Register subcommands
 app.add_typer(version)
 app.add_typer(dev, name='dev', hidden=True)
+app.add_typer(config, name='config')
 app.add_typer(sources, name='sources')
 app.add_typer(crawl)
 app.add_typer(search)
