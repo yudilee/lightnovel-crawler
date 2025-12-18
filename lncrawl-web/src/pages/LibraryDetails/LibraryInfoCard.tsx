@@ -47,7 +47,7 @@ export const LibraryInfoCard: React.FC<LibraryInfoCardProps> = ({
       <BookOutlined
         style={{
           fontSize: 48,
-          marginTop: 8,
+          marginTop: 6,
           color: library.is_public ? '#39f' : '#0f0',
         }}
       />
@@ -64,10 +64,7 @@ export const LibraryInfoCard: React.FC<LibraryInfoCardProps> = ({
         {library.extra?.owner_name && (
           <Typography.Text
             type="secondary"
-            style={{
-              fontSize: 12,
-              marginBottom: lg ? 8 : 0,
-            }}
+            style={{ marginBottom: lg ? 8 : 0 }}
           >
             <Flex gap={4} align="center" justify={lg ? 'flex-start' : 'center'}>
               <UserOutlined />
