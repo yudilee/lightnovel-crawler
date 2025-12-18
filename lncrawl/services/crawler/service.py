@@ -20,7 +20,8 @@ class CrawlerService:
         pass
 
     def get_crawler(self, user_id: str, novel_url: str):
-        crawler = ctx.sources.init_crawler(novel_url)
+        constructor = ctx.sources.get_crawler(novel_url)
+        crawler = ctx.sources.init_crawler(constructor)
         can_login = getattr(crawler, "can_login", False)
         logged_in = getattr(crawler, "__logged_in__", False)
         if can_login and not logged_in:
@@ -45,8 +46,10 @@ class CrawlerService:
         novel_url = url.encoded_string()
 
         # get crawler
+        can_close = False
         if crawler is None:
             crawler = self.get_crawler(user_id, novel_url)
+            can_close = True
         crawler_version = getattr(crawler, 'version')
         crawler.scraper.signal = signal
 
@@ -99,6 +102,10 @@ class CrawlerService:
         # update output path time
         ctx.files.utime(f'novels/{novel.id}')
 
+        # close crawler
+        if can_close:
+            crawler.close()
+
         return novel
 
     def fetch_chapter(
@@ -114,9 +121,11 @@ class CrawlerService:
             raise ServerErrors.invalid_url
 
         # get crawler
+        can_close = False
         if crawler is None:
             novel_url = ctx.novels.get(chapter.novel_id).url
             crawler = self.get_crawler(user_id, novel_url)
+            can_close = True
         crawler_version = getattr(crawler, 'version')
         crawler.scraper.signal = signal
 
@@ -148,6 +157,10 @@ class CrawlerService:
             sess.add(chapter)
             sess.commit()
 
+        # close crawler
+        if can_close:
+            crawler.close()
+
         return chapter
 
     def fetch_image(
@@ -163,9 +176,11 @@ class CrawlerService:
             raise ServerErrors.invalid_url
 
         # get crawler
+        can_close = False
         if crawler is None:
             novel_url = ctx.novels.get(image.novel_id).url
             crawler = self.get_crawler(user_id, novel_url)
+            can_close = True
         crawler_version = getattr(crawler, 'version')
         crawler.scraper.signal = signal
 
@@ -183,5 +198,9 @@ class CrawlerService:
             image.extra['crawler_version'] = crawler_version
             sess.add(image)
             sess.commit()
+
+        # close crawler
+        if can_close:
+            crawler.close()
 
         return image

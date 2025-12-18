@@ -1,8 +1,208 @@
+import logging
+from concurrent.futures import Future
+from difflib import SequenceMatcher
+from threading import Event
+from typing import List, Optional, Set, Type
+
+import questionary
 import typer
+from rich import print
+from slugify import slugify
 
-app = typer.Typer()
+from ..context import ctx
+from ..core.crawler import Crawler
+from ..core.taskman import TaskManager
+from ..models import CombinedSearchResult, SearchResult
+
+app = typer.Typer(
+    help='Search for novels across multiple sources.',
+)
+logger = logging.getLogger(__name__)
 
 
-@app.command(help='Search novels.')
-def search():
-    pass
+@app.command(help='Search for novels by query string.')
+def search(
+    source_queries: Optional[List[str]] = typer.Option(
+        None,
+        "-s", "--source",
+        help="Filter sources",
+    ),
+    concurrency: int = typer.Option(
+        15,
+        "-c", "--concurrency",
+        min=1,
+        max=25,
+        help="Maximum number of concurrent searches (default: 25)",
+    ),
+    limit: int = typer.Option(
+        10,
+        "-l", "--limit",
+        min=1,
+        max=25,
+        help="Maximum number of results to return",
+    ),
+    timeout: float = typer.Option(
+        30,
+        "-t", "--timeout",
+        min=1,
+        help="Maximum timeout for each search (default: 30 seconds)",
+    ),
+    query: Optional[str] = typer.Argument(
+        None,
+        help="Search query string",
+    ),
+):
+    """
+    Search for novels across multiple sources using the given query string.
+
+    Examples:
+        lncrawl search "solo leveling"
+        lncrawl search "overlord" --source "https://novelfull.com"
+        lncrawl search "reincarnation" --limit 20 --concurrency 10
+    """
+    # Prompt for query if not provided
+    if not query:
+        query = _prompt_query()
+
+    # Validate query
+    query = (query or '').strip()
+    if len(query.strip()) < 2:
+        print('[red]Search query must be at least 2 characters long[/red]')
+        raise typer.Exit(1)
+
+    # Get searchable crawlers
+    ctx.sources.load()
+    ctx.sources.ensure_load()
+    constructors = set([
+        ctx.sources.get_crawler(url)
+        for source in source_queries or [None]
+        for url, _ in ctx.sources.list(
+            query=source,
+            can_search=True
+        )
+    ])
+    if not constructors:
+        print('[red]No searchable sources available[/red]')
+        raise typer.Exit(1)
+
+    # Perform search
+    results = _perform_search(
+        query=query,
+        constructors=constructors,
+        concurrency=concurrency,
+        limit=limit,
+        timeout=timeout,
+    )
+    if not results:
+        print(f'[yellow]No results found for "{query}"[/yellow]')
+        return
+
+    # Print results
+    for result in results:
+        print(
+            f':book: [green bold]{result.title}[/green bold]',
+            f' ({len(result.novels)} results)',
+        )
+        for novel in result.novels:
+            print(f'  :right_arrow: [cyan]{novel.url}[/cyan]')
+            if novel.info:
+                print(f'    [dim]{novel.info}[/dim]')
+        print()
+
+
+def _prompt_query() -> str:
+    return questionary.text(
+        qmark="🔍",
+        message="Search query:",
+        validate=lambda x: True if x and len(x.strip()) >= 2 else "Search query must be at least 2 characters long"
+    ).unsafe_ask()
+
+
+def _perform_search(
+    query: str,
+    constructors: Set[Type[Crawler]],
+    limit: int,
+    concurrency: int,
+    timeout: float,
+) -> List[CombinedSearchResult]:
+    """Perform the actual search across sources."""
+    logger.info(f'Searching {len(constructors)} sources for "{query}"')
+    signal = Event()
+    taskman = TaskManager(concurrency, signal=signal)
+
+    # Submit search tasks
+    futures: List[Future[List[SearchResult]]] = []
+    for constructor in constructors:
+        future = taskman.submit_task(_search_job, constructor, query, signal)
+        futures.append(future)
+
+    # Wait for all tasks to finish with progress
+    records: List[SearchResult] = []
+    try:
+        for result_list in taskman.resolve_as_generator(
+            futures,
+            unit='source',
+            desc='Searching',
+            signal=signal,
+            timeout=timeout,
+        ):
+            records.extend(result_list or [])
+    except KeyboardInterrupt:
+        signal.set()
+    except Exception:
+        logger.error('Failed to perform search!', exc_info=ctx.logger.is_info)
+    finally:
+        signal.set()
+        taskman.shutdown()
+
+    # Combine the search results
+    combined: dict[str, List[SearchResult]] = {}
+    for item in records:
+        if not (item and item.title):
+            continue
+        key = slugify(str(item.title))
+        if len(key) <= 2:
+            continue
+        combined.setdefault(key, [])
+        combined[key].append(item)
+
+    # Process combined search results
+    results: List[CombinedSearchResult] = []
+    for key, value in combined.items():
+        value.sort(key=lambda x: x.url)
+        results.append(
+            CombinedSearchResult(
+                id=key,
+                title=value[0].title,
+                novels=value,
+            )
+        )
+
+    # Sort by relevance (number of sources, then similarity to query)
+    results.sort(
+        key=lambda x: (
+            -len(x.novels),
+            -SequenceMatcher(a=x.title, b=query).ratio(),
+        )
+    )
+
+    return results[:limit]
+
+
+def _search_job(constructor: Type[Crawler], query: str, signal: Event) -> List[SearchResult]:
+    url = constructor.home_url
+    logger.info(f'[green]{url}[/green] Searching...')
+    try:
+        crawler = ctx.sources.init_crawler(constructor)
+        crawler.scraper.signal = signal
+        crawler.can_use_browser = False
+        results = crawler.search_novel(query)
+        results = [SearchResult(**item) for item in results]
+        logger.info(f'[green]{url}[/green] Found {len(results)} results')
+        crawler.close()
+        return results
+    except KeyboardInterrupt:
+        raise
+    except Exception:
+        logger.info(f'[green]{url}[/green] Search failed', exc_info=ctx.logger.is_debug)
+    return []

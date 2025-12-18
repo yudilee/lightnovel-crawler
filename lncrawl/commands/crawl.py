@@ -75,7 +75,8 @@ def crawl(
 
     # init crawler
     try:
-        crawler = ctx.sources.init_crawler(url, disable_logger=False)
+        constructor = ctx.sources.get_crawler(url)
+        crawler = ctx.sources.init_crawler(constructor, disable_logger=False)
     except ServerError as e:
         print(f'[red]{e.format(True)}[/red]')
         return

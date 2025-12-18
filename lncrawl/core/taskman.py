@@ -173,6 +173,7 @@ class TaskManager(ABC):
         unit: Optional[str] = None,
         fail_fast: bool = False,
         signal: Optional[Event] = None,
+        timeout: Optional[float] = None,
     ) -> Generator[Optional[T], None, None]:
         """Create a generator output to resolve the futures.
 
@@ -199,15 +200,15 @@ class TaskManager(ABC):
             disable=disable_bar,
         )
         try:
-            for future in as_completed(futures):
+            for future in as_completed(futures, timeout):
                 if signal.is_set():
                     return  # canceled
                 if fail_fast:
-                    yield future.result()
+                    yield future.result(timeout)
                     bar.update()
                     continue
                 try:
-                    yield future.result()
+                    yield future.result(timeout)
                 except KeyboardInterrupt:
                     signal.set()
                     raise
@@ -239,6 +240,7 @@ class TaskManager(ABC):
         unit: Optional[str] = None,
         fail_fast: bool = False,
         signal: Optional[Event] = None,
+        timeout: Optional[float] = None,
     ):
         """Wait for the futures to be done.
 
@@ -259,16 +261,18 @@ class TaskManager(ABC):
                 unit=unit,
                 fail_fast=fail_fast,
                 signal=signal,
+                timeout=timeout,
             )
         )
 
     def as_completed(
-            self,
-            disable_bar: bool = False,
-            desc: Optional[str] = None,
-            unit: Optional[str] = None,
-            fail_fast: bool = False,
-            signal: Optional[Event] = None,
+        self,
+        disable_bar: bool = False,
+        desc: Optional[str] = None,
+        unit: Optional[str] = None,
+        fail_fast: bool = False,
+        signal: Optional[Event] = None,
+        timeout: Optional[float] = None,
     ):
         """Wait for the futures in this task manager to be done.
 
@@ -287,5 +291,6 @@ class TaskManager(ABC):
                 unit=unit,
                 fail_fast=fail_fast,
                 signal=signal,
+                timeout=timeout,
             )
         )

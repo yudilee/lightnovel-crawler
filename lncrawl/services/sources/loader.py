@@ -172,17 +172,19 @@ class SourceLoader:
         if host not in self.crawlers:
             raise ServerErrors.no_crawler.with_extra(host)
 
-        return self.crawlers[host]
+        constructor = self.crawlers[host]
+        constructor.home_url = url
+        return constructor
 
     def init_crawler(
         self,
-        url: str,
-        disable_logger=True,
+        constructor: Type[Crawler],
+        disable_logger=not ctx.logger.is_debug,
         workers: Optional[int] = None,
         parser: Optional[str] = None,
     ) -> Crawler:
+        url = constructor.home_url
         logger.debug(f"Creating crawler instance for {url}")
-        constructor = self.get_crawler(url)
 
         # disable logging
         if disable_logger:
