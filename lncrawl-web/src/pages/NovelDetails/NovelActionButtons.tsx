@@ -1,4 +1,3 @@
-import { MakeArtifactButton } from '@/components/ArtifactList/MakeArtifactButton';
 import { AddToLibraryButton } from '@/components/Library/AddToLibraryButton';
 import { Auth } from '@/store/_auth';
 import type { Job, Novel } from '@/types';
@@ -47,7 +46,6 @@ export const NovelActionButtons: React.FC<{ novel: Novel }> = ({ novel }) => {
         Refresh
       </Button>
       <AddToLibraryButton novelId={novel.id} />
-      <MakeArtifactButton novelId={novel.id} />
     </Flex>
   );
 };

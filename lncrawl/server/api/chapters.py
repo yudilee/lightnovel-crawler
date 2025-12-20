@@ -23,7 +23,7 @@ def fetch_chapter(
     user: User = Security(ensure_user),
     chapter_id: str = Path(),
 ) -> Job:
-    job = ctx.jobs.get_chapter_job(chapter_id)
+    job = ctx.jobs.get_chapter_job(user, chapter_id)
     if not job:
         job = ctx.jobs.fetch_chapter(user, chapter_id)
     return job

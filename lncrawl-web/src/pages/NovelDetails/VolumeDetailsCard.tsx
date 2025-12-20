@@ -126,7 +126,7 @@ export const VolumeDetailsCard: React.FC<{
             icon={<DownloadOutlined />}
             style={{ width: lg ? 115 : '100%' }}
           >
-            {lg ? 'Download' : 'Download all chapters'}
+            {lg ? 'Download' : 'Download this volume'}
           </Button>
         )}
       </Flex>

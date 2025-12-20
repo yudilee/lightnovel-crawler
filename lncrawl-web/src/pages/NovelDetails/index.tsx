@@ -81,7 +81,11 @@ export const NovelDetailsPage: React.FC<any> = () => {
       {contextHolder}
       <NovelDetailsCard novel={novel} showActions />
       <VolumeListCard novelId={novel.id} />
-      <ArtifactListCard artifacts={artifacts} />
+      <ArtifactListCard
+        artifacts={artifacts}
+        showMakeButton
+        novelId={novel.id}
+      />
     </Space>
   );
 };

@@ -55,7 +55,7 @@ export const ChapterListCard: React.FC<{
               <Button
                 size="small"
                 shape="round"
-                style={{ width: 75 }}
+                style={{ padding: '0 8px' }}
                 icon={<RightCircleOutlined />}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -63,13 +63,13 @@ export const ChapterListCard: React.FC<{
                   navigate(`/read/${chapter.id}`);
                 }}
               >
-                Read
+                {chapter.is_available ? 'Read' : 'Get & Read'}
               </Button>
             ) : (
               <Button
                 size="small"
                 shape="round"
-                style={{ width: 75 }}
+                style={{ padding: '0 8px' }}
                 icon={<DownloadOutlined />}
                 onClick={(e) => {
                   e.stopPropagation();

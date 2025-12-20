@@ -46,7 +46,7 @@ export const MakeArtifactButton: React.FC<{
       {contextHolder}
 
       <Button icon={<AppstoreAddOutlined />} onClick={() => setOpen(true)}>
-        Artifact
+        Make Artifact
       </Button>
 
       <Modal

@@ -9,13 +9,14 @@ import { stringifyError } from '@/utils/errors';
 import { formatFromNow } from '@/utils/time';
 import { Button, Flex, Result, Spin } from 'antd';
 import axios from 'axios';
+import { LRUCache } from 'lru-cache';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { ReaderVerticalLayout } from './ReaderLayoutVertical';
 
-const fetchJobs = new Map<string, Promise<Job>>();
-const cache = new Map<string, Promise<ReadChapter>>();
+const fetchJobs = new LRUCache<string, Promise<Job>>({ max: 1000 });
+const cache = new LRUCache<string, Promise<ReadChapter>>({ max: 1000 });
 
 async function fetchChapter(id: string) {
   const { data } = await axios.get<ReadChapter>(`/api/chapter/${id}/read`);
@@ -65,65 +66,32 @@ export const NovelReaderPage: React.FC<any> = () => {
   const [data, setData] = useState<ReadChapter>();
   const [job, setJob] = useState<Job>();
 
-  // get chapter content data
+  // current chapter content data
   useEffect(() => {
-    setJob(undefined);
-    setData(undefined);
-    setError(undefined);
-    if (id) {
-      setLoading(true);
-      if (fetchJobs.has(id)) {
-        cache.delete(id);
+    const fetchChapter = async (id: string) => {
+      setError(undefined);
+      try {
+        if (fetchJobs.has(id)) {
+          cache.delete(id);
+        } else {
+          setJob(undefined);
+        }
+        const data = await fetchChapterCached(id);
+        setData(data);
+      } catch (err) {
+        setError(stringifyError(err));
+      } finally {
+        setLoading(false);
       }
-      fetchChapterCached(id)
-        .then(setData)
-        .catch((err) => setError(stringifyError(err)))
-        .finally(() => setLoading(false));
+    };
+    if (id) {
+      fetchChapter(id);
+    } else {
+      setData(undefined);
+      setJob(undefined);
+      setError('No chapter ID in URL');
     }
   }, [id, token, refreshId]);
-
-  // get job details if auto fetch is enabled
-  useEffect(() => {
-    if (autoFetch && data && !data.chapter.is_done) {
-      setLoading(true);
-      createFetchJob(data.chapter.id)
-        .then(setJob)
-        .catch(console.error)
-        .finally(() => setLoading(false));
-    } else {
-      setJob(undefined);
-    }
-  }, [autoFetch, data]);
-
-  // auto refresh job status
-  useEffect(() => {
-    if (!job || !data || data.chapter.is_done) {
-      return;
-    }
-    if (job.is_done) {
-      cache.delete(data.chapter.id);
-      setRefreshId((v) => v + 1);
-    } else {
-      const iid = setInterval(() => {
-        axios
-          .get<Job>(`/api/job/${job.id}`)
-          .then((res) => setJob(res.data))
-          .catch(console.error);
-      }, 1000);
-      return () => clearInterval(iid);
-    }
-  }, [data, job]);
-
-  // preload next chapter
-  useEffect(() => {
-    if (data?.next_id) {
-      fetchChapterCached(data.next_id).then((next) => {
-        if (autoFetch && !next.chapter.is_done) {
-          createFetchJob(next.chapter.id);
-        }
-      });
-    }
-  }, [data?.next_id, autoFetch]);
 
   // preload previous chapter
   useEffect(() => {
@@ -136,13 +104,56 @@ export const NovelReaderPage: React.FC<any> = () => {
     }
   }, [data?.previous_id, autoFetch]);
 
+  // preload next chapter
   useEffect(() => {
-    if (!loading) {
-      store.dispatch(Reader.action.setSepakPosition(0));
-      if (!data?.content) {
-        store.dispatch(Reader.action.setSpeaking(false));
-      }
+    if (data?.next_id) {
+      fetchChapterCached(data.next_id).then((next) => {
+        if (autoFetch && !next.chapter.is_done) {
+          createFetchJob(next.chapter.id);
+        }
+      });
     }
+  }, [data?.next_id, autoFetch]);
+
+  // get job details if auto fetch is enabled
+  useEffect(() => {
+    if (autoFetch && data && !data.chapter.is_done) {
+      createFetchJob(data.chapter.id).then(setJob).catch(console.error);
+    } else {
+      setJob(undefined);
+    }
+  }, [autoFetch, data?.chapter.id, data?.chapter.is_done]);
+
+  // auto refresh job status
+  useEffect(() => {
+    if (!job?.id || !data?.chapter.id || data.chapter.is_done) {
+      return;
+    }
+    const id = data.chapter.id;
+    if (job.is_done) {
+      cache.delete(id);
+      setRefreshId((v) => v + 1);
+    } else {
+      const refreshJob = async () => {
+        try {
+          const { data } = await axios.get<Job>(`/api/job/${job.id}`);
+          fetchJobs.set(id, Promise.resolve(data));
+          setJob(data);
+        } catch {}
+      };
+      const iid = setInterval(refreshJob, 1000);
+      return () => clearInterval(iid);
+    }
+  }, [data?.chapter.id, data?.chapter.is_done, job?.is_done, job?.id]);
+
+  useEffect(() => {
+    if (!data) return;
+
+    store.dispatch(Reader.action.setSepakPosition(0));
+    if (data && !data.content && data.chapter.is_done) {
+      store.dispatch(Reader.action.setSpeaking(false));
+    }
+
     const fid = requestAnimationFrame(() => {
       const mainEl = document.querySelector('main');
       if (mainEl) {
@@ -150,7 +161,7 @@ export const NovelReaderPage: React.FC<any> = () => {
       }
     });
     return () => cancelAnimationFrame(fid);
-  }, [loading, data?.content]);
+  }, [data]);
 
   if (loading) {
     return (
@@ -168,7 +179,14 @@ export const NovelReaderPage: React.FC<any> = () => {
           title="Failed to load chapter content"
           subTitle={error}
           extra={[
-            <Button onClick={() => setRefreshId((v) => v + 1)}>Retry</Button>,
+            <Button
+              onClick={() => {
+                setLoading(true);
+                setRefreshId((v) => v + 1);
+              }}
+            >
+              Retry
+            </Button>,
           ]}
         />
       </Flex>

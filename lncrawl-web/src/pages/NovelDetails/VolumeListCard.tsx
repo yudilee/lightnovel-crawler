@@ -83,7 +83,7 @@ export const VolumeListCard: React.FC<{
           size="small"
           shape="round"
           type="primary"
-          style={{ width: 115 }}
+          style={{ padding: '0 12px' }}
           icon={<DownloadOutlined />}
           onClick={(e) =>
             createVolumeJob(
@@ -92,7 +92,7 @@ export const VolumeListCard: React.FC<{
             )
           }
         >
-          Download
+          Download All
         </Button>
       }
     >

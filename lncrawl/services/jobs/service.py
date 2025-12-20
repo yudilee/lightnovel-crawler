@@ -115,13 +115,14 @@ class JobService:
             stmt = sq.select(Job).where(Job.parent_job_id == parent_job_id)
             return sess.exec(stmt).all()
 
-    def get_chapter_job(self, chapter_id: str) -> Optional[Job]:
+    def get_chapter_job(self, user: User, chapter_id: str) -> Optional[Job]:
         with ctx.db.session() as sess:
             return sess.exec(
                 sq.select(Job)
                 .where(
+                    Job.user_id == user.id,
                     Job.type == JobType.CHAPTER,
-                    sq.col(Job.is_done).is_(False),
+                    sq.col(Job.parent_job_id).is_(None),
                     Job.extra["chapter_id"].as_string() == chapter_id,
                 )
                 .limit(1)
