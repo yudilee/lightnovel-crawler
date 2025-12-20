@@ -26,25 +26,24 @@ services:
 
   postgres:
     image: postgres:alpine
-    restart: unless-stopped
     environment:
       POSTGRES_USER: pguser
       POSTGRES_PASSWORD: pgpass
       POSTGRES_DB: lncrawl
     volumes:
       - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
     deploy:
       resources:
         limits:
-          cpus: '0.50'
-          memory: 512M
+          cpus: '2.00'
+          memory: 3G
         reservations:
-          cpus: '0.25'
-          memory: 256M
+          cpus: '1.00'
+          memory: 2G
 
   server:
     image: ghcr.io/dipu-bd/lightnovel-crawler:server
-    restart: unless-stopped
     ports:
       - "23457:8080"
     command: -ll server
@@ -55,19 +54,15 @@ services:
       - DATABASE_URL=postgresql+psycopg://pguser:pgpass@postgres:5432/lncrawl
     volumes:
       - ./appdata:/data
-    depends_on:
-      # - chrome
-      - postgres
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
     deploy:
       resources:
         limits:
-          cpus: '1.50'
-          memory: 3G
+          cpus: '3.50'
+          memory: 5G
         reservations:
-          cpus: '1.00'
-          memory: 1G
-  
+          cpus: '2.00'
+          memory: 3G
+
 volumes:
   pgdata:
