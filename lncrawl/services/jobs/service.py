@@ -127,6 +127,16 @@ class JobService:
                 .limit(1)
             ).first()
 
+    def get_root(self, job_id: str) -> Optional[Job]:
+        with ctx.db.session() as sess:
+            sa_pars = select_ancestors(job_id)
+            return sess.exec(
+                sq.select(Job)
+                .where(sq.col(Job.id).in_(sa_pars))
+                .where(sq.col(Job.parent_job_id).is_(None))
+                .limit(1)
+            ).first()
+
     # -------------------------------------------------------------------------
     #                              CANCEL Jobs
     # -------------------------------------------------------------------------
@@ -439,16 +449,6 @@ class JobService:
             sess.refresh(job)
             return job
 
-    def _get_root(self, job_id: str) -> Optional[Job]:
-        with ctx.db.session() as sess:
-            sa_pars = select_ancestors(job_id)
-            return sess.exec(
-                sq.select(Job)
-                .where(sq.col(Job.id).in_(sa_pars))
-                .where(sq.col(Job.parent_job_id).is_(None))
-                .limit(1)
-            ).first()
-
     def _pending(
         self,
         artifact: Optional[bool] = None,
@@ -595,7 +595,7 @@ class JobService:
         )
 
     def _is_dangling(self, job: Job) -> bool:
-        root = self._get_root(job.id)
+        root = self.get_root(job.id)
         if root and not root.is_done:
             return False
 

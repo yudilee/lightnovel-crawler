@@ -85,7 +85,7 @@ class MailService:
             return
 
         novel = ctx.novels.get(novel_id)
-        artifacts = ctx.artifacts.list(job_id=job.id)
+        artifacts = ctx.artifacts.list_latest(novel.id)
 
         base_url = ctx.config.server.base_url
         job_url = f'{base_url}/job/{job.id}'
@@ -99,10 +99,10 @@ class MailService:
         artifacts = [
             {
                 'format': str(item.format),
-                'size': format_size(item.file_size),
+                'size': format_size(item.file_size or 0),
                 'name': ctx.files.resolve(item.output_file).name,
                 'url': f'{base_url}/static/{item.output_file}?token={token}',
-            } for item in artifacts.items
+            } for item in artifacts
         ]
 
         if len(novel_synopsis) > 300:

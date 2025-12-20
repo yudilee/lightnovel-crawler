@@ -153,18 +153,21 @@ class Config(object):
             return
 
         if file.is_file():
-            self.config_file = None
-            self._data = self._defaults.copy()
+            try:
+                source = json.loads(file.read_text(encoding="utf-8"))
+                assert isinstance(source, dict)
 
-            source = json.loads(file.read_text(encoding="utf-8"))
-            assert isinstance(source, dict)
+                self.config_file = None
+                self._data = self._defaults.copy()
+                old_deprecated = source.pop('__deprecated__', {})
+                new_deprecated = _update(self._data, source)
+                _merge(new_deprecated, old_deprecated)
 
-            old_deprecated = source.pop('__deprecated__', {})
-            new_deprecated = _update(self._data, source)
-            _merge(new_deprecated, old_deprecated)
-
-            if new_deprecated:
-                self._data['__deprecated__'] = new_deprecated
+                if new_deprecated:
+                    self._data['__deprecated__'] = new_deprecated
+            except Exception:
+                logger.error(f'Failed to load config file: {file}', exc_info=True)
+                return
 
         self.config_file = file
         logger.info(f'Config file: {file}')

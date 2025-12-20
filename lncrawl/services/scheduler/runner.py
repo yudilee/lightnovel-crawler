@@ -2,7 +2,7 @@ import logging
 import traceback
 from functools import cached_property
 from threading import Event
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Dict, Iterable, Optional, Set
 
 from ...context import ctx
 from ...dao import (Artifact, Job, JobStatus, JobType, NotificationItem,
@@ -175,39 +175,66 @@ class JobRunner:
 
     def __send_mail(self):
         if self.job.parent_job_id:
-            return
+            parent = ctx.jobs.get_root(self.job.id)
+            if not parent:
+                return
+            runner = JobRunner(parent, self.signal)
+            runner.user = self.user
+            return runner.__send_mail()
+
         if not ctx.users.is_verified(self.user.email):
             return
+
+        alert_items: Set[NotificationItem] = set()
+        all_notificcations = set(NotificationItem)
         email_alerts = self.user.extra.get('email_alerts') or {}
-        alert_items = set([
-            NotificationItem(int(k))
-            for k, v in email_alerts.items()
-            if v and int(k) in list(NotificationItem)
-        ])
+        email_sent = set(self.job.extra.get('email_sent') or [])
+        for k, v in email_alerts.items():
+            if not v or v in email_sent:
+                continue
+            if int(k) not in all_notificcations:
+                continue
+            alert_items.add(NotificationItem(int(k)))
+
+        if not alert_items:
+            return
+
         if NotificationItem.JOB_SUCCESS in alert_items:
             if self.job.status == JobStatus.SUCCESS:
                 ctx.mail.send_job_report(self.user, self.job)
+                email_sent.add(NotificationItem.JOB_SUCCESS.value)
+
         if NotificationItem.JOB_RUNNING in alert_items:
             if self.job.status == JobStatus.RUNNING:
                 ctx.mail.send_job_report(self.user, self.job)
+                email_sent.add(NotificationItem.JOB_RUNNING.value)
+
         if NotificationItem.JOB_CANCELED in alert_items:
             if self.job.status == JobStatus.CANCELED:
                 ctx.mail.send_job_report(self.user, self.job)
+                email_sent.add(NotificationItem.JOB_CANCELED.value)
+
         if NotificationItem.JOB_FAILURE in alert_items:
             if self.job.status == JobStatus.FAILED:
                 ctx.mail.send_job_report(self.user, self.job)
+                email_sent.add(NotificationItem.JOB_FAILURE.value)
+
         if NotificationItem.NOVEL_SUCCESS in alert_items:
             if self.job.status == JobStatus.SUCCESS and (
                 self.job.type == JobType.FULL_NOVEL
                 or self.job.type == JobType.NOVEL
             ):
                 ctx.mail.send_full_novel_job_success(self.user, self.job)
+                email_sent.add(NotificationItem.NOVEL_SUCCESS.value)
         if NotificationItem.ARTIFACT_SUCCESS in alert_items:
             if self.job.status == JobStatus.SUCCESS and (
                 self.job.type == JobType.ARTIFACT
                 or self.job.type == JobType.ARTIFACT_BATCH
             ):
                 ctx.mail.send_full_novel_job_success(self.user, self.job)
+                email_sent.add(NotificationItem.ARTIFACT_SUCCESS.value)
+
+        self.__set_extra(email_sent=list(email_sent))
 
     # ------------------------------------------------------------------ #
     #                             Job Runners                            #
