@@ -11,16 +11,10 @@ import { useNavigate } from 'react-router-dom';
 export const LibraryCard: React.FC<{ library: Library }> = ({ library }) => {
   const navigate = useNavigate();
   const user = useSelector(Auth.select.user);
-  const isAdmin = useSelector(Auth.select.isAdmin);
 
   const gradientBackground = useMemo(
     () => getGradientForId(library.id),
     [library.id]
-  );
-
-  const isOwner = useMemo(
-    () => isAdmin || library.user_id === user?.id,
-    [library.user_id, isAdmin, user?.id]
   );
 
   return (
@@ -96,7 +90,7 @@ export const LibraryCard: React.FC<{ library: Library }> = ({ library }) => {
             <UserOutlined style={{ fontSize: 14 }} />
             <Typography.Text style={{ fontSize: 14 }}>
               {library.extra.owner_name || 'Unknown'}
-              {isOwner ? ' (you)' : ''}
+              {library.user_id === user?.id ? ' (you)' : ''}
             </Typography.Text>
           </Space>
           <Divider type="vertical" />
