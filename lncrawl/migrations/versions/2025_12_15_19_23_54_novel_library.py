@@ -41,6 +41,7 @@ def upgrade() -> None:
     op.create_index(op.f("ix_libraries_created_at"), "libraries", ["created_at"], unique=False)
     op.create_index(op.f("ix_libraries_updated_at"), "libraries", ["updated_at"], unique=False)
     op.create_index(op.f("ix_libraries_user_id"), "libraries", ["user_id"], unique=False)
+    op.create_index(op.f("ix_libraries_name"), "libraries", ["name"], unique=False)
     op.create_table(
         "library_novels",
         sa.Column("library_id", AutoString(), nullable=False),
@@ -63,6 +64,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Downgrade schema."""
     op.drop_table("library_novels")
+    op.drop_index(op.f("ix_libraries_name"), table_name="libraries")
     op.drop_index(op.f("ix_libraries_user_id"), table_name="libraries")
     op.drop_index(op.f("ix_libraries_updated_at"), table_name="libraries")
     op.drop_index(op.f("ix_libraries_created_at"), table_name="libraries")

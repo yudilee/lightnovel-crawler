@@ -138,50 +138,6 @@ class JobService:
             ).first()
 
     # -------------------------------------------------------------------------
-    #                              CANCEL Jobs
-    # -------------------------------------------------------------------------
-
-    def cancel(self, job_id: str, who: str = 'admin') -> None:
-        with ctx.db.session() as sess:
-            self._cancel_down(sess, job_id, True)
-            self._success(sess, job_id)
-            self._update(
-                sess,
-                job_id,
-                error=f'Canceled by {who}',
-                status=job_canceled_literal,
-            )
-            sess.commit()
-
-    # -------------------------------------------------------------------------
-    #                              DELETE Jobs
-    # -------------------------------------------------------------------------
-    def delete(self, job_id: str) -> None:
-        with ctx.db.session() as sess:
-            result = sess.exec(
-                sq.select(Job.done, Job.total)
-                .where(Job.id == job_id)
-            ).first()
-            if not result:
-                return
-            done, total = result
-
-            self._update_up(
-                sess,
-                job_id=job_id,
-                done=Job.done - done,
-                total=Job.total - total,
-            )
-
-            sa_deps = select_descendends(job_id, True)
-            sess.exec(
-                sq.delete(Job)
-                .where(sq.col(Job.id).in_(sa_deps))
-            )
-
-            sess.commit()
-
-    # -------------------------------------------------------------------------
     #                              CREATE Jobs
     # -------------------------------------------------------------------------
     def fetch_novel(
@@ -418,6 +374,55 @@ class JobService:
         )
 
     # -------------------------------------------------------------------------
+    #                              DELETE Jobs
+    # -------------------------------------------------------------------------
+    def delete(self, job_id: str) -> None:
+        with ctx.db.session() as sess:
+            result = sess.exec(
+                sq.select(Job.done, Job.total, Job.failed)
+                .where(Job.id == job_id)
+            ).first()
+            if not result:
+                return
+            done, total, failed = result
+
+            self._update_up(
+                sess,
+                job_id=job_id,
+                done=Job.done - done,
+                total=Job.total - total,
+                failed=Job.failed - failed,
+            )
+
+            sa_deps = select_descendends(job_id, True)
+            sess.exec(
+                sq.delete(Job)
+                .where(sq.col(Job.id).in_(sa_deps))
+            )
+
+            sess.commit()
+
+    # -------------------------------------------------------------------------
+    #                              CANCEL Jobs
+    # -------------------------------------------------------------------------
+
+    def cancel(self, job_id: str, who: str = 'admin') -> None:
+        with ctx.db.session() as sess:
+            self._cancel_down(sess, job_id, True)
+            self._fail(
+                sess,
+                job_id,
+                reason=f'Canceled as the parent job was canceled by {who}',
+            )
+            self._update(
+                sess,
+                job_id,
+                error=f'Canceled by {who}',
+                status=job_canceled_literal,
+            )
+            sess.commit()
+
+    # -------------------------------------------------------------------------
     #                            Internal Methods
     # -------------------------------------------------------------------------
     def _create(
@@ -509,12 +514,14 @@ class JobService:
         job_id: str,
         done=Job.done,
         total=Job.total,
+        failed=Job.failed,
         inclusive: bool = False,
     ) -> None:
         now = current_timestamp()
 
         sa_done = done
         sa_total = total
+        sa_failed = failed
         sa_is_done = sa_done == sa_total
 
         sa_status = sq.case(
@@ -544,6 +551,7 @@ class JobService:
             .values(
                 done=sa_done,
                 total=sa_total,
+                failed=sa_failed,
                 status=sa_status,
                 is_done=sa_is_done,
                 started_at=sa_started_at,
@@ -577,16 +585,25 @@ class JobService:
             done=Job.done + step,
         )
 
-    def _success(self, sess: Session, job_id: str) -> None:
-        pending = sess.exec(
+    def _count_pending(self, sess: Session, job_id: str) -> int:
+        return sess.exec(
             sq.select(Job.total - Job.done)
             .where(Job.id == job_id)
         ).one()
+
+    def _success(self, sess: Session, job_id: str) -> None:
+        pending = self._count_pending(sess, job_id)
         self._increment_up(sess, job_id, pending)
 
     def _fail(self, sess: Session, job_id: str, reason: str) -> None:
-        self._cancel_down(sess, job_id)
-        self._success(sess, job_id)
+        pending = self._count_pending(sess, job_id)
+        self._update_up(
+            sess,
+            job_id=job_id,
+            inclusive=True,
+            done=Job.done + pending,
+            failed=Job.failed + pending,
+        )
         self._update(
             sess,
             job_id,

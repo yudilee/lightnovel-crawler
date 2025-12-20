@@ -1,4 +1,5 @@
 import { JobEtaTimeTag } from '@/components/Tags/JobEtaTimeTag';
+import { JobFailCountTag } from '@/components/Tags/JobFailCountTag';
 import { JobPriorityTag } from '@/components/Tags/JobPriorityTag';
 import { JobStatusTag } from '@/components/Tags/JobStatusTag';
 import { JobTypeTag } from '@/components/Tags/JobTypeTag';
@@ -37,6 +38,7 @@ export const JobDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
 
       <Flex wrap gap={4} style={{ marginTop: 5 }}>
         <JobStatusTag job={job} />
+        <JobFailCountTag job={job} />
         {!job.is_pending && (
           <Tag icon={<ClockCircleOutlined />} color="default">
             <b>Started:</b> {formatDate(job.started_at)}

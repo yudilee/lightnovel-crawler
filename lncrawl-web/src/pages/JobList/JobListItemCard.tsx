@@ -1,3 +1,4 @@
+import { JobFailCountTag } from '@/components/Tags/JobFailCountTag';
 import { JobStatusTag } from '@/components/Tags/JobStatusTag';
 import { JobTypeTag } from '@/components/Tags/JobTypeTag';
 import { type Job } from '@/types';
@@ -38,6 +39,7 @@ export const JobListItemCard: React.FC<{
 
             <Space wrap style={{ marginTop: 5 }}>
               <JobStatusTag job={job} />
+              <JobFailCountTag job={job} short />
               <JobTypeTag value={job.type} />
               <Tag icon={<ClockCircleOutlined />} color="default">
                 {formatDate(job.created_at)}

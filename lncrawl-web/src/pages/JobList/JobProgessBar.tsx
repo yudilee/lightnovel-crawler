@@ -20,6 +20,7 @@ export const JobProgressCircle: React.FC<
     job: Job;
   } & ProgressProps
 > = ({ job, ...props }) => {
+  const { token } = theme.useToken();
   return (
     <Progress
       size="small"
@@ -27,6 +28,7 @@ export const JobProgressCircle: React.FC<
       type="circle"
       percent={job.progress || 0}
       status={getProgressStatus(job)}
+      strokeColor={job.failed > 0 ? token.colorError : token.colorSuccess}
     />
   );
 };

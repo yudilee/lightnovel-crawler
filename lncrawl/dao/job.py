@@ -67,7 +67,11 @@ class Job(BaseTable, table=True):
 
     done: int = sa.Field(
         default=0,
-        description="Currently completed items"
+        description="Total completed items"
+    )
+    failed: int = sa.Field(
+        default=0,
+        description="Total failed items"
     )
     total: int = sa.Field(
         default=1,

@@ -59,6 +59,7 @@ export interface Job extends _Base {
   finished_at?: number;
 
   done: number;
+  failed: number;
   total: number;
   progress: number;
   job_title?: string;
