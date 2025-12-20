@@ -131,20 +131,8 @@ class Config(object):
         return ServerConfig(self)
 
     @cached_property
-    def cloud(self):
-        return CloudConfig(self)
-
-    @cached_property
     def mail(self):
         return MailConfig(self)
-
-    @cached_property
-    def discord(self):
-        return DiscordConfig(self)
-
-    @cached_property
-    def telegram(self):
-        return TelegramConfig(self)
 
     # -------------------------------------------------------------- #
 
@@ -423,51 +411,6 @@ class ServerConfig(_Section):
     @token_expiry.setter
     def token_expiry(self, v: int) -> None:
         self._set("token_expiry_minutes", v)
-
-
-# ------------------------------------------------------------------ #
-#                         Third Party Section                        #
-# ------------------------------------------------------------------ #
-class CloudConfig(_Section):
-    section = "cloud"
-
-    @property
-    def store(self) -> str:
-        return self._get("store", "ANONFILES")
-
-    @store.setter
-    def store(self, v: str) -> None:
-        self._set("store", v)
-
-
-# ------------------------------------------------------------------ #
-#                          Discord Section                           #
-# ------------------------------------------------------------------ #
-class DiscordConfig(_Section):
-    section = "discord"
-
-    @property
-    def token(self) -> str:
-        return self._get("token", "")
-
-    @token.setter
-    def token(self, v: str) -> None:
-        self._set("token", v)
-
-
-# ------------------------------------------------------------------ #
-#                          Telegram Section                          #
-# ------------------------------------------------------------------ #
-class TelegramConfig(_Section):
-    section = "telegram"
-
-    @property
-    def token(self) -> str:
-        return self._get("token", "")
-
-    @token.setter
-    def token(self, v: str) -> None:
-        self._set("token", v)
 
 
 # ------------------------------------------------------------------ #
