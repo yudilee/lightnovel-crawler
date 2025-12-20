@@ -90,13 +90,12 @@ def _update(target: dict, source: dict) -> dict:
     deprecated = {}
     for key, value in source.items():
         if key in target:
-            target_value = target[key]
-            if isinstance(target_value, dict) and isinstance(value, dict):
-                inner = _update(target_value, value)
+            if isinstance(target[key], dict) and isinstance(value, dict):
+                inner = _update(target[key], value)
                 if inner:
                     deprecated[key] = inner
-            elif isinstance(value, type(target_value)):
-                target_value = value
+            elif type(value) is type(target[key]):
+                target[key] = value
             else:
                 deprecated[key] = value
         else:
@@ -160,24 +159,27 @@ class Config(object):
         env_file = os.getenv('LNCRAWL_CONFIG')
         if not file and env_file:
             file = Path(env_file)
+
         file = file or DEFAULT_CONFIG_FILE
         if file == self.config_file:
             return
 
-        self.config_file = file
-        logger.info(f'Config file: {file}')
-
         if file.is_file():
+            self.config_file = None
+            self._data = self._defaults.copy()
+
             source = json.loads(file.read_text(encoding="utf-8"))
             assert isinstance(source, dict)
 
-            self._data = self._defaults.copy()
             old_deprecated = source.pop('__deprecated__', {})
             new_deprecated = _update(self._data, source)
             _merge(new_deprecated, old_deprecated)
 
             if new_deprecated:
                 self._data['__deprecated__'] = new_deprecated
+
+        self.config_file = file
+        logger.info(f'Config file: {file}')
 
         self.save()
 
