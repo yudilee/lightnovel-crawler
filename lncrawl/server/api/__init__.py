@@ -97,3 +97,8 @@ router.include_router(
     tags=['Admin'],
     dependencies=[Depends(ensure_admin)],
 )
+
+
+@router.api_route("/ping", methods=["GET", "HEAD", "OPTIONS"], include_in_schema=False)
+def ping() -> str:
+    return "pong"

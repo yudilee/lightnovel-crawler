@@ -41,9 +41,10 @@ class Cleaner:
             try:
                 size = folder_size(folder)
                 current_size -= size
-                shutil.rmtree(folder, ignore_errors=True)
+                for file in folder.iterdir():
+                    if file.is_dir():
+                        shutil.rmtree(file, ignore_errors=True)
                 logger.info(f'Deleted novel: {folder.name} [{format_size(size)}]')
-                ctx.novels.delete(folder.name)
             except Exception:
                 current_size = folder_size(ctx.config.app.output_path)
                 logger.info(f'Error removing: {folder.name}', exc_info=True)
