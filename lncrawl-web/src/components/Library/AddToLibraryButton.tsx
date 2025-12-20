@@ -45,6 +45,7 @@ export const AddToLibraryButton: React.FC<Props> = ({
         open={open}
         footer={null}
         onCancel={handleCancel}
+        destroyOnHidden
       >
         {view === 'selection' ? (
           <LibrarySelectionView

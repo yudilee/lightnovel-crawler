@@ -14,19 +14,6 @@ interface Props {
   onSuccess: () => void;
 }
 
-const _cache = new Map<string, Promise<LibraryItem[]>>();
-
-function fetchAll(userId: string): Promise<LibraryItem[]> {
-  if (_cache.has(userId)) {
-    return _cache.get(userId)!;
-  }
-  const result = axios
-    .get<LibraryItem[]>('/api/library/my/list')
-    .then((resp) => resp.data);
-  _cache.set(userId, result);
-  return result;
-}
-
 export const LibrarySelectionView: React.FC<Props> = ({
   novelId,
   onCreateNew,
@@ -43,8 +30,9 @@ export const LibrarySelectionView: React.FC<Props> = ({
   useEffect(() => {
     if (user?.id) {
       setLoading(true);
-      fetchAll(user.id)
-        .then(setLibraries)
+      axios
+        .get<LibraryItem[]>('/api/library/my/list')
+        .then((resp) => setLibraries(resp.data))
         .catch((err) => setError(stringifyError(err)))
         .finally(() => setLoading(false));
     } else {
