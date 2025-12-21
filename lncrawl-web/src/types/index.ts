@@ -177,6 +177,7 @@ export interface SourceItem {
   can_login: boolean;
   total_commits: number;
   contributors: string[];
+  total_novels: number;
 }
 
 export interface ReadHistory extends Record<string, boolean> {}

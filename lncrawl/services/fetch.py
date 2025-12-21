@@ -1,14 +1,14 @@
 import hashlib
 import logging
 import os
+import shutil
 import time
 from pathlib import Path
-from typing import Dict, Optional
 
 import httpx
 
+from ..assets.images import favicon_icon
 from ..context import ctx
-from ..exceptions import ServerErrors
 from ..utils.platforms import Platform
 from ..utils.url_tools import extract_base
 
@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 class FetchService:
     def __init__(self) -> None:
-        self._favicons: Dict[str, Optional[Path]] = {}
         pass
 
     def _client(self):
@@ -51,21 +50,15 @@ class FetchService:
     def favicon(self, url: str) -> Path:
         favicon_url = f'{extract_base(url)}favicon.ico'
 
-        if favicon_url in self._favicons:
-            cache = self._favicons[favicon_url]
-            if not cache:
-                raise ServerErrors.invalid_image_response
-            return cache
+        filename = hashlib.md5(favicon_url.encode()).hexdigest()
+        out_file = ctx.files.resolve(f'/images/{filename}.ico')
+        if out_file.is_file():
+            return out_file
 
         try:
-            filename = hashlib.md5(favicon_url.encode()).hexdigest()
-            out_file = ctx.files.resolve(f'/images/{filename}.ico')
-            self._favicons[favicon_url] = out_file
-            if out_file.is_file():
-                return out_file
-
             self.download(favicon_url, out_file)
-            return out_file
-        except Exception as e:
-            self._favicons[favicon_url] = None
-            raise ServerErrors.invalid_image_response from e
+        except Exception:
+            logger.warning(f'Failed to download favicon {url}. Using the default one.')
+            shutil.copy(favicon_icon(), out_file)
+
+        return out_file

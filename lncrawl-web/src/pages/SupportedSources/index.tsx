@@ -3,8 +3,8 @@ import { LoadingState } from '@/components/Loading/LoadingState';
 import { Auth } from '@/store/_auth';
 import { stringifyError } from '@/utils/errors';
 import { formatDate, parseDate } from '@/utils/time';
-import { ReloadOutlined } from '@ant-design/icons';
-import { Button, message, Space, Tabs, Typography } from 'antd';
+import { FileDoneOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Button, Divider, Flex, message, Tabs, Typography } from 'antd';
 import axios from 'axios';
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
@@ -30,66 +30,57 @@ export const SupportedSourcesPage: React.FC<any> = () => {
     }
   };
 
-  if (loading) {
-    return <LoadingState />;
-  }
-
-  if (error) {
-    return (
-      <ErrorState
-        error={error}
-        title="Failed to load novel list"
-        onRetry={refresh}
-      />
-    );
-  }
   return (
     <>
       {contextHolder}
-      <Tabs
-        defaultActiveKey="active"
-        style={{ padding: 15 }}
-        tabBarGutter={20}
-        tabBarExtraContent={
-          isAdmin && (
-            <Button
-              shape="round"
-              type="primary"
-              icon={<ReloadOutlined />}
-              onClick={handleUpdateSources}
-            >
-              Update Sources
-            </Button>
-          )
-        }
-      >
-        <Tabs.TabPane
-          key="active"
-          tab={
-            <Space>
-              <Typography.Text strong>Active Sources</Typography.Text>
-              <small>
-                <code>{active.length}</code>
-              </small>
-            </Space>
-          }
-        >
-          <SupportedSourceList sources={active} />
-        </Tabs.TabPane>
-        <Tabs.TabPane
-          key="disabled"
-          tab={
-            <Space>
-              <Typography.Text strong>Disabled Sources</Typography.Text>
-              <small>
-                <code>{disabled.length}</code>
-              </small>
-            </Space>
-          }
-        >
-          <SupportedSourceList sources={disabled} disabled />
-        </Tabs.TabPane>
-      </Tabs>
+
+      <Flex align="center" justify="space-between" gap="8px" wrap>
+        <Typography.Title level={2}>
+          <FileDoneOutlined style={{ color: '#0f0' }} /> Supported Sources
+        </Typography.Title>
+        {isAdmin && (
+          <Button
+            shape="round"
+            type="primary"
+            icon={<ReloadOutlined />}
+            onClick={handleUpdateSources}
+          >
+            Update Sources
+          </Button>
+        )}
+      </Flex>
+
+      <Divider size="small" />
+
+      {loading ? (
+        <LoadingState />
+      ) : error ? (
+        <ErrorState
+          error={error}
+          title="Failed to load supported sources"
+          onRetry={refresh}
+        />
+      ) : (
+        <Tabs
+          defaultActiveKey="active"
+          tabBarGutter={20}
+          size="large"
+          destroyOnHidden
+          tabBarStyle={{ fontSize: 16, padding: '0 10px' }}
+          items={[
+            {
+              key: 'active',
+              label: 'Active Sources',
+              children: <SupportedSourceList sources={active} />,
+            },
+            {
+              key: 'disabled',
+              label: 'Disabled Sources',
+              children: <SupportedSourceList sources={disabled} disabled />,
+            },
+          ]}
+        />
+      )}
     </>
   );
 };

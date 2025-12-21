@@ -36,7 +36,7 @@ export const NovelListPage: React.FC<any> = () => {
 
   return (
     <>
-      <Typography.Title level={2}>📚 Available Novels</Typography.Title>
+      <Typography.Title level={2}>📚 All Novels</Typography.Title>
 
       <Divider size="small" />
 

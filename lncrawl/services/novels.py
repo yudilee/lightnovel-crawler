@@ -6,8 +6,7 @@ import sqlmodel as sa
 from ..context import ctx
 from ..dao import Novel
 from ..exceptions import ServerErrors
-from ..server.models import Paginated
-from ..services.sources.dto import SourceItem
+from ..server.models import Paginated, SourceItem
 
 
 class NovelService:
@@ -57,9 +56,17 @@ class NovelService:
 
     def list_sources(self) -> Generator[SourceItem, None, None]:
         with ctx.db.session() as sess:
-            domains = sess.scalars(sa.select(sa.func.distinct(Novel.domain)))
-            for domain in domains:
-                yield from ctx.sources.list(domain)
+            domains = sess.exec(
+                sa.select(
+                    Novel.domain,
+                    sa.func.count(sa.col(Novel.id)).label('total_novels')
+                )
+                .group_by(Novel.domain)
+            ).all()
+            for domain, total_novels in domains:
+                for source in ctx.sources.list(domain):
+                    source.total_novels = total_novels
+                    yield source
 
     def get(self, novel_id: str) -> Novel:
         with ctx.db.session() as sess:

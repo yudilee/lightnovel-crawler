@@ -27,7 +27,7 @@ class JobRunner:
                 if not job:
                     return
                 if job.parent_job_id:
-                    if ctx.jobs._is_dangling(job):
+                    if ctx.jobs.cancel_if_dangling(job):
                         logger.debug(f'Dangling job [b]{job.id}[/b] | {job.job_title}')
                         return
                 _queue[job.id] = Event()

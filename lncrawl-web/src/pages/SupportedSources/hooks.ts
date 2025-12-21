@@ -15,7 +15,7 @@ export function useSupportedSources() {
     try {
       setError(undefined);
       const res = await axios.get<SourceItem[]>('/api/meta/supported-sources');
-      setData(res.data);
+      setData(res.data.sort((a, b) => a.domain.localeCompare(b.domain)));
     } catch (err) {
       setError(stringifyError(err));
     } finally {
@@ -23,8 +23,27 @@ export function useSupportedSources() {
     }
   };
 
+  const fetchNovelSources = async () => {
+    try {
+      const res = await axios.get<SourceItem[]>('/api/novel/sources');
+      const novelSources = new Map<string, number>();
+      for (const source of res.data) {
+        novelSources.set(source.domain, source.total_novels);
+      }
+      setData((prev) =>
+        prev.map((source) => ({
+          ...source,
+          total_novels: novelSources.get(source.domain) ?? 0,
+        }))
+      );
+    } catch (err) {
+      console.error(stringifyError(err));
+    }
+  };
+
   useEffect(() => {
     fetchSupportedSources();
+    fetchNovelSources();
   }, [refreshId]);
 
   const refresh = useCallback(() => {

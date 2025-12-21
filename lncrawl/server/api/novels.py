@@ -2,11 +2,9 @@ from typing import List
 
 from fastapi import APIRouter, Depends, Path, Query
 
-from lncrawl.services.sources.dto import SourceItem
-
 from ...context import ctx
 from ...dao import Artifact, Chapter, Novel, Volume
-from ..models import Paginated
+from ..models import Paginated, SourceItem
 from ..security import ensure_admin
 
 # The root router

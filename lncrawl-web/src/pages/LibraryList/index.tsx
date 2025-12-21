@@ -1,10 +1,10 @@
 import { Auth } from '@/store/_auth';
 import {
-  FolderOpenOutlined,
+  FolderOpenTwoTone,
   GlobalOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Flex, Space, Tabs, Typography } from 'antd';
+import { Divider, Flex, Space, Tabs, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -27,13 +27,15 @@ export const LibraryListPage: React.FC = () => {
   }, [isAdmin, navigate]);
 
   return (
-    <Space size="large" direction="vertical" style={{ width: '100%' }}>
-      <Flex wrap align="center" justify="space-between">
-        <Typography.Title level={2} style={{ margin: 0 }}>
-          <FolderOpenOutlined /> Libraries
+    <>
+      <Flex wrap align="baseline" justify="space-between">
+        <Typography.Title level={2}>
+          <FolderOpenTwoTone /> Libraries
         </Typography.Title>
         <CreateLibraryButton onSuccess={() => setRefresh((v) => v + 1)} />
       </Flex>
+
+      <Divider size="small" />
 
       {isAdmin ? (
         <LibraryList type={'all'} refreshId={refresh} />
@@ -69,6 +71,6 @@ export const LibraryListPage: React.FC = () => {
           ]}
         />
       )}
-    </Space>
+    </>
   );
 };

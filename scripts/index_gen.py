@@ -25,7 +25,7 @@ try:
     from lncrawl.assets.languages import language_codes
     from lncrawl.context import ctx
     from lncrawl.core.taskman import TaskManager
-    from lncrawl.services.sources.dto import CrawlerInfo
+    from lncrawl.server.models import CrawlerInfo
 except ImportError:
     raise
 

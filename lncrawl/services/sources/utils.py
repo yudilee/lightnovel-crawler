@@ -10,8 +10,8 @@ from typing import Generator, Type
 
 from ...context import ctx
 from ...core.crawler import Crawler
+from ...server.models import CrawlerIndex, CrawlerInfo
 from ...utils.url_tools import validate_url
-from .dto import CrawlerIndex, CrawlerInfo
 
 logger = logging.getLogger(__name__)
 
@@ -158,8 +158,11 @@ def import_crawlers(file: Path) -> Generator[Type[Crawler], None, None]:
 def create_crawler_info(crawler: Type[Crawler]):
     root = ctx.config.crawler.local_sources.parent
     file = Path(getattr(crawler, '__file__'))
+    file_path = file.relative_to(root).as_posix()
+    language = file_path.split("/")[1]
     return CrawlerInfo(
-        file_path=file.relative_to(root).as_posix(),
+        language=language,
+        file_path=file_path,
         id=getattr(crawler, '__id__'),
         md5=getattr(crawler, '__module__'),
         version=int(getattr(crawler, 'version')),

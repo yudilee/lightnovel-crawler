@@ -7,11 +7,11 @@ from ...context import ctx
 from ...core.crawler import Crawler
 from ...core.taskman import TaskManager
 from ...exceptions import ServerErrors
+from ...server.models import CrawlerIndex, CrawlerInfo, SourceItem
 from ...utils.fts_store import FTSStore
 from ...utils.text_tools import normalize
 from ...utils.url_tools import extract_base, extract_host, normalize_url
 from . import utils
-from .dto import CrawlerIndex, CrawlerInfo, SourceItem
 
 logger = logging.getLogger(__name__)
 
@@ -214,6 +214,7 @@ class Sources:
                     if query in normalize(url)
                 ] or info.base_urls
 
+            language = info.file_path.split("/")[1]
             for url in urls:
                 domain = extract_host(url)
                 is_disabled = domain in self.rejected
@@ -223,10 +224,10 @@ class Sources:
                 item = SourceItem(
                     url=url,
                     domain=domain,
+                    language=language,
                     version=info.version,
                     has_manga=info.has_manga,
                     has_mtl=info.has_mtl,
-                    language=crawler.language,
                     is_disabled=is_disabled,
                     disable_reason=self.rejected.get(domain, 'No reason provided'),
                     can_search=info.can_search,

@@ -4,12 +4,18 @@ from .job import (FetchChaptersRequest, FetchImagesRequest, FetchNovelRequest,
 from .library import LibraryCreateRequest, LibraryItem, LibraryUpdateRequest
 from .novel import ReadChapterResponse
 from .pagination import Paginated
+from .sources import AppInfo, CrawlerIndex, CrawlerInfo, SourceItem
 from .user import (CreateRequest, ForgotPasswordRequest, LoginRequest,
                    LoginResponse, NameUpdateRequest, PasswordUpdateRequest,
                    PutNotificationRequest, ResetPasswordRequest, SignupRequest,
                    TokenResponse, UpdateRequest)
 
 __all__ = [
+    # sources
+    "AppInfo",
+    "CrawlerInfo",
+    "CrawlerIndex",
+    "SourceItem",
     # crawler
     "LoginData",
     # job

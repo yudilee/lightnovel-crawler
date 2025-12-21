@@ -30,9 +30,9 @@ const icons = [
   },
 ];
 
-export const SourceFeatureIcons: React.FC<{ source: SourceItem }> = ({
-  source,
-}) => (
+export const SourceFeatureIcons: React.FC<{
+  source: SourceItem;
+}> = ({ source }) => (
   <>
     {icons.map(
       ({ key, icon, label }) =>
