@@ -20,6 +20,7 @@ export const ReaderSettingsButton: React.FC<
         <Modal
           closable
           centered
+          width={600}
           open={open}
           footer={null}
           destroyOnHidden
@@ -29,10 +30,6 @@ export const ReaderSettingsButton: React.FC<
             header: {
               paddingBottom: 10,
               background: 'transparent',
-            },
-            content: {
-              padding: 20,
-              background: '#1f1f1fef',
             },
           }}
         >
@@ -48,13 +45,6 @@ export const ReaderSettingsButton: React.FC<
           styles={{
             body: {
               padding: 5,
-            },
-            mask: {
-              background: '#1f1f1f1f',
-            },
-            content: {
-              position: 'relative',
-              background: '#1f1f1fef',
             },
           }}
         >

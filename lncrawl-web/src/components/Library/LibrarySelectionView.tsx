@@ -70,7 +70,9 @@ export const LibrarySelectionView: React.FC<Props> = ({
           allowClear
           size="large"
           value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setSearchValue(e.target.value)
+          }
           placeholder="Search libraries..."
         />
 
