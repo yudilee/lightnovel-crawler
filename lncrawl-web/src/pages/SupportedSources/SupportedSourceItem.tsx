@@ -1,12 +1,12 @@
 import { Favicon } from '@/components/Favicon';
-import type { SupportedSource } from '@/types';
+import type { SourceItem } from '@/types';
 import { FlagFilled, GlobalOutlined, StopOutlined } from '@ant-design/icons';
 import { Card, Flex, Tag, Typography } from 'antd';
 import { useInView } from 'react-intersection-observer';
 import { SourceFeatureIcons } from './SourceFeatureIcons';
 
 export const SupportedSourceItem: React.FC<{
-  source: SupportedSource;
+  source: SourceItem;
   disabled?: boolean;
 }> = ({ source, disabled }) => {
   const { ref, inView } = useInView({

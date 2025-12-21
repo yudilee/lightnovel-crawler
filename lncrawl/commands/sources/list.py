@@ -73,12 +73,12 @@ def list_all(
     table.add_column('Manga', justify='center')
     table.add_column('MTL', justify='center', min_width=5)
 
-    for i, (url, item) in enumerate(sources):
+    for i, item in enumerate(sources):
         yes_no = {
             True: Icons.CHECK,
             False: '',
         }
-        url = Text(url, style='blue')
+        url = Text(item.url, style='blue')
         if query:
             url.highlight_regex(query, style='yellow')
         table.add_row(

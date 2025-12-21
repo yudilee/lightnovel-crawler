@@ -14,6 +14,7 @@ export const NovelListItemCard: React.FC<{ novel: Novel }> = ({ novel }) => {
 
   return (
     <Tooltip
+      placement="bottom"
       title={
         <Flex wrap gap="5px">
           <Typography.Text strong>{novel.title}</Typography.Text>
@@ -29,6 +30,7 @@ export const NovelListItemCard: React.FC<{ novel: Novel }> = ({ novel }) => {
           position: 'relative',
           userSelect: 'none',
           background: getGradientForId(novel.id),
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
         onClick={() => navigate(`/novel/${novel.id}`)}
         styles={{
@@ -36,6 +38,14 @@ export const NovelListItemCard: React.FC<{ novel: Novel }> = ({ novel }) => {
             padding: 0,
             aspectRatio: 0.7,
           },
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
         }}
       >
         <Image

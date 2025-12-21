@@ -164,9 +164,10 @@ export interface Artifact extends _Base {
   is_available: boolean;
 }
 
-export interface SupportedSource {
+export interface SourceItem {
   url: string;
   domain: string;
+  version: number;
   has_manga: boolean;
   has_mtl: boolean;
   language: string;
@@ -174,6 +175,8 @@ export interface SupportedSource {
   disable_reason?: string;
   can_search: boolean;
   can_login: boolean;
+  total_commits: number;
+  contributors: string[];
 }
 
 export interface ReadHistory extends Record<string, boolean> {}

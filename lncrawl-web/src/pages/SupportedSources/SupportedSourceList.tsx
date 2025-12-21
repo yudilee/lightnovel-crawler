@@ -1,4 +1,4 @@
-import type { SupportedSource } from '@/types';
+import type { SourceItem } from '@/types';
 import { List } from 'antd';
 import { useCallback, useMemo, useState } from 'react';
 import {
@@ -8,7 +8,7 @@ import {
 import { SupportedSourceItem } from './SupportedSourceItem';
 
 export const SupportedSourceList: React.FC<{
-  sources: SupportedSource[];
+  sources: SourceItem[];
   disabled?: boolean;
 }> = ({ sources, disabled }) => {
   const [filtered, setFiltered] = useState(sources);

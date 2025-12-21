@@ -1,12 +1,13 @@
 import shutil
-from typing import Any, List, Optional
+from typing import Any, Generator, List, Optional
 
-from sqlmodel import and_, col, desc, func, select
+import sqlmodel as sa
 
 from ..context import ctx
 from ..dao import Novel
 from ..exceptions import ServerErrors
 from ..server.models import Paginated
+from ..services.sources.dto import SourceItem
 
 
 class NovelService:
@@ -18,25 +19,28 @@ class NovelService:
         search: str = '',
         offset: int = 0,
         limit: int = 20,
+        domain: str = '',
     ) -> Paginated[Novel]:
         with ctx.db.session() as sess:
-            stmt = select(Novel)
-            cnt = select(func.count()).select_from(Novel)
+            stmt = sa.select(Novel)
+            cnt = sa.select(sa.func.count()).select_from(Novel)
 
             # Apply filters
             conditions: List[Any] = []
 
+            if domain:
+                conditions.append(sa.col(Novel.url).ilike(f'%{domain}%'))
+
             if search:
-                q = f"%{search.lower()}%"
-                conditions.append(col(Novel.title).ilike(q))
+                conditions.append(sa.col(Novel.title).ilike(f"%{search}%"))
 
             if conditions:
-                cnd = and_(*conditions)
+                cnd = sa.and_(*conditions)
                 stmt = stmt.where(cnd)
                 cnt = cnt.where(cnd)
 
             # Apply sorting
-            stmt = stmt.order_by(desc(Novel.updated_at))
+            stmt = stmt.order_by(sa.desc(Novel.updated_at))
 
             # Apply pagination
             stmt = stmt.offset(offset).limit(limit)
@@ -50,6 +54,12 @@ class NovelService:
                 limit=limit,
                 items=list(items),
             )
+
+    def list_sources(self) -> Generator[SourceItem, None, None]:
+        with ctx.db.session() as sess:
+            domains = sess.scalars(sa.select(sa.func.distinct(Novel.domain)))
+            for domain in domains:
+                yield from ctx.sources.list(domain)
 
     def get(self, novel_id: str) -> Novel:
         with ctx.db.session() as sess:
@@ -72,6 +82,6 @@ class NovelService:
     def find_by_url(self, novel_url: str) -> Optional[Novel]:
         with ctx.db.session() as sess:
             return sess.exec(
-                select(Novel)
+                sa.select(Novel)
                 .where(Novel.url == novel_url)
             ).first()

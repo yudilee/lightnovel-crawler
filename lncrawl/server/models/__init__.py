@@ -2,7 +2,6 @@ from .crawler import LoginData
 from .job import (FetchChaptersRequest, FetchImagesRequest, FetchNovelRequest,
                   FetchVolumesRequest, MakeArtifactsRequest)
 from .library import LibraryCreateRequest, LibraryItem, LibraryUpdateRequest
-from .meta import SupportedSource
 from .novel import ReadChapterResponse
 from .pagination import Paginated
 from .user import (CreateRequest, ForgotPasswordRequest, LoginRequest,
@@ -23,8 +22,6 @@ __all__ = [
     "LibraryCreateRequest",
     "LibraryUpdateRequest",
     "LibraryItem",
-    # meta
-    "SupportedSource",
     # novel
     "ReadChapterResponse",
     # pagination

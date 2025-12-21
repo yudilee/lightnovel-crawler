@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 @app.command(help='Search for novels by query string.')
 def search(
-    source_queries: Optional[List[str]] = typer.Option(
+    source_query: Optional[str] = typer.Option(
         None,
         "-s", "--source",
         help="Filter sources",
@@ -57,7 +57,7 @@ def search(
 
     Examples:
         lncrawl search "solo leveling"
-        lncrawl search "overlord" --source "https://novelfull.com"
+        lncrawl search "overlord" --source "novelfull"
         lncrawl search "reincarnation" --limit 20 --concurrency 10
     """
     # Prompt for query if not provided
@@ -76,10 +76,9 @@ def search(
 
     # Get searchable crawlers
     constructors = set([
-        ctx.sources.get_crawler(url)
-        for source in source_queries or ['']
-        for url, _ in ctx.sources.list(
-            query=source,
+        item.crawler
+        for item in ctx.sources.list(
+            source_query,
             can_search=True
         )
     ])

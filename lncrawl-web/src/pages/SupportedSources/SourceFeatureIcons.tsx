@@ -1,4 +1,4 @@
-import type { SupportedSource } from '@/types';
+import type { SourceItem } from '@/types';
 import {
   LoginOutlined,
   PictureOutlined,
@@ -30,7 +30,7 @@ const icons = [
   },
 ];
 
-export const SourceFeatureIcons: React.FC<{ source: SupportedSource }> = ({
+export const SourceFeatureIcons: React.FC<{ source: SourceItem }> = ({
   source,
 }) => (
   <>

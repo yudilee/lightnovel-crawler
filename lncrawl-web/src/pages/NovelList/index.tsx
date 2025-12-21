@@ -9,6 +9,7 @@ import { NovelListItemCard } from './NovelListItemCard';
 export const NovelListPage: React.FC<any> = () => {
   const {
     search: initialSearch,
+    domain: initialDomain,
     currentPage,
     perPage,
     error,
@@ -39,7 +40,11 @@ export const NovelListPage: React.FC<any> = () => {
 
       <Divider size="small" />
 
-      <NovelFilterBox search={initialSearch} updateParams={updateParams} />
+      <NovelFilterBox
+        search={initialSearch}
+        domain={initialDomain}
+        updateParams={updateParams}
+      />
 
       <Divider size="small" />
 

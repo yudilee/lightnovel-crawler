@@ -2,6 +2,8 @@ from typing import List
 
 from fastapi import APIRouter, Depends, Path, Query
 
+from lncrawl.services.sources.dto import SourceItem
+
 from ...context import ctx
 from ...dao import Artifact, Chapter, Novel, Volume
 from ..models import Paginated
@@ -16,15 +18,25 @@ router = APIRouter()
     summary='Returns a list of novels',
 )
 def list_novels(
-    search: str = Query(default=''),
-    offset: int = Query(default=0),
-    limit: int = Query(default=20, le=100),
+    search: str = Query(default='', help='Search query'),
+    offset: int = Query(default=0, help='Offset'),
+    limit: int = Query(default=20, le=100, help='Limit'),
+    domain: str = Query(default='', help='Domain name'),
 ) -> Paginated[Novel]:
     return ctx.novels.list(
         limit=limit,
         offset=offset,
         search=search.strip(),
+        domain=domain.strip(),
     )
+
+
+@router.get(
+    "/sources",
+    summary='Returns a list of sources that are used in available novels',
+)
+def list_sources() -> List[SourceItem]:
+    return list(ctx.novels.list_sources())
 
 
 @router.get("/{novel_id}", summary='Returns a novel')

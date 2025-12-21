@@ -38,7 +38,12 @@ export const JobListPage: React.FC<{
     return <LoadingState />;
   }
 
-  if (hideIfEmpty && !jobs?.length) {
+  if (
+    hideIfEmpty &&
+    !jobs?.length &&
+    status === undefined &&
+    type === undefined
+  ) {
     return null;
   }
 

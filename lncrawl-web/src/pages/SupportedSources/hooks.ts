@@ -1,4 +1,4 @@
-import type { SupportedSource } from '@/types';
+import type { SourceItem } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import axios from 'axios';
 import { useCallback, useEffect, useState } from 'react';
@@ -9,14 +9,12 @@ export function useSupportedSources() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
 
-  const [data, setData] = useState<SupportedSource[]>([]);
+  const [data, setData] = useState<SourceItem[]>([]);
 
   const fetchSupportedSources = async () => {
     try {
       setError(undefined);
-      const res = await axios.get<SupportedSource[]>(
-        '/api/meta/supported-sources'
-      );
+      const res = await axios.get<SourceItem[]>('/api/meta/supported-sources');
       setData(res.data);
     } catch (err) {
       setError(stringifyError(err));

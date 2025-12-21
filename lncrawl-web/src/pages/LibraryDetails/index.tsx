@@ -10,7 +10,7 @@ import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { UserDetailsCard } from '../JobDetails/UserDetailsCard';
 import { LibraryInfoCard } from './LibraryInfoCard';
-import { LibraryNovelList } from './NovelList';
+import { LibraryNovelList } from './LibraryNovelList';
 
 export const LibraryDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

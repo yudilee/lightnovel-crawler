@@ -11,7 +11,6 @@ _INIT_SQL = """
     CREATE VIRTUAL TABLE store USING fts5(
         key,
         value UNINDEXED,
-        tokenize = "unicode61 tokenchars '.:/?&=_-%#+'"
     );
 """
 
@@ -41,7 +40,9 @@ _PURGE_SQL = """
 
 
 def _escape_query(s: str) -> str:
-    return '"' + s.replace('"', '""') + '"' + '*'  # for exact prefix match
+    escaped = s.replace('"', '""')
+    return f'"{escaped}"*'
+
 
 # ------------------------------------------------------------------ #
 #                              FTSStore                              #

@@ -1,17 +1,60 @@
-import { Flex, Input } from 'antd';
+import { Favicon } from '@/components/Favicon';
+import { Flex, Input, message, Select, Space } from 'antd';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import type { SourceItem } from '../../types';
 import { type NovelListHook } from './hooks';
 
 export const NovelFilterBox: React.FC<
-  Pick<NovelListHook, 'search' | 'updateParams'>
-> = ({ search: initialSearch, updateParams }) => {
+  Pick<NovelListHook, 'search' | 'domain' | 'updateParams'>
+> = ({ search: initialSearch, domain: initialDomain, updateParams }) => {
+  const [loading, setLoading] = useState(false);
+  const [sources, setSources] = useState<SourceItem[]>([]);
+
+  useEffect(() => {
+    const loadSources = async () => {
+      try {
+        setLoading(true);
+        const { data } = await axios.get<SourceItem[]>('/api/novel/sources');
+        setSources(data);
+      } catch (error) {
+        message.error('Failed to load sources');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadSources();
+  }, []);
+
   return (
-    <Flex align="center">
+    <Flex align="center" justify="space-between" gap="8px" wrap>
+      {/* Domain Select */}
+      <Select
+        loading={loading}
+        defaultValue={initialDomain || undefined}
+        onChange={(value) => updateParams({ domain: value || '', page: 1 })}
+        placeholder="Select a domain"
+        allowClear
+        size="large"
+        options={sources.map((source) => ({
+          value: source.domain,
+          label: (
+            <Space>
+              <Favicon url={source.url} /> {source.domain}
+            </Space>
+          ),
+        }))}
+        style={{ flex: 1, minWidth: 250 }}
+      />
+
+      {/* Search Input */}
       <Input.Search
         defaultValue={initialSearch}
         onSearch={(search) => updateParams({ search, page: 1 })}
         placeholder="Search novels"
         allowClear
         size="large"
+        style={{ flex: 3, minWidth: 300 }}
       />
     </Flex>
   );

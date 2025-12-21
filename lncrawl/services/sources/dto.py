@@ -51,8 +51,22 @@ class CrawlerIndex(BaseModel):
 
 class SourceItem(BaseModel):
     model_config = ConfigDict(frozen=True)
-    info: CrawlerInfo
-    crawler: Type[Crawler]
+
+    url: str = Field(description='Source base url')
+    domain: str = Field(description='Domain name')
+    version: int = Field(description='Version number')
+    has_manga: bool = Field(default=False)
+    has_mtl: bool = Field(default=False)
+    language: str = Field(default='en', description='2 letter language code')
+    is_disabled: bool = Field(default=False)
+    disable_reason: Optional[str] = Field(default=None)
+    can_search: bool = Field(default=False)
+    can_login: bool = Field(default=False)
+    total_commits: int = Field(default=0)
+    contributors: List[str] = Field(default=[])
+
+    info: CrawlerInfo = Field(..., exclude=True)
+    crawler: Type[Crawler] = Field(..., exclude=True)
 
     @cached_property
     def current_file(self):
