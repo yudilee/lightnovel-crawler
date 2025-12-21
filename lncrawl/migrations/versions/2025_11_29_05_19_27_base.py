@@ -19,15 +19,23 @@ down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
+try:
+    dialect = op.get_context().dialect.name
+except Exception:
+    dialect = ''
+
 
 def upgrade() -> None:
     """Upgrade schema."""
+    # Migration table
     op.create_table(
         "_migration",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("version", sa.Integer(), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("id", name=op.f("_migration_pkey")),
     )
+
+    # Novels table
     op.create_table(
         "novels",
         sa.Column("id", AutoString(), nullable=False),
@@ -47,33 +55,22 @@ def upgrade() -> None:
         sa.Column("language", sa.CHAR(length=2), nullable=True),
         sa.Column("volume_count", sa.Integer(), nullable=False),
         sa.Column("chapter_count", sa.Integer(), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("url"),
+        sa.PrimaryKeyConstraint("id", name=op.f("novels_pkey")),
+        sa.UniqueConstraint("url", name="novels_url_key"),
     )
-    op.create_index(
-        op.f("ix_novels_created_at"),
-        "novels",
-        ["created_at"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_novels_domain"),
-        "novels",
-        ["domain"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_novels_updated_at"),
-        "novels",
-        ["updated_at"],
-        unique=False,
-    )
+    op.create_index(op.f("ix_novels_created_at"), "novels", ["created_at"], unique=False)
+    op.create_index(op.f("ix_novels_domain"), "novels", ["domain"], unique=False)
+    op.create_index(op.f("ix_novels_updated_at"), "novels", ["updated_at"], unique=False)
+
+    # Tags table
     op.create_table(
         "tags",
         sa.Column("name", AutoString(), nullable=False),
         sa.Column("description", AutoString(), nullable=True),
-        sa.PrimaryKeyConstraint("name"),
+        sa.PrimaryKeyConstraint("name", name=op.f("tags_pkey")),
     )
+
+    # Users table
     op.create_table(
         "users",
         sa.Column("id", AutoString(), nullable=False),
@@ -87,33 +84,22 @@ def upgrade() -> None:
         sa.Column("role", sa.Enum(enums.UserRole, name="userrole"), nullable=False),
         sa.Column("tier", sa.Enum(enums.UserTier, name="usertier"), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
-        sa.ForeignKeyConstraint(["referrer_id"], ["users.id"], ondelete="SET NULL"),
-        sa.PrimaryKeyConstraint("id"),
+        sa.ForeignKeyConstraint(["referrer_id"], ["users.id"], ondelete="SET NULL", name=op.f("users_referrer_id_fkey")),
+        sa.PrimaryKeyConstraint("id", name=op.f("users_pkey")),
     )
-    op.create_index(
-        op.f("ix_users_created_at"),
-        "users",
-        ["created_at"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_users_email"),
-        "users",
-        ["email"],
-        unique=True,
-    )
-    op.create_index(
-        op.f("ix_users_updated_at"),
-        "users",
-        ["updated_at"],
-        unique=False,
-    )
+    op.create_index(op.f("ix_users_created_at"), "users", ["created_at"], unique=False)
+    op.create_index(op.f("ix_users_email"), "users", ["email"], unique=True)
+    op.create_index(op.f("ix_users_updated_at"), "users", ["updated_at"], unique=False)
+
+    # Verified email table
     op.create_table(
         "verifiedemail",
         sa.Column("email", AutoString(), nullable=False),
         sa.Column("created_at", sa.BigInteger(), nullable=False),
-        sa.PrimaryKeyConstraint("email"),
+        sa.PrimaryKeyConstraint("email", name=op.f("verifiedemail_pkey")),
     )
+
+    # Jobs table
     op.create_table(
         "jobs",
         sa.Column("id", AutoString(), nullable=False),
@@ -132,62 +118,31 @@ def upgrade() -> None:
         sa.Column("finished_at", sa.BigInteger(), nullable=True),
         sa.Column("done", sa.Integer(), nullable=False),
         sa.Column("total", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(["depends_on"], ["jobs.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["parent_job_id"], ["jobs.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("id"),
+        sa.ForeignKeyConstraint(["depends_on"], ["jobs.id"], ondelete="CASCADE", name=op.f("jobs_depends_on_fkey")),
+        sa.ForeignKeyConstraint(["parent_job_id"], ["jobs.id"], ondelete="CASCADE", name=op.f("jobs_parent_job_id_fkey")),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE", name=op.f("jobs_user_id_fkey")),
+        sa.PrimaryKeyConstraint("id", name=op.f("jobs_pkey")),
     )
-    op.create_index(
-        "ix_job_is_done",
-        "jobs",
-        ["id", "is_done"],
-        unique=False,
-    )
-    op.create_index(
-        "ix_job_parent_job_id",
-        "jobs",
-        ["parent_job_id"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_jobs_created_at"),
-        "jobs",
-        ["created_at"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_jobs_updated_at"),
-        "jobs",
-        ["updated_at"],
-        unique=False,
-    )
+    op.create_index(op.f("ix_job_is_done"), "jobs", ["id", "is_done"], unique=False)
+    op.create_index(op.f("ix_job_parent_job_id"), "jobs", ["parent_job_id"], unique=False)
+    op.create_index(op.f("ix_jobs_created_at"), "jobs", ["created_at"], unique=False)
+    op.create_index(op.f("ix_jobs_updated_at"), "jobs", ["updated_at"], unique=False)
+
+    # Secrets table
     op.create_table(
         "secrets",
         sa.Column("user_id", AutoString(), nullable=False),
         sa.Column("name", AutoString(length=255), nullable=False),
         sa.Column("value", sa.LargeBinary(), nullable=False),
         sa.Column("created_at", sa.BigInteger(), nullable=False),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("name"),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE", name=op.f("secrets_user_id_fkey")),
+        sa.PrimaryKeyConstraint("name", name=op.f("secrets_pkey")),
     )
-    op.create_index(
-        op.f("ix_secrets_created_at"),
-        "secrets",
-        ["created_at"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_secrets_name"),
-        "secrets",
-        ["name"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_secrets_user_id"),
-        "secrets",
-        ["user_id"],
-        unique=False,
-    )
+    op.create_index(op.f("ix_secrets_created_at"), "secrets", ["created_at"], unique=False)
+    op.create_index(op.f("ix_secrets_name"), "secrets", ["name"], unique=False)
+    op.create_index(op.f("ix_secrets_user_id"), "secrets", ["user_id"], unique=False)
+
+    # Volumes table
     op.create_table(
         "volumes",
         sa.Column("id", AutoString(), nullable=False),
@@ -198,34 +153,59 @@ def upgrade() -> None:
         sa.Column("serial", sa.Integer(), nullable=False),
         sa.Column("title", AutoString(), nullable=False),
         sa.Column("chapter_count", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(["novel_id"], ["novels.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["novel_id"], ["novels.id"], ondelete="CASCADE", name=op.f("volumes_novel_id_fkey")),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("novel_id", "serial"),
+        sa.UniqueConstraint("novel_id", "serial", name="volumes_novel_id_serial_key"),
     )
-    op.create_index(
-        "ix_volume_novel_id",
-        "volumes",
-        ["novel_id"],
-        unique=False,
+    op.create_index(op.f("ix_volume_novel_id"), "volumes", ["novel_id"], unique=False)
+    op.create_index(op.f("ix_volume_novel_serial"), "volumes", ["novel_id", "serial"], unique=False)
+    op.create_index(op.f("ix_volumes_created_at"), "volumes", ["created_at"], unique=False)
+    op.create_index(op.f("ix_volumes_updated_at"), "volumes", ["updated_at"], unique=False)
+
+    # Chapters table
+    op.create_table(
+        "chapters",
+        sa.Column("id", AutoString(), nullable=False),
+        sa.Column("created_at", sa.BigInteger(), nullable=False),
+        sa.Column("updated_at", sa.BigInteger(), nullable=False),
+        sa.Column("extra", sa.JSON(), nullable=False),
+        sa.Column("novel_id", AutoString(), nullable=False),
+        sa.Column("serial", sa.Integer(), nullable=False),
+        sa.Column("volume_id", AutoString(), nullable=True),
+        sa.Column("url", AutoString(), nullable=False),
+        sa.Column("title", AutoString(), nullable=False),
+        sa.Column("is_done", sa.Boolean(), nullable=False),
+        sa.ForeignKeyConstraint(["novel_id"], ["novels.id"], ondelete="CASCADE", name=op.f("chapters_novel_id_fkey")),
+        sa.ForeignKeyConstraint(["volume_id"], ["volumes.id"], ondelete="SET NULL", name=op.f("chapters_volume_id_fkey")),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("novel_id", "serial", name="chapters_novel_id_serial_key"),
     )
-    op.create_index(
-        "ix_volume_novel_serial",
-        "volumes",
-        ["novel_id", "serial"],
-        unique=False,
+    op.create_index(op.f("ix_chapter_novel_id"), "chapters", ["novel_id"], unique=False)
+    op.create_index(op.f("ix_chapter_novel_serial"), "chapters", ["novel_id", "serial"], unique=False)
+    op.create_index(op.f("ix_chapter_novel_volume"), "chapters", ["novel_id", "volume_id"], unique=False)
+    op.create_index(op.f("ix_chapters_created_at"), "chapters", ["created_at"], unique=False)
+    op.create_index(op.f("ix_chapters_updated_at"), "chapters", ["updated_at"], unique=False)
+
+    # Chapter images table
+    op.create_table(
+        "chapter_images",
+        sa.Column("id", AutoString(), nullable=False),
+        sa.Column("created_at", sa.BigInteger(), nullable=False),
+        sa.Column("updated_at", sa.BigInteger(), nullable=False),
+        sa.Column("extra", sa.JSON(), nullable=False),
+        sa.Column("novel_id", AutoString(), nullable=False),
+        sa.Column("chapter_id", AutoString(), nullable=False),
+        sa.Column("url", AutoString(), nullable=False),
+        sa.Column("is_done", sa.Boolean(), nullable=False),
+        sa.ForeignKeyConstraint(["chapter_id"], ["chapters.id"], ondelete="CASCADE", name=op.f("chapter_images_chapter_id_fkey")),
+        sa.ForeignKeyConstraint(["novel_id"], ["novels.id"], ondelete="CASCADE", name=op.f("chapter_images_novel_id_fkey")),
+        sa.PrimaryKeyConstraint("id", name=op.f("chapter_images_pkey")),
     )
-    op.create_index(
-        op.f("ix_volumes_created_at"),
-        "volumes",
-        ["created_at"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_volumes_updated_at"),
-        "volumes",
-        ["updated_at"],
-        unique=False,
-    )
+    op.create_index(op.f("ix_chapter_image_chapter"), "chapter_images", ["chapter_id"], unique=False)
+    op.create_index(op.f("ix_chapter_images_created_at"), "chapter_images", ["created_at"], unique=False)
+    op.create_index(op.f("ix_chapter_images_updated_at"), "chapter_images", ["updated_at"], unique=False)
+
+    # Artifacts table
     op.create_table(
         "artifacts",
         sa.Column("id", AutoString(), nullable=False),
@@ -237,114 +217,17 @@ def upgrade() -> None:
         sa.Column("user_id", AutoString(), nullable=True),
         sa.Column("format", sa.Enum(enums.OutputFormat, name="outputformat"), nullable=False),
         sa.Column("file_name", AutoString(), nullable=False),
-        sa.ForeignKeyConstraint(["job_id"], ["jobs.id"], ondelete="SET NULL"),
-        sa.ForeignKeyConstraint(["novel_id"], ["novels.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="SET NULL"),
-        sa.PrimaryKeyConstraint("id"),
+        sa.ForeignKeyConstraint(["job_id"], ["jobs.id"], ondelete="SET NULL", name=op.f("artifacts_job_id_fkey")),
+        sa.ForeignKeyConstraint(["novel_id"], ["novels.id"], ondelete="CASCADE", name=op.f("artifacts_novel_id_fkey")),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="SET NULL", name=op.f("artifacts_user_id_fkey")),
+        sa.PrimaryKeyConstraint("id", name=op.f("artifacts_pkey")),
     )
-    op.create_index(
-        op.f("ix_artifacts_created_at"),
-        "artifacts",
-        ["created_at"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_artifacts_format"),
-        "artifacts",
-        ["format"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_artifacts_novel_id"),
-        "artifacts",
-        ["novel_id"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_artifacts_updated_at"),
-        "artifacts",
-        ["updated_at"],
-        unique=False,
-    )
-    op.create_table(
-        "chapters",
-        sa.Column("id", AutoString(), nullable=False),
-        sa.Column("created_at", sa.BigInteger(), nullable=False),
-        sa.Column("updated_at", sa.BigInteger(), nullable=False),
-        sa.Column("extra", sa.JSON(), nullable=False),
-        sa.Column("novel_id", AutoString(), nullable=False),
-        sa.Column("serial", sa.Integer(), nullable=False),
-        sa.Column("volume_id", AutoString(), nullable=True),
-        sa.Column("url", AutoString(), nullable=False),
-        sa.Column("title", AutoString(), nullable=False),
-        sa.Column("is_done", sa.Boolean(), nullable=False),
-        sa.ForeignKeyConstraint(["novel_id"], ["novels.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["volume_id"], ["volumes.id"], ondelete="SET NULL"),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("novel_id", "serial"),
-    )
-    op.create_index(
-        "ix_chapter_novel_id",
-        "chapters",
-        ["novel_id"],
-        unique=False,
-    )
-    op.create_index(
-        "ix_chapter_novel_serial",
-        "chapters",
-        ["novel_id", "serial"],
-        unique=False,
-    )
-    op.create_index(
-        "ix_chapter_novel_volume",
-        "chapters",
-        ["novel_id", "volume_id"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_chapters_created_at"),
-        "chapters",
-        ["created_at"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_chapters_updated_at"),
-        "chapters",
-        ["updated_at"],
-        unique=False,
-    )
-    op.create_table(
-        "chapter_images",
-        sa.Column("id", AutoString(), nullable=False),
-        sa.Column("created_at", sa.BigInteger(), nullable=False),
-        sa.Column("updated_at", sa.BigInteger(), nullable=False),
-        sa.Column("extra", sa.JSON(), nullable=False),
-        sa.Column("novel_id", AutoString(), nullable=False),
-        sa.Column("chapter_id", AutoString(), nullable=False),
-        sa.Column("url", AutoString(), nullable=False),
-        sa.Column("is_done", sa.Boolean(), nullable=False),
-        sa.ForeignKeyConstraint(["chapter_id"], ["chapters.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["novel_id"], ["novels.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index(
-        "ix_chapter_image_chapter",
-        "chapter_images",
-        ["chapter_id"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_chapter_images_created_at"),
-        "chapter_images",
-        ["created_at"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_chapter_images_updated_at"),
-        "chapter_images",
-        ["updated_at"],
-        unique=False,
-    )
+    op.create_index(op.f("ix_artifacts_created_at"), "artifacts", ["created_at"], unique=False)
+    op.create_index(op.f("ix_artifacts_format"), "artifacts", ["format"], unique=False)
+    op.create_index(op.f("ix_artifacts_novel_id"), "artifacts", ["novel_id"], unique=False)
+    op.create_index(op.f("ix_artifacts_updated_at"), "artifacts", ["updated_at"], unique=False)
+
+    # Read history table
     op.create_table(
         "read_history",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -353,47 +236,81 @@ def upgrade() -> None:
         sa.Column("chapter_id", AutoString(), nullable=False),
         sa.Column("novel_id", AutoString(), nullable=False),
         sa.Column("volume_id", AutoString(), nullable=True),
-        sa.ForeignKeyConstraint(["chapter_id"], ["chapters.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["novel_id"], ["novels.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["volume_id"], ["volumes.id"], ondelete="SET NULL"),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("user_id", "chapter_id"),
+        sa.ForeignKeyConstraint(["chapter_id"], ["chapters.id"], ondelete="CASCADE", name=op.f("read_history_chapter_id_fkey")),
+        sa.ForeignKeyConstraint(["novel_id"], ["novels.id"], ondelete="CASCADE", name=op.f("read_history_novel_id_fkey")),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE", name=op.f("read_history_user_id_fkey")),
+        sa.ForeignKeyConstraint(["volume_id"], ["volumes.id"], ondelete="SET NULL", name=op.f("read_history_volume_id_fkey")),
+        sa.PrimaryKeyConstraint("id", name=op.f("read_history_pkey")),
+        sa.UniqueConstraint("user_id", "chapter_id", name="read_history_user_id_chapter_id_key"),
     )
-    op.create_index(
-        "ix_read_history_user_created",
-        "read_history",
-        ["user_id", "created_at"],
-        unique=False,
-    )
+    op.create_index(op.f("ix_read_history_user_created"), "read_history", ["user_id", "created_at"], unique=False)
 
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.drop_index("ix_read_history_user_created", table_name="read_history")
+    if dialect != "sqlite":
+        op.drop_constraint(op.f("novels_url_key"), "novels", type_="unique")
+        op.drop_constraint(op.f("users_referrer_id_fkey"), "users", type_="foreignkey")
+        op.drop_constraint(op.f("jobs_user_id_fkey"), "jobs", type_="foreignkey")
+        op.drop_constraint(op.f("jobs_parent_job_id_fkey"), "jobs", type_="foreignkey")
+        op.drop_constraint(op.f("jobs_depends_on_fkey"), "jobs", type_="foreignkey")
+        op.drop_constraint(op.f("secrets_user_id_fkey"), "secrets", type_="foreignkey")
+        op.drop_constraint(op.f("volumes_novel_id_serial_key"), "volumes", type_="unique")
+        op.drop_constraint(op.f("volumes_novel_id_fkey"), "volumes", type_="foreignkey")
+        op.drop_constraint(op.f("chapters_novel_id_serial_key"), "chapters", type_="unique")
+        op.drop_constraint(op.f("chapters_novel_id_fkey"), "chapters", type_="foreignkey")
+        op.drop_constraint(op.f("chapters_volume_id_fkey"), "chapters", type_="foreignkey")
+        op.drop_constraint(op.f("chapter_images_chapter_id_fkey"), "chapter_images", type_="foreignkey")
+        op.drop_constraint(op.f("chapter_images_novel_id_fkey"), "chapter_images", type_="foreignkey")
+        op.drop_constraint(op.f("artifacts_job_id_fkey"), "artifacts", type_="foreignkey")
+        op.drop_constraint(op.f("artifacts_novel_id_fkey"), "artifacts", type_="foreignkey")
+        op.drop_constraint(op.f("artifacts_user_id_fkey"), "artifacts", type_="foreignkey")
+        op.drop_constraint(op.f("read_history_user_id_chapter_id_key"), "read_history", type_="unique")
+        op.drop_constraint(op.f("read_history_chapter_id_fkey"), "read_history", type_="foreignkey")
+        op.drop_constraint(op.f("read_history_novel_id_fkey"), "read_history", type_="foreignkey")
+        op.drop_constraint(op.f("read_history_user_id_fkey"), "read_history", type_="foreignkey")
+        op.drop_constraint(op.f("read_history_volume_id_fkey"), "read_history", type_="foreignkey")
+
+    op.drop_index(op.f("ix_novels_created_at"), "novels")
+    op.drop_index(op.f("ix_novels_domain"), "novels")
+    op.drop_index(op.f("ix_novels_updated_at"), "novels")
+    op.drop_index(op.f("ix_users_created_at"), "users")
+    op.drop_index(op.f("ix_users_email"), "users")
+    op.drop_index(op.f("ix_users_updated_at"), "users")
+    op.drop_index(op.f("ix_job_is_done"), "jobs")
+    op.drop_index(op.f("ix_job_parent_job_id"), "jobs")
+    op.drop_index(op.f("ix_jobs_created_at"), "jobs")
+    op.drop_index(op.f("ix_jobs_updated_at"), "jobs")
+    op.drop_index(op.f("ix_secrets_created_at"), "secrets")
+    op.drop_index(op.f("ix_secrets_name"), "secrets")
+    op.drop_index(op.f("ix_secrets_user_id"), "secrets")
+    op.drop_index(op.f("ix_volume_novel_id"), "volumes")
+    op.drop_index(op.f("ix_volume_novel_serial"), "volumes")
+    op.drop_index(op.f("ix_volumes_created_at"), "volumes")
+    op.drop_index(op.f("ix_volumes_updated_at"), "volumes")
+    op.drop_index(op.f("ix_chapter_novel_id"), "chapters")
+    op.drop_index(op.f("ix_chapter_novel_serial"), "chapters")
+    op.drop_index(op.f("ix_chapter_novel_volume"), "chapters")
+    op.drop_index(op.f("ix_chapters_created_at"), "chapters")
+    op.drop_index(op.f("ix_chapters_updated_at"), "chapters")
+    op.drop_index(op.f("ix_chapter_image_chapter"), "chapter_images")
+    op.drop_index(op.f("ix_chapter_images_created_at"), "chapter_images")
+    op.drop_index(op.f("ix_chapter_images_updated_at"), "chapter_images")
+    op.drop_index(op.f("ix_artifacts_created_at"), "artifacts")
+    op.drop_index(op.f("ix_artifacts_format"), "artifacts")
+    op.drop_index(op.f("ix_artifacts_novel_id"), "artifacts")
+    op.drop_index(op.f("ix_artifacts_updated_at"), "artifacts")
+    op.drop_index(op.f("ix_read_history_user_created"), "read_history")
+
     op.drop_table("read_history")
-    op.drop_index(op.f("ix_chapter_images_updated_at"), table_name="chapter_images")
-    op.drop_index(op.f("ix_chapter_images_created_at"), table_name="chapter_images")
-    op.drop_index("ix_chapter_image_chapter", table_name="chapter_images")
+    op.drop_table("artifacts")
     op.drop_table("chapter_images")
-    op.drop_index(op.f("ix_chapters_updated_at"), table_name="chapters")
-    op.drop_index(op.f("ix_chapters_created_at"), table_name="chapters")
-    op.drop_index("ix_chapter_novel", table_name="chapters")
     op.drop_table("chapters")
-    op.drop_index(op.f("ix_volumes_updated_at"), table_name="volumes")
-    op.drop_index(op.f("ix_volumes_created_at"), table_name="volumes")
-    op.drop_index("ix_volume_novel", table_name="volumes")
     op.drop_table("volumes")
-    op.drop_index(op.f("ix_verifiedemail_created_at"), table_name="verifiedemail")
     op.drop_table("verifiedemail")
-    op.drop_index(op.f("ix_jobs_updated_at"), table_name="jobs")
-    op.drop_index(op.f("ix_jobs_created_at"), table_name="jobs")
-    op.drop_index("ix_job_user", table_name="jobs")
     op.drop_table("jobs")
+    op.drop_table("secrets")
     op.drop_table("users")
     op.drop_table("tags")
-    op.drop_index(op.f("ix_novels_updated_at"), table_name="novels")
-    op.drop_index(op.f("ix_novels_domain"), table_name="novels")
-    op.drop_index(op.f("ix_novels_created_at"), table_name="novels")
     op.drop_table("novels")
     op.drop_table("_migration")

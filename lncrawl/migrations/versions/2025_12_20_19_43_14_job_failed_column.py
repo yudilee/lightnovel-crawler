@@ -17,6 +17,11 @@ down_revision: Union[str, Sequence[str], None] = "e6c4ce29ecfd"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
+try:
+    dialect = op.get_context().dialect.name
+except Exception:
+    dialect = ''
+
 
 def upgrade() -> None:
     """Upgrade schema."""

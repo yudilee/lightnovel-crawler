@@ -260,14 +260,60 @@ class DatabaseConfig(_Section):
 
     @property
     def url(self) -> str:
+        """
+        Database URL.
+
+        Example:
+        - postgresql+psycopg://pguser:pgpass@postgres:5432/lncrawl
+        - mysql+pymysql://user:password@mysql:3306/lncrawl
+        - sqlite:////home/user/sqlite.db
+        - sqlite:///sqlite.db
+        """
         return self._get("url", self.__url)
 
     @url.setter
-    def url(self, url: str) -> None:
-        self._set("url", url)
+    def url(self, v: str) -> None:
+        self._set("url", v)
+
+    @property
+    def pool_size(self) -> int:
+        """Number of connections to maintain in the pool"""
+        return self._get("pool_size", 10)
+
+    @pool_size.setter
+    def pool_size(self, v: int) -> None:
+        self._set("pool_size", v)
+
+    @property
+    def pool_timeout(self) -> int:
+        """Seconds to wait before giving up on getting a connection"""
+        return self._get("pool_timeout", 30)
+
+    @pool_timeout.setter
+    def pool_timeout(self, v: int) -> None:
+        self._set("pool_timeout", v)
+
+    @property
+    def pool_recycle(self) -> int:
+        """Recycle connections after this many seconds (prevents stale connections)"""
+        return self._get("pool_recycle", 3600)
+
+    @pool_recycle.setter
+    def pool_recycle(self, v: int) -> None:
+        self._set("pool_recycle", v)
+
+    @property
+    def connect_timeout(self) -> int:
+        """Timeout for database connection in seconds"""
+        return self._get("connect_timeout", 10)
+
+    @connect_timeout.setter
+    def connect_timeout(self, v: int) -> None:
+        self._set("connect_timeout", v)
 
     @property
     def admin_email(self) -> str:
+        """Admin email"""
         return self._get("admin_email", "admin")
 
     @admin_email.setter
@@ -276,6 +322,7 @@ class DatabaseConfig(_Section):
 
     @property
     def admin_password(self) -> str:
+        """Admin password"""
         return self._get("admin_password", "admin")
 
     @admin_password.setter

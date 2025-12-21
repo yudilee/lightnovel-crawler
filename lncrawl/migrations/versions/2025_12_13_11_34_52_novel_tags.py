@@ -17,11 +17,14 @@ down_revision: Union[str, Sequence[str], None] = "2aa88e70f465"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
+try:
+    dialect = op.get_context().dialect.name
+except Exception:
+    dialect = ''
+
 
 def upgrade() -> None:
     """Upgrade schema."""
-    bind = op.get_bind()
-    dialect = bind.dialect.name
     if dialect == "postgresql":
         op.alter_column("novels", "tags", existing_type=postgresql.JSON(astext_type=sa.Text()), nullable=False)
     elif dialect == "sqlite":
@@ -33,8 +36,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Downgrade schema."""
-    bind = op.get_bind()
-    dialect = bind.dialect.name
     if dialect == "postgresql":
         op.alter_column("novels", "tags", existing_type=postgresql.JSON(astext_type=sa.Text()), nullable=True)
     elif dialect == "sqlite":

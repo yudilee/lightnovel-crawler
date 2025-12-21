@@ -10,11 +10,9 @@ app = typer.Typer(
 )
 
 
-@app.command("ls", help="List changeset scripts in chronological order.")
-def app_history():
-    command.history(
-        config=ctx.db.alembic_config,
-    )
+@app.callback()
+def migrate():
+    ctx.db._ensure_database()
 
 
 @app.command("add", help="Create a new revision file.")
@@ -31,9 +29,9 @@ def app_add(
     ),
 ):
     command.revision(
-        message=message,
-        autogenerate=not disable_auto,
         config=ctx.db.alembic_config,
+        autogenerate=not disable_auto,
+        message=message,
     )
 
 
@@ -58,10 +56,14 @@ def app_downgrade(
         help='Revision target. "base" to target the first revision.',
     ),
 ):
-    command.downgrade(
-        config=ctx.db.alembic_config,
-        revision=revision,
-    )
+    current = ctx.db.current_revision()
+    if not current:
+        print("[red]No revisions to downgrade.[/red]")
+    else:
+        command.downgrade(
+            config=ctx.db.alembic_config,
+            revision=revision,
+        )
     app_status()
 
 
@@ -70,8 +72,7 @@ def app_status():
     latest = ctx.db.latest_revision()
     current = ctx.db.current_revision()
     print(f"Current: [yellow]{current}[/yellow]", end=" ")
-    if latest:
-        if latest == current:
-            print("(latest)")
-        else:
-            print(f"(Latest: [yellow]{latest}[/yellow])")
+    if latest == current:
+        print("(latest)")
+    else:
+        print(f"(Latest: [yellow]{latest}[/yellow])")

@@ -173,7 +173,7 @@ class SourceLoader:
             raise ServerErrors.no_crawler.with_extra(host)
 
         constructor = self.crawlers[host]
-        constructor.home_url = url
+        setattr(constructor, 'url', url)
         return constructor
 
     def init_crawler(
@@ -183,7 +183,7 @@ class SourceLoader:
         workers: Optional[int] = None,
         parser: Optional[str] = None,
     ) -> Crawler:
-        url = constructor.home_url
+        url = getattr(constructor, 'url')
         logger.debug(f"Creating crawler instance for {url}")
 
         # disable logging

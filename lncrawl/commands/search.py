@@ -70,12 +70,14 @@ def search(
         print('[red]Search query must be at least 2 characters long[/red]')
         raise typer.Exit(1)
 
-    # Get searchable crawlers
-    ctx.sources.load()
+    # setup context
+    ctx.setup()
     ctx.sources.ensure_load()
+
+    # Get searchable crawlers
     constructors = set([
         ctx.sources.get_crawler(url)
-        for source in source_queries or [None]
+        for source in source_queries or ['']
         for url, _ in ctx.sources.list(
             query=source,
             can_search=True
@@ -190,12 +192,12 @@ def _perform_search(
 
 
 def _search_job(constructor: Type[Crawler], query: str, signal: Event) -> List[SearchResult]:
-    url = constructor.home_url
+    url = getattr(constructor, 'url')
     logger.info(f'[green]{url}[/green] Searching...')
     try:
         crawler = ctx.sources.init_crawler(constructor)
         crawler.scraper.signal = signal
-        crawler.can_use_browser = False
+        setattr(crawler, 'can_use_browser', False)
         results = crawler.search_novel(query)
         results = [SearchResult(**item) for item in results]
         logger.info(f'[green]{url}[/green] Found {len(results)} results')

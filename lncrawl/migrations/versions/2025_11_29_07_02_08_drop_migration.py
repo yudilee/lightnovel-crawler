@@ -17,6 +17,11 @@ down_revision: Union[str, Sequence[str], None] = "4d43af0bd879"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
+try:
+    dialect = op.get_context().dialect.name
+except Exception:
+    dialect = ''
+
 
 def upgrade() -> None:
     """Upgrade schema."""
@@ -29,5 +34,5 @@ def downgrade() -> None:
         "_migration",
         sa.Column("id", sa.INTEGER(), nullable=False),
         sa.Column("version", sa.INTEGER(), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("id", name=op.f("_migration_pkey")),
     )

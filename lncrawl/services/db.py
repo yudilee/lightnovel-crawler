@@ -2,12 +2,13 @@ import logging
 from functools import cached_property
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
+from urllib.parse import urlparse
 
+import sqlmodel as sa
 from alembic import command
 from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
-from sqlmodel import Session, create_engine, inspect
 
 from ..context import ctx
 
@@ -20,13 +21,26 @@ class DB:
 
     @cached_property
     def engine(self):
-        engine = create_engine(
-            ctx.config.db.url,
+        db_url = ctx.config.db.url
+
+        connect_args = {}
+        if 'postgres' in db_url or 'mysql' in db_url:
+            connect_args['connect_timeout'] = ctx.config.db.connect_timeout
+
+        engine = sa.create_engine(
+            db_url,
             echo=ctx.logger.is_debug,
+            # Pool configuration for connection management
+            pool_size=ctx.config.db.pool_size,
+            pool_timeout=ctx.config.db.pool_timeout,
+            pool_recycle=ctx.config.db.pool_recycle,
+            max_overflow=ctx.config.db.pool_size * 3,  # Maximum overflow connections allowed
+            pool_pre_ping=True,  # Test connections before using them (handles disconnects gracefully)
+            # Connection arguments for database-specific settings
+            connect_args=connect_args,
         )
         if ctx.logger.is_debug:
             engine.logger = logger
-        logger.info(f'Database URL: "{engine.url}"')
         return engine
 
     def close(self):
@@ -40,7 +54,7 @@ class DB:
         expire_on_commit: bool = False,
         enable_baked_queries: bool = True,
     ):
-        return Session(
+        return sa.Session(
             self.engine,
             autoflush=autoflush,
             expire_on_commit=expire_on_commit,
@@ -84,11 +98,19 @@ class DB:
     #                          Prepare Database                          #
     # ------------------------------------------------------------------ #
 
+    def bootstrap(self):
+        self._ensure_database()
+        base = self.base_revision()
+        if base and self.has_any_tables() and not self.current_revision():
+            command.stamp(self.alembic_config, base)
+        command.upgrade(self.alembic_config, "head")
+
     @cached_property
     def alembic_config(self) -> Config:
         cfg = Config()
         migration_path = Path(__file__).parent.parent / "migrations"
         cfg.set_main_option("sqlalchemy.url", ctx.config.db.url)
+        cfg.set_main_option("dialect", self.engine.dialect.name)
         cfg.set_main_option("script_location", migration_path.as_posix())
         cfg.set_main_option(
             "file_template",
@@ -100,28 +122,63 @@ class DB:
         cfg.set_section_option("post_write_hooks", "black.options", "REVISION_SCRIPT_FILENAME")
         return cfg
 
-    def bootstrap(self):
-        if self.has_any_tables() and self.current_revision() is None:
-            command.stamp(self.alembic_config, self.base_revision())
-        command.upgrade(self.alembic_config, "head")
+    @cached_property
+    def alembic_script(self):
+        return ScriptDirectory.from_config(self.alembic_config)
+
+    def base_revision(self):
+        return self.alembic_script.get_base()
+
+    def latest_revision(self):
+        return self.alembic_script.get_current_head()
 
     def has_any_tables(self):
         with self.engine.connect() as conn:
-            return bool(inspect(conn).get_table_names())
+            return bool(sa.inspect(conn).get_table_names())
 
     def current_revision(self):
         with self.engine.connect() as conn:
             context = MigrationContext.configure(conn)
             return context.get_current_revision()
 
-    def base_revision(self):
-        script = ScriptDirectory.from_config(ctx.db.alembic_config)
-        base = script.get_base()
-        assert base
-        return base
+    def _ensure_database(self) -> None:
+        """Create the database if it doesn't exist (MySQL and PostgreSQL only)."""
+        db_url = ctx.config.db.url
+        logger.info(f'Database URL: "{db_url}"')
+        try:
+            # Parse the database URL
+            parsed = urlparse(db_url)
+            scheme = parsed.scheme
+            database = parsed.path.lstrip("/")
+            if not database:
+                raise ValueError("No database name found in the URL")
 
-    def latest_revision(self):
-        script = ScriptDirectory.from_config(ctx.db.alembic_config)
-        head = script.get_current_head()
-        assert head
-        return head
+            # Create a connection URL without the database name
+            if "mysql" in scheme :
+                server_url = db_url.replace(f"/{database}", "")
+                check_query = sa.text("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = :db_name")
+                create_query = sa.text(f"CREATE DATABASE `{database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+            elif "postgres" in scheme :
+                server_url = db_url.replace(f"/{database}", "/postgres")
+                check_query = sa.text("SELECT 1 FROM pg_database WHERE datname = :db_name")
+                create_query = sa.text(f'CREATE DATABASE "{database}"')
+            elif 'sqlite' in scheme:
+                return  # sqlite doesn't need database creation
+            else:
+                raise ValueError("Unsupported database")
+
+            # Try to connect to the server and check/create database
+            engine = sa.create_engine(server_url, isolation_level="AUTOCOMMIT")
+            try:
+                with engine.connect() as conn:
+                    logger.info(f"Ensuring database '{database}' exists...")
+                    result = conn.execute(check_query, {"db_name": database})
+                    exists = result.fetchone() is not None
+                    if not exists:
+                        logger.info(f"Creating database '{database}'.")
+                        conn.execute(create_query)
+                        logger.info(f"Database '{database}' created.")
+            finally:
+                engine.dispose()
+        except Exception as e:
+            logger.warning(f"Failed to ensure database exists. {e}")

@@ -16,6 +16,10 @@ down_revision: Union[str, Sequence[str], None] = ${repr(down_revision)}
 branch_labels: Union[str, Sequence[str], None] = ${repr(branch_labels)}
 depends_on: Union[str, Sequence[str], None] = ${repr(depends_on)}
 
+try:
+    dialect = op.get_context().dialect.name
+except Exception:
+    dialect = ''
 
 def upgrade() -> None:
     """Upgrade schema."""
