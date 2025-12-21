@@ -117,7 +117,7 @@ export const NovelReaderPage: React.FC<any> = () => {
 
   // get job details if auto fetch is enabled
   useEffect(() => {
-    if (autoFetch && data && !data.chapter.is_done) {
+    if (autoFetch && data?.chapter?.id && !data.chapter.is_done) {
       createFetchJob(data.chapter.id).then(setJob).catch(console.error);
     } else {
       setJob(undefined);

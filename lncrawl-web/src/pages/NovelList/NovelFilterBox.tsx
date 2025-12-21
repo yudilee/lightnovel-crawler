@@ -17,7 +17,7 @@ export const NovelFilterBox: React.FC<
         setLoading(true);
         const { data } = await axios.get<SourceItem[]>('/api/novel/sources');
         setSources(data);
-      } catch (error) {
+      } catch {
         message.error('Failed to load sources');
       } finally {
         setLoading(false);
