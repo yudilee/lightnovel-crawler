@@ -44,7 +44,7 @@ export const ReaderVoiceSettings: ReaderSettingsItem = {
     }, []);
 
     const defaultValue = useMemo(
-      () => voices.find((x) => x.default)?.voiceURI,
+      () => voices.find((x) => x.default)?.name,
       [voices]
     );
 
@@ -52,7 +52,7 @@ export const ReaderVoiceSettings: ReaderSettingsItem = {
       () =>
         voices.map((voice) => ({
           label: voice.name,
-          value: voice.voiceURI,
+          value: voice.name,
         })),
       [voices]
     );

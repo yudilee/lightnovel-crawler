@@ -1,7 +1,7 @@
 import { Favicon } from '@/components/Favicon';
 import { Flex, Input, message, Select, Space } from 'antd';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { SourceItem } from '../../types';
 import { type NovelListHook } from './hooks';
 
@@ -26,6 +26,17 @@ export const NovelFilterBox: React.FC<
     loadSources();
   }, []);
 
+  const sourceOptions = useMemo(() => {
+    return sources.map((source) => ({
+      value: source.domain,
+      label: (
+        <Space key={source.domain}>
+          <Favicon url={source.url} /> {source.domain}
+        </Space>
+      ),
+    }));
+  }, [sources]);
+
   return (
     <Flex align="center" justify="space-between" gap="8px" wrap>
       {/* Domain Select */}
@@ -36,14 +47,7 @@ export const NovelFilterBox: React.FC<
         placeholder="Select a domain"
         allowClear
         size="large"
-        options={sources.map((source) => ({
-          value: source.domain,
-          label: (
-            <Space>
-              <Favicon url={source.url} /> {source.domain}
-            </Space>
-          ),
-        }))}
+        options={sourceOptions}
         style={{ flex: 1, minWidth: 250 }}
       />
 

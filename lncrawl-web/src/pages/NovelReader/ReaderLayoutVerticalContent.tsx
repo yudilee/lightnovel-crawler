@@ -16,7 +16,7 @@ function useSpeechSynthesis(
 ) {
   const navigate = useNavigate();
 
-  const voiceUri = useSelector(Reader.select.voice);
+  const voiceName = useSelector(Reader.select.voice);
   const speaking = useSelector(Reader.select.speaking);
   const position = useSelector(Reader.select.speakPosition);
   const voiceSpeed = useSelector(Reader.select.voiceSpeed);
@@ -26,8 +26,8 @@ function useSpeechSynthesis(
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   const voice = useMemo(
-    () => voices.find((x) => x.voiceURI === voiceUri) || voices[0],
-    [voices, voiceUri]
+    () => voices.find((x) => x.name === voiceName) || voices[0],
+    [voices, voiceName]
   );
 
   useEffect(() => {
