@@ -24,6 +24,7 @@ export const ReaderFontFamilySettings: ReaderSettingsItem = {
 
     return (
       <Select
+        virtual={false}
         placeholder="Select font family"
         variant="borderless"
         style={{ width: '100%' }}

@@ -34,7 +34,7 @@ def list_novels(
     summary='Returns a list of sources that are used in available novels',
 )
 def list_sources() -> List[SourceItem]:
-    return list(ctx.novels.list_sources())
+    return ctx.novels.list_sources()
 
 
 @router.get("/{novel_id}", summary='Returns a novel')

@@ -1,6 +1,7 @@
 import { Favicon } from '@/components/Favicon';
 import { Flex, Input, message, Select, Space } from 'antd';
 import axios from 'axios';
+import { uniqBy } from 'lodash';
 import { useEffect, useMemo, useState } from 'react';
 import type { SourceItem } from '../../types';
 import { type NovelListHook } from './hooks';
@@ -27,10 +28,10 @@ export const NovelFilterBox: React.FC<
   }, []);
 
   const sourceOptions = useMemo(() => {
-    return sources.map((source) => ({
+    return uniqBy(sources, 'domain').map((source) => ({
       value: source.domain,
       label: (
-        <Space key={source.domain}>
+        <Space>
           <Favicon url={source.url} /> {source.domain}
         </Space>
       ),
@@ -41,9 +42,12 @@ export const NovelFilterBox: React.FC<
     <Flex align="center" justify="space-between" gap="8px" wrap>
       {/* Domain Select */}
       <Select
+        virtual={false}
         loading={loading}
         defaultValue={initialDomain || undefined}
-        onChange={(value) => updateParams({ domain: value || '', page: 1 })}
+        onChange={(value: string) =>
+          updateParams({ domain: value || '', page: 1 })
+        }
         placeholder="Select a domain"
         allowClear
         size="large"

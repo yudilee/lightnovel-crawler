@@ -63,6 +63,7 @@ export const ReaderVoiceSettings: ReaderSettingsItem = {
 
     return (
       <Select
+        virtual={false}
         loading={loading}
         disabled={!voices.length}
         variant="borderless"

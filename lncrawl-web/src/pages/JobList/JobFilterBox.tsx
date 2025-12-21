@@ -26,6 +26,7 @@ export const JobFilterBox: React.FC<
           Status:
         </Typography.Text>
         <Select
+          virtual={false}
           options={JobStatusFilterParams}
           defaultValue={status ?? JobStatusFilterParams[0].value}
           onChange={(status) => updateParams({ status, page: 1 })}
@@ -46,6 +47,7 @@ export const JobFilterBox: React.FC<
           Type:
         </Typography.Text>
         <Select
+          virtual={false}
           defaultValue={type ?? JobTypeFilterParams[0].value}
           onChange={(type) => updateParams({ type, page: 1 })}
           options={JobTypeFilterParams}

@@ -104,7 +104,7 @@ export const UserEditButton: React.FC<
             label="Full Name"
             rules={[
               {
-                validator: (_, value) =>
+                validator: (_: any, value: string) =>
                   value && value.trim().length >= 2
                     ? Promise.resolve()
                     : Promise.reject('Please enter a valid name'),
@@ -120,6 +120,7 @@ export const UserEditButton: React.FC<
 
           <Form.Item name="role" label="Role">
             <Select
+              virtual={false}
               size="large"
               placeholder="Select role"
               options={Object.values(UserRole).map((value) => ({
@@ -131,6 +132,7 @@ export const UserEditButton: React.FC<
 
           <Form.Item name="tier" label="Tier">
             <Select
+              virtual={false}
               size="large"
               placeholder="Select tier"
               options={Object.values(UserTier).map((value) => ({

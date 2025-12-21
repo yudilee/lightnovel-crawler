@@ -1,5 +1,5 @@
 import shutil
-from typing import Any, Generator, List, Optional
+from typing import Any, List, Optional
 
 import sqlmodel as sa
 
@@ -54,7 +54,7 @@ class NovelService:
                 items=list(items),
             )
 
-    def list_sources(self) -> Generator[SourceItem, None, None]:
+    def list_sources(self) -> List[SourceItem]:
         with ctx.db.session() as sess:
             domains = sess.exec(
                 sa.select(
@@ -63,10 +63,16 @@ class NovelService:
                 )
                 .group_by(Novel.domain)
             ).all()
-            for domain, total_novels in domains:
-                for source in ctx.sources.list(domain):
-                    source.total_novels = total_novels
-                    yield source
+
+        results = []
+        for domain, total_novels in domains:
+            sources = ctx.sources.list(domain)
+            if not sources:
+                continue
+            source = sources[0]
+            source.total_novels = total_novels
+            results.append(source)
+        return results
 
     def get(self, novel_id: str) -> Novel:
         with ctx.db.session() as sess:

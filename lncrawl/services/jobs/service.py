@@ -613,19 +613,11 @@ class JobService:
         )
 
     def cancel_if_dangling(self, job: Job) -> bool:
-        """
-        Check if a job is dangling and cancel it if it is.
-        """
-        if job.parent_job_id:
-            root = self.get_root(job.parent_job_id)
-        else:
-            root = None
-
+        root = self.get_root(job.id)
         if root and not root.is_done:
             return False
 
         self.cancel(job.id)
-
         if root:
             if root.status == JobStatus.CANCELED:
                 self.cancel(root.id)

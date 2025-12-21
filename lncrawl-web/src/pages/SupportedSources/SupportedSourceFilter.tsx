@@ -117,10 +117,13 @@ export const SupportedSourceFilter: React.FC<{
         prefix={<SearchOutlined />}
         placeholder="Search by URL"
         value={filter.search}
-        onChange={(e) => setFilter({ ...filter, search: e.target.value })}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          setFilter({ ...filter, search: e.target.value })
+        }
         style={{ width: 220 }}
       />
       <Select
+        virtual={false}
         allowClear
         placeholder="Language"
         options={languageOptions}
@@ -129,6 +132,7 @@ export const SupportedSourceFilter: React.FC<{
         style={{ width: 110 }}
       />
       <Select
+        virtual={false}
         allowClear
         mode="multiple"
         placeholder="Features"
@@ -138,6 +142,7 @@ export const SupportedSourceFilter: React.FC<{
         options={featureOptions}
       />
       <Select
+        virtual={false}
         placeholder="Sort by"
         options={sortByOptions}
         value={filter.sortBy}
