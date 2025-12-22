@@ -9,11 +9,11 @@ import type { RootState } from '.';
 //
 
 export interface ConfigState {
-  supportSourceListPageSize: number;
+  supportSourcesPageSize: number;
 }
 
 const buildInitialState = (): ConfigState => ({
-  supportSourceListPageSize: 12,
+  supportSourcesPageSize: 12,
 });
 
 //
@@ -23,8 +23,8 @@ export const ConfigSlice = createSlice({
   name: 'auth',
   initialState: buildInitialState(),
   reducers: {
-    setSupportedSourceListPageSize(state, action: PayloadAction<number>) {
-      state.supportSourceListPageSize = action.payload;
+    setSupportedSourcesPageSize(state, action: PayloadAction<number>) {
+      state.supportSourcesPageSize = action.payload;
     },
   },
 });
@@ -33,15 +33,15 @@ export const ConfigSlice = createSlice({
 // Actions & Selectors
 //
 const selectConfigState = (state: RootState) => state.config;
-const selectSupportedSourceListPageSize = createSelector(
+const supportedSourcesPageSize = createSelector(
   selectConfigState,
-  (state) => state.supportSourceListPageSize
+  (state) => state.supportSourcesPageSize
 );
 
 export const Config = {
   action: ConfigSlice.actions,
   select: {
-    supportedSourceListPageSize: selectSupportedSourceListPageSize,
+    supportedSourcesPageSize,
   },
 };
 

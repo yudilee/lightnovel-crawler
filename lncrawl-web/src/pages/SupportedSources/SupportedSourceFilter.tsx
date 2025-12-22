@@ -1,59 +1,29 @@
 import {
   BookOutlined,
+  ClearOutlined,
   LoginOutlined,
   SearchOutlined,
   SortAscendingOutlined,
   SortDescendingOutlined,
   TranslationOutlined,
 } from '@ant-design/icons';
-import { Flex, Input, Select } from 'antd';
-import { sortedUniqBy } from 'lodash';
-import React, { useMemo } from 'react';
+import { Button, Flex, Input, Select, Space } from 'antd';
+import { isEqual, sortedUniqBy } from 'lodash';
+import React, { useEffect, useMemo, useState } from 'react';
 import { getLanguageLabel } from './utils';
 
-type Feature = 'has_manga' | 'has_mtl' | 'can_search' | 'can_login';
 type SortBy = 'domain' | 'total_novels' | 'total_commits' | 'version';
 type SortOrder = 'asc' | 'desc';
-
-const featureOptions = [
-  {
-    value: 'has_manga',
-    label: (
-      <>
-        <BookOutlined /> Manga
-      </>
-    ),
-  },
-  {
-    value: 'has_mtl',
-    label: (
-      <>
-        <TranslationOutlined /> MTL
-      </>
-    ),
-  },
-  {
-    value: 'can_search',
-    label: (
-      <>
-        <SearchOutlined /> Search
-      </>
-    ),
-  },
-  {
-    value: 'can_login',
-    label: (
-      <>
-        <LoginOutlined /> Login
-      </>
-    ),
-  },
-];
 
 export type SourceFilterState = {
   search: string;
   language?: string;
-  features: Feature[];
+  features: {
+    has_manga?: boolean;
+    has_mtl?: boolean;
+    can_search?: boolean;
+    can_login?: boolean;
+  };
   sortBy?: SortBy;
   sortOrder: SortOrder;
 };
@@ -61,7 +31,7 @@ export type SourceFilterState = {
 export const defaultSourceFilters: SourceFilterState = {
   search: '',
   language: undefined,
-  features: [],
+  features: {},
   sortBy: 'version',
   sortOrder: 'desc',
 };
@@ -74,10 +44,18 @@ const defaultSortOrder: Record<SortBy, SortOrder> = {
 };
 
 export const SupportedSourceFilter: React.FC<{
-  value: SourceFilterState;
   onChange: (f: SourceFilterState) => void;
   languages: string[];
-}> = ({ value: filter, onChange: setFilter, languages }) => {
+}> = ({ onChange, languages }) => {
+  const [filter, setFilter] = useState(defaultSourceFilters);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      onChange(filter);
+    }, 50);
+    return () => clearTimeout(timeout);
+  }, [filter, onChange]);
+
   const sortByOptions = [
     { value: 'domain', label: 'Domain' },
     { value: 'total_novels', label: 'Total Novels' },
@@ -95,6 +73,16 @@ export const SupportedSourceFilter: React.FC<{
       .sort((a, b) => a.label!.localeCompare(b.label!));
     return sortedUniqBy(options, 'label');
   }, [languages]);
+
+  const toggleFeature = (feature: keyof SourceFilterState['features']) => {
+    setFilter((prev) => ({
+      ...prev,
+      features: {
+        ...prev.features,
+        [feature]: !prev.features[feature],
+      },
+    }));
+  };
 
   return (
     <Flex align="center" gap={5} wrap>
@@ -148,18 +136,6 @@ export const SupportedSourceFilter: React.FC<{
         style={{ flex: 1, minWidth: 150 }}
       />
 
-      {/* Feature filter */}
-      <Select
-        virtual={false}
-        allowClear
-        mode="multiple"
-        placeholder="Features"
-        style={{ flex: 1, minWidth: 150 }}
-        value={filter.features}
-        onChange={(features) => setFilter({ ...filter, features })}
-        options={featureOptions}
-      />
-
       {/* Language filter */}
       <Select
         virtual={false}
@@ -170,6 +146,51 @@ export const SupportedSourceFilter: React.FC<{
         onChange={(val) => setFilter({ ...filter, language: val })}
         style={{ flex: 1, minWidth: 150 }}
       />
+
+      {/* Feature filters */}
+      <Space size={0} wrap>
+        <Button
+          type={filter.features.has_manga ? 'primary' : 'default'}
+          onClick={() => toggleFeature('has_manga')}
+          icon={<BookOutlined />}
+          style={{ outline: 'none', borderRadius: 0 }}
+        >
+          Manga
+        </Button>
+        <Button
+          type={filter.features.has_mtl ? 'primary' : 'default'}
+          onClick={() => toggleFeature('has_mtl')}
+          icon={<TranslationOutlined />}
+          style={{ outline: 'none', borderRadius: 0 }}
+        >
+          MTL
+        </Button>
+        <Button
+          type={filter.features.can_search ? 'primary' : 'default'}
+          onClick={() => toggleFeature('can_search')}
+          icon={<SearchOutlined />}
+          style={{ outline: 'none', borderRadius: 0 }}
+        >
+          Search
+        </Button>
+        <Button
+          type={filter.features.can_login ? 'primary' : 'default'}
+          onClick={() => toggleFeature('can_login')}
+          icon={<LoginOutlined />}
+          style={{ outline: 'none', borderRadius: 0 }}
+        >
+          Login
+        </Button>
+      </Space>
+
+      {/* Clear Filters */}
+      {!isEqual(filter, defaultSourceFilters) && (
+        <Button
+          shape="round"
+          icon={<ClearOutlined />}
+          onClick={() => setFilter(defaultSourceFilters)}
+        />
+      )}
     </Flex>
   );
 };

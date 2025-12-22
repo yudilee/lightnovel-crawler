@@ -1,7 +1,7 @@
 import { store } from '@/store';
 import { Config } from '@/store/_config';
 import type { SourceItem } from '@/types';
-import { List, Typography } from 'antd';
+import { List } from 'antd';
 import { useSelector } from 'react-redux';
 import { SupportedSourceCard } from './SupportedSourceCard';
 
@@ -9,9 +9,10 @@ export const SupportedSourceList: React.FC<{
   sources: SourceItem[];
   disabled?: boolean;
 }> = ({ sources, disabled }) => {
-  const defaultPageSize = useSelector(
-    Config.select.supportedSourceListPageSize
-  );
+  const defaultPageSize = useSelector(Config.select.supportedSourcesPageSize);
+  const updatePageSize = (pageSize: number) => {
+    store.dispatch(Config.action.setSupportedSourcesPageSize(pageSize));
+  };
   return (
     <>
       <List
@@ -28,15 +29,7 @@ export const SupportedSourceList: React.FC<{
           hideOnSinglePage: true,
           showSizeChanger: true,
           pageSizeOptions: [8, 12, 16, 25, 50, 100],
-          onChange: (_, pageSize) =>
-            store.dispatch(
-              Config.action.setSupportedSourceListPageSize(pageSize)
-            ),
-          showTotal: (total) => (
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              {total} sources
-            </Typography.Text>
-          ),
+          onChange: (_, pageSize) => updatePageSize(pageSize),
         }}
       />
     </>

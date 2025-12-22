@@ -1,41 +1,32 @@
 import { ErrorState } from '@/components/Loading/ErrorState';
 import { LoadingState } from '@/components/Loading/LoadingState';
 import { Auth } from '@/store/_auth';
+import type { SourceItem } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { formatDate, parseDate } from '@/utils/time';
-import {
-  ClearOutlined,
-  FileDoneOutlined,
-  ReloadOutlined,
-} from '@ant-design/icons';
-import { Button, Divider, Empty, Flex, message, Tabs, Typography } from 'antd';
+import { FileDoneOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Button, Divider, Empty, Flex, Grid, message, Typography } from 'antd';
 import axios from 'axios';
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useSupportedSources } from './hooks';
-import {
-  defaultSourceFilters,
-  SupportedSourceFilter,
-} from './SupportedSourceFilter';
+import { SupportedSourceFilter } from './SupportedSourceFilter';
 import { SupportedSourceList } from './SupportedSourceList';
 import { filterAndSortSources } from './utils';
 
 export const SupportedSourcesPage: React.FC<any> = () => {
+  const { sm } = Grid.useBreakpoint();
+
   const isAdmin = useSelector(Auth.select.isAdmin);
   const [messageApi, contextHolder] = message.useMessage();
   const { data, loading, error, refresh } = useSupportedSources();
 
   const [tabKey, setTabKey] = useState<string>('active');
-  const [filter, setFilter] = useState(defaultSourceFilters);
+  const [filteredSources, setFilteredSources] = useState<SourceItem[]>([]);
 
   const languages = useMemo(
     () => Array.from(new Set(data.map((x) => x.language))).sort(),
     [data]
-  );
-
-  const filteredSources = useMemo(
-    () => filterAndSortSources(data, filter),
-    [data, filter]
   );
 
   const [activeSources, disabledSources, usedSources] = useMemo(() => {
@@ -79,8 +70,9 @@ export const SupportedSourcesPage: React.FC<any> = () => {
   return (
     <>
       {contextHolder}
+
       <Flex align="baseline" justify="space-between" gap="8px" wrap>
-        <Typography.Title level={2}>
+        <Typography.Title level={2} style={{ marginBottom: 5 }}>
           <FileDoneOutlined style={{ color: '#0f0' }} /> Supported Sources
         </Typography.Title>
         {isAdmin && (
@@ -98,10 +90,50 @@ export const SupportedSourcesPage: React.FC<any> = () => {
       <Divider size="small" />
 
       <SupportedSourceFilter
-        value={filter}
-        onChange={setFilter}
         languages={languages}
+        onChange={(f) => setFilteredSources(filterAndSortSources(data, f))}
       />
+
+      <Flex align="center" style={{ marginTop: 10 }}>
+        <Button
+          type={tabKey === 'active' ? 'primary' : 'default'}
+          onClick={() => setTabKey('active')}
+          style={{ borderRadius: 0, outline: 'none' }}
+        >
+          {sm ? 'Active Sources' : 'Active'}
+        </Button>
+        <Button
+          type={tabKey === 'used' ? 'primary' : 'default'}
+          onClick={() => setTabKey('used')}
+          style={{ borderRadius: 0, outline: 'none' }}
+        >
+          {sm ? 'Sources In Use' : 'In Use'}
+        </Button>
+        <Button
+          type={tabKey === 'disabled' ? 'primary' : 'default'}
+          onClick={() => setTabKey('disabled')}
+          style={{ borderRadius: 0, outline: 'none' }}
+        >
+          {sm ? 'Disabled Sources' : 'Disabled'}
+        </Button>
+        {currentSources?.length ? (
+          <Typography.Text
+            type="secondary"
+            style={{
+              flex: 1,
+              fontSize: 14,
+              marginLeft: 10,
+              textAlign: 'right',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {currentSources?.length} item
+            {currentSources?.length > 1 && 's'}
+          </Typography.Text>
+        ) : null}
+      </Flex>
+
+      <Divider size="small" style={{ marginTop: 4 }} />
 
       {loading ? (
         <LoadingState />
@@ -111,58 +143,16 @@ export const SupportedSourcesPage: React.FC<any> = () => {
           title="Failed to load supported sources"
           onRetry={refresh}
         />
+      ) : !currentSources?.length ? (
+        <Empty
+          description="No sources available"
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+        />
       ) : (
-        <>
-          <Tabs
-            activeKey={tabKey}
-            onChange={setTabKey}
-            tabBarGutter={20}
-            size="large"
-            destroyOnHidden
-            tabBarStyle={{ fontSize: 16 }}
-            tabBarExtraContent={
-              currentSources ? (
-                <Typography.Text type="secondary" style={{ fontSize: 14 }}>
-                  {currentSources.length} item
-                  {currentSources.length > 1 && 's'}
-                </Typography.Text>
-              ) : undefined
-            }
-            items={[
-              {
-                key: 'active',
-                label: 'Active Sources',
-              },
-              {
-                key: 'used',
-                label: 'Used Sources',
-              },
-              {
-                key: 'disabled',
-                label: 'Disabled Sources',
-              },
-            ]}
-          />
-          {!currentSources?.length ? (
-            <Empty
-              description="No sourcess"
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            >
-              <Button
-                shape="round"
-                icon={<ClearOutlined />}
-                onClick={() => setFilter(defaultSourceFilters)}
-              >
-                Clear Filters
-              </Button>
-            </Empty>
-          ) : (
-            <SupportedSourceList
-              sources={currentSources}
-              disabled={tabKey === 'disabled'}
-            />
-          )}
-        </>
+        <SupportedSourceList
+          sources={currentSources}
+          disabled={tabKey === 'disabled'}
+        />
       )}
     </>
   );

@@ -23,7 +23,7 @@ export const SupportedSourceCard: React.FC<{
 
   return (
     <Card size="small" style={{ opacity: disabled ? 0.8 : 1 }}>
-      <Space size={10} style={{ width: '100%' }}>
+      <Space size={15} style={{ width: '100%' }}>
         <Favicon
           size="large"
           url={source.url}

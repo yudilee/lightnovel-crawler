@@ -31,7 +31,7 @@ export function filterAndSortSources(
 
   // Apply filters
   const searchLower = search?.trim().toLowerCase();
-  if (language || searchLower || features?.length) {
+  if (language || searchLower || Object.values(features).some(Boolean)) {
     data = data.filter((src) => {
       if (language && src.language !== language) {
         return false;
@@ -39,12 +39,17 @@ export function filterAndSortSources(
       if (searchLower && !src.domain.toLowerCase().includes(searchLower)) {
         return false;
       }
-      if (features?.length) {
-        for (const feature of features) {
-          if (!(src as any)[feature]) {
-            return false;
-          }
-        }
+      if (features.has_manga && !src.has_manga) {
+        return false;
+      }
+      if (features.has_mtl && !src.has_mtl) {
+        return false;
+      }
+      if (features.can_search && !src.can_search) {
+        return false;
+      }
+      if (features.can_login && !src.can_login) {
+        return false;
       }
       return true;
     });
