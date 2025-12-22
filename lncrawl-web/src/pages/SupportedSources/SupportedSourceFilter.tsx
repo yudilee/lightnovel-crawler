@@ -6,18 +6,13 @@ import {
   SortDescendingOutlined,
   TranslationOutlined,
 } from '@ant-design/icons';
-import { Button, Flex, Input, Select } from 'antd';
+import { Flex, Input, Select } from 'antd';
 import { sortedUniqBy } from 'lodash';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { getLanguageLabel } from './utils';
 
 type Feature = 'has_manga' | 'has_mtl' | 'can_search' | 'can_login';
-type SortBy =
-  | 'domain'
-  | 'total_novels'
-  | 'feature_count'
-  | 'total_commits'
-  | 'version';
+type SortBy = 'domain' | 'total_novels' | 'total_commits' | 'version';
 type SortOrder = 'asc' | 'desc';
 
 const featureOptions = [
@@ -63,7 +58,7 @@ export type SourceFilterState = {
   sortOrder: SortOrder;
 };
 
-const defaultFilters: SourceFilterState = {
+export const defaultSourceFilters: SourceFilterState = {
   search: '',
   language: undefined,
   features: [],
@@ -74,22 +69,21 @@ const defaultFilters: SourceFilterState = {
 const defaultSortOrder: Record<SortBy, SortOrder> = {
   domain: 'asc',
   total_novels: 'desc',
-  feature_count: 'desc',
   total_commits: 'desc',
   version: 'desc',
 };
 
 export const SupportedSourceFilter: React.FC<{
-  value?: SourceFilterState;
+  value: SourceFilterState;
   onChange: (f: SourceFilterState) => void;
   languages: string[];
-}> = ({ value = defaultFilters, onChange, languages }) => {
-  const [filter, setFilter] = useState<SourceFilterState>(value);
-
-  useEffect(() => {
-    const tid = setTimeout(() => onChange(filter), 50);
-    return () => clearTimeout(tid);
-  }, [filter, onChange]);
+}> = ({ value: filter, onChange: setFilter, languages }) => {
+  const sortByOptions = [
+    { value: 'domain', label: 'Domain' },
+    { value: 'total_novels', label: 'Total Novels' },
+    { value: 'total_commits', label: 'Total Commits' },
+    { value: 'version', label: 'Version' },
+  ];
 
   const languageOptions = useMemo(() => {
     const options = languages
@@ -102,16 +96,9 @@ export const SupportedSourceFilter: React.FC<{
     return sortedUniqBy(options, 'label');
   }, [languages]);
 
-  const sortByOptions = [
-    { value: 'domain', label: 'Domain' },
-    { value: 'total_novels', label: 'Total Novels' },
-    { value: 'feature_count', label: 'Feature Count' },
-    { value: 'total_commits', label: 'Total Commits' },
-    { value: 'version', label: 'Version' },
-  ];
-
   return (
-    <Flex wrap align="center" gap={5}>
+    <Flex align="center" gap={5} wrap>
+      {/* Search */}
       <Input
         allowClear
         prefix={<SearchOutlined />}
@@ -120,27 +107,10 @@ export const SupportedSourceFilter: React.FC<{
         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
           setFilter({ ...filter, search: e.target.value })
         }
-        style={{ width: 220 }}
+        style={{ flex: 2, minWidth: 250 }}
       />
-      <Select
-        virtual={false}
-        allowClear
-        placeholder="Language"
-        options={languageOptions}
-        value={filter.language}
-        onChange={(val) => setFilter({ ...filter, language: val })}
-        style={{ width: 110 }}
-      />
-      <Select
-        virtual={false}
-        allowClear
-        mode="multiple"
-        placeholder="Features"
-        style={{ minWidth: 150 }}
-        value={filter.features}
-        onChange={(features) => setFilter({ ...filter, features })}
-        options={featureOptions}
-      />
+
+      {/* Sort */}
       <Select
         virtual={false}
         placeholder="Sort by"
@@ -175,9 +145,31 @@ export const SupportedSourceFilter: React.FC<{
           }
         }}
         allowClear={filter.sortBy !== 'version' || filter.sortOrder !== 'desc'}
-        style={{ width: 160 }}
+        style={{ flex: 1, minWidth: 150 }}
       />
-      <Button onClick={() => setFilter(defaultFilters)}>Clear</Button>
+
+      {/* Feature filter */}
+      <Select
+        virtual={false}
+        allowClear
+        mode="multiple"
+        placeholder="Features"
+        style={{ flex: 1, minWidth: 150 }}
+        value={filter.features}
+        onChange={(features) => setFilter({ ...filter, features })}
+        options={featureOptions}
+      />
+
+      {/* Language filter */}
+      <Select
+        virtual={false}
+        allowClear
+        placeholder="Language"
+        options={languageOptions}
+        value={filter.language}
+        onChange={(val) => setFilter({ ...filter, language: val })}
+        style={{ flex: 1, minWidth: 150 }}
+      />
     </Flex>
   );
 };

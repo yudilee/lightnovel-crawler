@@ -3,21 +3,67 @@ import { LoadingState } from '@/components/Loading/LoadingState';
 import { Auth } from '@/store/_auth';
 import { stringifyError } from '@/utils/errors';
 import { formatDate, parseDate } from '@/utils/time';
-import { FileDoneOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Button, Divider, Flex, message, Tabs, Typography } from 'antd';
+import {
+  ClearOutlined,
+  FileDoneOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons';
+import { Button, Divider, Empty, Flex, message, Tabs, Typography } from 'antd';
 import axios from 'axios';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { SupportedSourceList } from './SupportedSourceList';
 import { useSupportedSources } from './hooks';
+import {
+  defaultSourceFilters,
+  SupportedSourceFilter,
+} from './SupportedSourceFilter';
+import { SupportedSourceList } from './SupportedSourceList';
+import { filterAndSortSources } from './utils';
 
 export const SupportedSourcesPage: React.FC<any> = () => {
   const isAdmin = useSelector(Auth.select.isAdmin);
   const [messageApi, contextHolder] = message.useMessage();
   const { data, loading, error, refresh } = useSupportedSources();
 
-  const active = useMemo(() => data.filter((x) => !x.is_disabled), [data]);
-  const disabled = useMemo(() => data.filter((x) => x.is_disabled), [data]);
+  const [tabKey, setTabKey] = useState<string>('active');
+  const [filter, setFilter] = useState(defaultSourceFilters);
+
+  const languages = useMemo(
+    () => Array.from(new Set(data.map((x) => x.language))).sort(),
+    [data]
+  );
+
+  const filteredSources = useMemo(
+    () => filterAndSortSources(data, filter),
+    [data, filter]
+  );
+
+  const [activeSources, disabledSources, usedSources] = useMemo(() => {
+    const active = [];
+    const disabled = [];
+    const used = [];
+    for (const src of filteredSources) {
+      if (src.is_disabled) {
+        disabled.push(src);
+      } else {
+        active.push(src);
+      }
+      if (src.total_novels > 0) {
+        used.push(src);
+      }
+    }
+    return [active, disabled, used];
+  }, [filteredSources]);
+
+  const currentSources = useMemo(
+    () =>
+      ({
+        active: activeSources,
+        used: usedSources,
+        disabled: disabledSources,
+      }[tabKey]),
+    [activeSources, disabledSources, usedSources, tabKey]
+  );
 
   const handleUpdateSources = async () => {
     try {
@@ -33,8 +79,7 @@ export const SupportedSourcesPage: React.FC<any> = () => {
   return (
     <>
       {contextHolder}
-
-      <Flex align="center" justify="space-between" gap="8px" wrap>
+      <Flex align="baseline" justify="space-between" gap="8px" wrap>
         <Typography.Title level={2}>
           <FileDoneOutlined style={{ color: '#0f0' }} /> Supported Sources
         </Typography.Title>
@@ -52,6 +97,12 @@ export const SupportedSourcesPage: React.FC<any> = () => {
 
       <Divider size="small" />
 
+      <SupportedSourceFilter
+        value={filter}
+        onChange={setFilter}
+        languages={languages}
+      />
+
       {loading ? (
         <LoadingState />
       ) : error ? (
@@ -61,25 +112,57 @@ export const SupportedSourcesPage: React.FC<any> = () => {
           onRetry={refresh}
         />
       ) : (
-        <Tabs
-          defaultActiveKey="active"
-          tabBarGutter={20}
-          size="large"
-          destroyOnHidden
-          tabBarStyle={{ fontSize: 16, padding: '0 10px' }}
-          items={[
-            {
-              key: 'active',
-              label: 'Active Sources',
-              children: <SupportedSourceList sources={active} />,
-            },
-            {
-              key: 'disabled',
-              label: 'Disabled Sources',
-              children: <SupportedSourceList sources={disabled} disabled />,
-            },
-          ]}
-        />
+        <>
+          <Tabs
+            activeKey={tabKey}
+            onChange={setTabKey}
+            tabBarGutter={20}
+            size="large"
+            destroyOnHidden
+            tabBarStyle={{ fontSize: 16 }}
+            tabBarExtraContent={
+              currentSources ? (
+                <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+                  {currentSources.length} item
+                  {currentSources.length > 1 && 's'}
+                </Typography.Text>
+              ) : undefined
+            }
+            items={[
+              {
+                key: 'active',
+                label: 'Active Sources',
+              },
+              {
+                key: 'used',
+                label: 'Used Sources',
+              },
+              {
+                key: 'disabled',
+                label: 'Disabled Sources',
+              },
+            ]}
+          />
+          {!currentSources?.length ? (
+            <Empty
+              description="No sourcess"
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            >
+              <Button
+                shape="round"
+                icon={<ClearOutlined />}
+                onClick={() => setFilter(defaultSourceFilters)}
+              >
+                Clear Filters
+              </Button>
+            </Empty>
+          ) : (
+            <SupportedSourceList
+              sources={currentSources}
+              disabled={tabKey === 'disabled'}
+            />
+          )}
+        </>
       )}
     </>
   );
