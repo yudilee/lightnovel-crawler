@@ -1,7 +1,10 @@
 const _mask24 = (1 << 24) - 1;
 type Theme = 'light' | 'dark';
 
-function buildHex(code: number, start = 0x09, stop = 0x3f): string {
+function buildColor(code: number, theme: Theme): string {
+  const start = theme === 'dark' ? 0x09 : 0xcf;
+  const stop = theme === 'dark' ? 0x3f : 0xf5;
+
   const range = stop - start;
   const r = (code & range) + start;
   code >>= 8;
@@ -16,21 +19,37 @@ function buildHex(code: number, start = 0x09, stop = 0x3f): string {
   return hex;
 }
 
-function buildGradient(code1: number, code2: number, theme: Theme): string {
-  const start = theme === 'dark' ? 0x09 : 0xcf;
-  const stop = theme === 'dark' ? 0x3f : 0xf5;
-  const color1 = buildHex(code1, start, stop);
-  const color2 = buildHex(code2, start, stop);
-  return `linear-gradient(135deg, ${color1}, ${color2})`;
+/**
+ * Get a random color (non-deterministic)
+ */
+export function getRandomColor(theme: Theme = 'dark'): string {
+  const code = Math.floor(Math.random() * (_mask24 + 1));
+  return buildColor(code, theme);
 }
 
 /**
+ * Generate a deterministic random color based on a ID
+ */
+export function getColorForId(id: string = '', theme: Theme = 'dark'): string {
+  let code = _mask24;
+  for (let i = 0; i < id.length && i < 6; ++i) {
+    code ^= (code << 4) ^ id.charCodeAt(i);
+    code ^= code >>> 24;
+    code = code << 4;
+  }
+  return buildColor(code, theme);
+}
+/**
  * Get a random gradient (non-deterministic)
  */
-export function getRandomGradient(theme: Theme = 'dark'): string {
-  const code1 = Math.floor(Math.random() * (_mask24 + 1));
-  const code2 = Math.floor(Math.random() * (_mask24 + 1));
-  return buildGradient(code1, code2, theme);
+export function getRandomGradient(
+  theme: Theme = 'dark',
+  degress?: number
+): string {
+  const color1 = getRandomColor(theme);
+  const color2 = getRandomColor(theme);
+  degress ??= Math.floor(Math.random() * 360);
+  return `linear-gradient(${degress}deg, ${color1}, ${color2})`;
 }
 
 /**
@@ -38,21 +57,12 @@ export function getRandomGradient(theme: Theme = 'dark'): string {
  */
 export function getGradientForId(
   id: string = '',
-  theme: Theme = 'dark'
+  theme: Theme = 'dark',
+  degress: number = 135
 ): string {
-  let code1 = _mask24;
-  for (let i = 0; i < 6; ++i) {
-    const c = id.charCodeAt(i % id.length);
-    code1 ^= (code1 << 4) ^ c;
-    code1 ^= code1 >>> 24;
-    code1 = code1 << 4;
-  }
-  let code2 = code1;
-  for (let i = 6; i < 12; ++i) {
-    const c = id.charCodeAt(i % id.length);
-    code2 ^= (code2 << 4) ^ c;
-    code2 ^= code2 >>> 24;
-    code2 = code2 << 4;
-  }
-  return buildGradient(code1, code2, theme);
+  const first = id.slice(0, 6);
+  const second = id.slice(Math.max(id.length - 6, 0));
+  const color1 = getColorForId(first, theme);
+  const color2 = getColorForId(second, theme);
+  return `linear-gradient(${degress}deg, ${color1}, ${color2})`;
 }
