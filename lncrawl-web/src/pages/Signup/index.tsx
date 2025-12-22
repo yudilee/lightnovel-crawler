@@ -10,24 +10,19 @@ import {
   Flex,
   Form,
   Input,
-  Modal,
   Typography,
 } from 'antd';
 import FormItem from 'antd/es/form/FormItem';
 import axios from 'axios';
 import { useState } from 'react';
 import './policy-content.scss';
+import { PrivacyPolicy } from './PrivacyPolicy';
+import { TermsOfService } from './TermsOfService';
 
 export const SignupPage: React.FC<any> = () => {
   const [form] = Form.useForm();
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState<boolean>(false);
-  const [privacyModalOpen, setPrivacyModalOpen] = useState<boolean>(false);
-  const [termsModalOpen, setTermsModalOpen] = useState<boolean>(false);
-  const [privacyContent, setPrivacyContent] = useState<string>('');
-  const [termsContent, setTermsContent] = useState<string>('');
-  const [loadingPrivacy, setLoadingPrivacy] = useState<boolean>(false);
-  const [loadingTerms, setLoadingTerms] = useState<boolean>(false);
 
   const handleSignup = async (data: any) => {
     setLoading(true);
@@ -39,50 +34,6 @@ export const SignupPage: React.FC<any> = () => {
       setError(stringifyError(err, 'Oops! Something went wrong.'));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadPrivacyPolicy = async () => {
-    if (privacyContent) {
-      setPrivacyModalOpen(true);
-      return;
-    }
-    setLoadingPrivacy(true);
-    try {
-      const response = await fetch('/PRIVACY_POLICY.html');
-      if (!response.ok) {
-        throw new Error(`Failed to load: ${response.statusText}`);
-      }
-      const html = await response.text();
-      setPrivacyContent(html);
-      setPrivacyModalOpen(true);
-    } catch (err) {
-      setError('Failed to load privacy policy. Please try again later.');
-      console.error('Error loading privacy policy:', err);
-    } finally {
-      setLoadingPrivacy(false);
-    }
-  };
-
-  const loadTermsOfService = async () => {
-    if (termsContent) {
-      setTermsModalOpen(true);
-      return;
-    }
-    setLoadingTerms(true);
-    try {
-      const response = await fetch('/TERMS_OF_SERVICE.html');
-      if (!response.ok) {
-        throw new Error(`Failed to load: ${response.statusText}`);
-      }
-      const html = await response.text();
-      setTermsContent(html);
-      setTermsModalOpen(true);
-    } catch (err) {
-      setError('Failed to load terms of service. Please try again later.');
-      console.error('Error loading terms of service:', err);
-    } finally {
-      setLoadingTerms(false);
     }
   };
 
@@ -156,36 +107,15 @@ export const SignupPage: React.FC<any> = () => {
         valuePropName="checked"
         rules={[
           {
-            validator: (_, value) =>
+            validator: async (_, value) =>
               value
-                ? Promise.resolve()
-                : Promise.reject(
-                    'You must accept the Privacy Policy and Terms of Service to continue'
-                  ),
+                ? null
+                : 'You must accept the Privacy Policy and Terms of Service to continue',
           },
         ]}
       >
         <Checkbox>
-          I accept the{' '}
-          <Typography.Link
-            onClick={(e) => {
-              e.preventDefault();
-              loadPrivacyPolicy();
-            }}
-            style={{ padding: 0 }}
-          >
-            Privacy Policy
-          </Typography.Link>{' '}
-          and{' '}
-          <Typography.Link
-            onClick={(e) => {
-              e.preventDefault();
-              loadTermsOfService();
-            }}
-            style={{ padding: 0 }}
-          >
-            Terms of Service
-          </Typography.Link>
+          I accept the <PrivacyPolicy /> and <TermsOfService />
         </Checkbox>
       </Form.Item>
 
@@ -216,72 +146,6 @@ export const SignupPage: React.FC<any> = () => {
           <LeftOutlined /> Back to login
         </Typography.Link>
       </Flex>
-
-      <Modal
-        title="Privacy Policy"
-        open={privacyModalOpen}
-        onCancel={() => setPrivacyModalOpen(false)}
-        footer={[
-          <Button key="close" onClick={() => setPrivacyModalOpen(false)}>
-            Close
-          </Button>,
-        ]}
-        width={800}
-        style={{ top: 20 }}
-      >
-        <div
-          style={{
-            maxHeight: '70vh',
-            overflowY: 'auto',
-            padding: '16px 0',
-          }}
-        >
-          {loadingPrivacy ? (
-            <Typography.Text>Loading...</Typography.Text>
-          ) : (
-            <div
-              className="policy-content"
-              dangerouslySetInnerHTML={{ __html: privacyContent }}
-              style={{
-                lineHeight: '1.6',
-              }}
-            />
-          )}
-        </div>
-      </Modal>
-
-      <Modal
-        title="Terms of Service"
-        open={termsModalOpen}
-        onCancel={() => setTermsModalOpen(false)}
-        footer={[
-          <Button key="close" onClick={() => setTermsModalOpen(false)}>
-            Close
-          </Button>,
-        ]}
-        width={800}
-        style={{ top: 20 }}
-      >
-        <div
-          style={{
-            maxHeight: '70vh',
-            overflowY: 'auto',
-            padding: '16px 0',
-          }}
-        >
-          {loadingTerms ? (
-            <Typography.Text>Loading...</Typography.Text>
-          ) : (
-            <div
-              className="policy-content"
-              dangerouslySetInnerHTML={{ __html: termsContent }}
-              style={{
-                lineHeight: '1.6',
-              }}
-            />
-          )}
-        </div>
-      </Modal>
     </Form>
   );
 };

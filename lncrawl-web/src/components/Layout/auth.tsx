@@ -13,7 +13,7 @@ export const AuthLayout: React.FC<any> = () => {
           style={{ width: '100%', height: '100%' }}
         >
           <Card
-            style={{ width: '400px' }}
+            style={{ width: '500px' }}
             title={
               <Space
                 align="center"
