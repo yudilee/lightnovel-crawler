@@ -26,10 +26,11 @@ def __format_volume(crawler: Crawler, vol_id_map: Dict[int, int]):
     if crawler.volumes:
         crawler.volumes = [
             vol if isinstance(vol, Volume) else Volume(**vol)
-            for vol in sorted(crawler.volumes, key=lambda x: x.id)
+            for vol in crawler.volumes
         ]
         next_id = crawler.volumes[-1].id + 1
         crawler.volumes.append(Volume(id=next_id, title='Others'))
+        crawler.volumes.sort(key=lambda x: x.id)
     else:
         vol_count = math.ceil(len(crawler.chapters) / DEFAULT_CHAPTER_PER_VOLUME)
         crawler.volumes = [Volume(id=i + 1) for i in range(vol_count)]
@@ -45,8 +46,9 @@ def __format_volume(crawler: Crawler, vol_id_map: Dict[int, int]):
 def __format_chapters(crawler: Crawler, vol_id_map: Dict[int, int]):
     crawler.chapters = [
         chap if isinstance(chap, Chapter) else Chapter(**chap)
-        for chap in sorted(crawler.chapters, key=lambda x: x.id)
+        for chap in crawler.chapters
     ]
+    crawler.chapters.sort(key=lambda x: x.id)
     for index, item in enumerate(crawler.chapters):
         item.id = index + 1
         item.extra['crawler_version'] = getattr(crawler, 'version')
