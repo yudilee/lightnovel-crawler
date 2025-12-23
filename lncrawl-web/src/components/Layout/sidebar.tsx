@@ -1,6 +1,7 @@
 import { Auth } from '@/store/_auth';
 import {
   BookOutlined,
+  CommentOutlined,
   ControlOutlined,
   DeploymentUnitOutlined,
   FileDoneOutlined,
@@ -62,6 +63,12 @@ export const MainLayoutSidebar: React.FC<any> = () => {
         className={getClassName(currentPath, '/meta/sources')}
       >
         <Link to="/meta/sources">Crawlers</Link>
+      </Menu.Item>
+      <Menu.Item
+        icon={<CommentOutlined />}
+        className={getClassName(currentPath, '/feedbacks')}
+      >
+        <Link to="/feedbacks">Feedbacks</Link>
       </Menu.Item>
       <Menu.Divider />
       <Menu.Item

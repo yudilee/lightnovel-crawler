@@ -100,6 +100,11 @@ class AppContext:
         return LibraryService()
 
     @cached_property
+    def feedback(self):
+        from .services.feedback import FeedbackService
+        return FeedbackService()
+
+    @cached_property
     def crawler(self):
         from .services.crawler import CrawlerService
         return CrawlerService()

@@ -5,6 +5,7 @@ from .admin import router as admin
 from .artifacts import router as artifact
 from .auth import router as auth
 from .chapters import router as chapter
+from .feedback import router as feedback
 from .history import router as history
 from .jobs import router as job
 from .libraries import router as library
@@ -82,6 +83,13 @@ router.include_router(
     history,
     prefix='/read-history',
     tags=['Read History'],
+    dependencies=[Depends(ensure_user)],
+)
+
+router.include_router(
+    feedback,
+    prefix='/feedback',
+    tags=['Feedback'],
     dependencies=[Depends(ensure_user)],
 )
 

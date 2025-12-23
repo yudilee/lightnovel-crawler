@@ -1,4 +1,6 @@
 import type {
+  FeedbackStatus,
+  FeedbackType,
   JobPriority,
   JobStatus,
   JobType,
@@ -188,4 +190,16 @@ export interface ReadChapter {
   content?: string;
   next_id?: string;
   previous_id?: string;
+}
+
+export interface Feedback extends _Base {
+  user_id: string;
+  type: FeedbackType;
+  status: FeedbackStatus;
+  subject: string;
+  message: string;
+  admin_notes?: string;
+  extra: {
+    user_name?: string;
+  };
 }

@@ -104,3 +104,18 @@ export const ReaderLayout = {
   vertical: 'vertical',
 };
 export type ReaderLayout = (typeof ReaderLayout)[keyof typeof ReaderLayout];
+
+export const FeedbackType = {
+  GENERAL: 0,
+  ISSUE: 1,
+  FEATURE: 2,
+};
+export type FeedbackType = (typeof FeedbackType)[keyof typeof FeedbackType];
+
+export const FeedbackStatus = {
+  PENDING: 0,
+  ACCEPTED: 1,
+  RESOLVED: 2,
+};
+export type FeedbackStatus =
+  (typeof FeedbackStatus)[keyof typeof FeedbackStatus];

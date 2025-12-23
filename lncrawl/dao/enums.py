@@ -68,3 +68,15 @@ class NotificationItem(IntEnum):
     JOB_CANCELED = 40
     NOVEL_SUCCESS = 50
     ARTIFACT_SUCCESS = 60
+
+
+class FeedbackType(IntEnum):
+    GENERAL = 0
+    ISSUE = 1
+    FEATURE = 2
+
+
+class FeedbackStatus(IntEnum):
+    PENDING = 0
+    ACCEPTED = 1
+    RESOLVED = 2

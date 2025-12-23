@@ -1,4 +1,6 @@
 from .crawler import LoginData
+from .feedback import (FeedbackCreateRequest, FeedbackRespondRequest,
+                       FeedbackUpdateRequest)
 from .job import (FetchChaptersRequest, FetchImagesRequest, FetchNovelRequest,
                   FetchVolumesRequest, MakeArtifactsRequest)
 from .library import LibraryCreateRequest, LibraryItem, LibraryUpdateRequest
@@ -44,4 +46,8 @@ __all__ = [
     "ForgotPasswordRequest",
     "ResetPasswordRequest",
     "PutNotificationRequest",
+    # feedback
+    "FeedbackCreateRequest",
+    "FeedbackUpdateRequest",
+    "FeedbackRespondRequest",
 ]

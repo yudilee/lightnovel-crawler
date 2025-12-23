@@ -314,3 +314,13 @@ def downgrade() -> None:
     op.drop_table("tags")
     op.drop_table("novels")
     op.drop_table("_migration")
+
+    if dialect != "sqlite":
+        op.execute("DROP TYPE IF EXISTS userrole")
+        op.execute("DROP TYPE IF EXISTS usertier")
+        op.execute("DROP TYPE IF EXISTS jobtype")
+        op.execute("DROP TYPE IF EXISTS jobpriority")
+        op.execute("DROP TYPE IF EXISTS jobstatus")
+        op.execute("DROP TYPE IF EXISTS outputformat")
+        op.execute("DROP TYPE IF EXISTS feedbacktype")
+        op.execute("DROP TYPE IF EXISTS feedbackstatus")

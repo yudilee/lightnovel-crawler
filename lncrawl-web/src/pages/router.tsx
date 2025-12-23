@@ -2,6 +2,8 @@ import { MainLayout } from '@/components/Layout';
 import { Navigate, type RouteObject } from 'react-router-dom';
 
 import { AuthLayout } from '@/components/Layout/auth';
+import { FeedbackDetailsPage } from './FeedbackDetails';
+import { FeedbackListPage } from './FeedbackList';
 import { ForgotPasswordPage } from './ForgotPassword';
 import { JobDetailsPage } from './JobDetails';
 import { LibraryDetailsPage } from './LibraryDetails';
@@ -80,6 +82,14 @@ export const USER_ROUTES: RouteObject[] = [
       {
         path: 'novel/:id',
         element: <NovelDetailsPage />,
+      },
+      {
+        path: 'feedbacks',
+        element: <FeedbackListPage />,
+      },
+      {
+        path: 'feedback/:id',
+        element: <FeedbackDetailsPage />,
       },
       {
         path: 'meta',
