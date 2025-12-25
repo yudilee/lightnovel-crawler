@@ -77,7 +77,7 @@ export const LibraryNovelList: React.FC<{
 
       <Divider size="small" />
 
-      <Space direction="vertical" style={{ width: '100%' }} size="middle">
+      <Space vertical style={{ width: '100%' }} size="middle">
         {novels.length ? (
           <Row gutter={[12, 12]}>
             {novels.map((novel) => (

@@ -77,7 +77,7 @@ export const NovelDetailsPage: React.FC<any> = () => {
   }
 
   return (
-    <Space direction="vertical" size={lg ? 'large' : 'small'}>
+    <Space vertical size={lg ? 'large' : 'small'}>
       {contextHolder}
       <NovelDetailsCard novel={novel} showActions />
       <VolumeListCard novelId={novel.id} />

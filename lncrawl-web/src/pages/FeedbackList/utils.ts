@@ -1,6 +1,18 @@
 import { FeedbackStatus, FeedbackType } from '@/types';
 import type { TagProps } from 'antd';
 
+export const FeedbackStatusLabels: Record<FeedbackStatus, string> = {
+  [FeedbackStatus.PENDING]: 'Pending',
+  [FeedbackStatus.ACCEPTED]: 'In Progress',
+  [FeedbackStatus.RESOLVED]: 'Resolved',
+};
+
+export const FeedbackTypeLabels: Record<FeedbackType, string> = {
+  [FeedbackType.GENERAL]: 'General',
+  [FeedbackType.ISSUE]: 'Issue',
+  [FeedbackType.FEATURE]: 'Feature',
+};
+
 export const getFeedbackTypeColor = (type: FeedbackType): TagProps['color'] => {
   switch (type) {
     case FeedbackType.GENERAL:

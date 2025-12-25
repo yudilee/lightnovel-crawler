@@ -1,11 +1,6 @@
+import { FeedbackStatusLabels } from '@/pages/FeedbackList/utils';
 import { FeedbackStatus } from '@/types/enums';
 import { Tag } from 'antd';
-
-export const FeedbackStatusLabels: Record<FeedbackStatus, string> = {
-  [FeedbackStatus.PENDING]: 'Pending',
-  [FeedbackStatus.ACCEPTED]: 'In Progress',
-  [FeedbackStatus.RESOLVED]: 'Resolved',
-};
 
 export const FeedbackStatusTag: React.FC<{ status: FeedbackStatus }> = ({
   status,

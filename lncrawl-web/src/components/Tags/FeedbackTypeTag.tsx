@@ -1,12 +1,7 @@
+import { FeedbackTypeLabels } from '@/pages/FeedbackList/utils';
 import { FeedbackType } from '@/types/enums';
 import { BugOutlined, CommentOutlined, StarOutlined } from '@ant-design/icons';
 import { Tag } from 'antd';
-
-export const FeedbackTypeLabels: Record<FeedbackType, string> = {
-  [FeedbackType.GENERAL]: 'General',
-  [FeedbackType.ISSUE]: 'Issue',
-  [FeedbackType.FEATURE]: 'Feature',
-};
 
 export const FeedbackTypeTag: React.FC<{ value: FeedbackType }> = ({
   value,

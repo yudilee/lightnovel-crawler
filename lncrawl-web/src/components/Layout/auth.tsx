@@ -17,7 +17,7 @@ export const AuthLayout: React.FC<any> = () => {
             title={
               <Space
                 align="center"
-                direction="vertical"
+                vertical
                 style={{ padding: '15px', width: '100%' }}
               >
                 <Avatar

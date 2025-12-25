@@ -131,7 +131,7 @@ export const JobDetailsPage: React.FC<any> = () => {
   }
 
   return (
-    <Space direction="vertical" size={lg ? 'middle' : 'small'}>
+    <Space vertical size={lg ? 'middle' : 'small'}>
       {job.parent_job_id ? (
         <Link to={`/job/${job.parent_job_id}`}>
           <LeftOutlined /> Parent Request

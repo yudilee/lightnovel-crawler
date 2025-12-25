@@ -30,7 +30,7 @@ export const ReaderFontSizeSettings: ReaderSettingsItem = {
         >
           <MinusOutlined />
         </Button>
-        <Divider type="vertical" />
+        <Divider orientation="vertical" />
         <Typography.Text
           style={{
             width: '100%',
@@ -40,7 +40,7 @@ export const ReaderFontSizeSettings: ReaderSettingsItem = {
         >
           {fontSize}px
         </Typography.Text>
-        <Divider type="vertical" />
+        <Divider orientation="vertical" />
         <Button
           type="text"
           size="small"

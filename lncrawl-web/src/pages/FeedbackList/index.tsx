@@ -1,8 +1,6 @@
-import { FeedbackButton } from '@/pages/FeedbackList/FeedbackButton';
 import { ErrorState } from '@/components/Loading/ErrorState';
 import { LoadingState } from '@/components/Loading/LoadingState';
-import { FeedbackStatusLabels } from '@/components/Tags/FeedbackStatusTag';
-import { FeedbackTypeLabels } from '@/components/Tags/FeedbackTypeTag';
+import { FeedbackButton } from '@/pages/FeedbackList/FeedbackButton';
 import { CommentOutlined } from '@ant-design/icons';
 import {
   Divider,
@@ -16,6 +14,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { FeedbackListItemCard } from './FeedbackListItemCard';
 import { useFeedbackList } from './hooks';
+import { FeedbackStatusLabels, FeedbackTypeLabels } from './utils';
 
 export const FeedbackListPage: React.FC<any> = () => {
   const navigate = useNavigate();

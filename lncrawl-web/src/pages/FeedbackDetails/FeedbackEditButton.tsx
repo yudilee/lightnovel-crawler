@@ -1,10 +1,10 @@
-import { FeedbackTypeLabels } from '@/components/Tags/FeedbackTypeTag';
 import { type Feedback, FeedbackType } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { EditOutlined } from '@ant-design/icons';
 import { Button, Form, Input, message, Modal, Select, Space } from 'antd';
 import axios from 'axios';
 import { useState } from 'react';
+import { FeedbackTypeLabels } from '../FeedbackList/utils';
 
 type FormValues = {
   type?: FeedbackType;

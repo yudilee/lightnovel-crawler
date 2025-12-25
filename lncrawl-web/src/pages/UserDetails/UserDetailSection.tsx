@@ -167,7 +167,7 @@ export const UserDetailSection: React.FC<{ userId: string }> = ({ userId }) => {
         >
           <Space>
             <UserStatusTag value={user.is_active} />
-            <Divider type="vertical" />
+            <Divider orientation="vertical" />
             <UserActionButtons
               user={user}
               onChange={() => setRefreshId((v) => v + 1)}
@@ -183,7 +183,7 @@ export const UserDetailSection: React.FC<{ userId: string }> = ({ userId }) => {
           }
         >
           <Typography.Text>{formatDate(user.created_at)}</Typography.Text>
-          <Divider type="vertical" />
+          <Divider orientation="vertical" />
           <Typography.Text type="secondary">
             {formatFromNow(user.created_at)}
           </Typography.Text>
@@ -197,7 +197,7 @@ export const UserDetailSection: React.FC<{ userId: string }> = ({ userId }) => {
           }
         >
           <Typography.Text>{formatDate(user.updated_at)}</Typography.Text>
-          <Divider type="vertical" />
+          <Divider orientation="vertical" />
           <Typography.Text type="secondary">
             {formatFromNow(user.updated_at)}
           </Typography.Text>

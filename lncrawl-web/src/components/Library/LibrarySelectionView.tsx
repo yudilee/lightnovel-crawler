@@ -65,7 +65,7 @@ export const LibrarySelectionView: React.FC<Props> = ({
   return (
     <>
       {contextHolder}
-      <Space direction="vertical" size="small" style={{ width: '100%' }}>
+      <Space vertical size="small" style={{ width: '100%' }}>
         <Input.Search
           allowClear
           size="large"

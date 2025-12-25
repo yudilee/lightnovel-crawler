@@ -93,7 +93,7 @@ export const LibraryCard: React.FC<{ library: Library }> = ({ library }) => {
               {library.user_id === user?.id ? ' (you)' : ''}
             </Typography.Text>
           </Space>
-          <Divider type="vertical" />
+          <Divider orientation="vertical" />
           <Space size="small">
             <BookOutlined style={{ fontSize: 14 }} />
             <Typography.Text strong style={{ fontSize: 14 }}>

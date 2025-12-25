@@ -1,4 +1,3 @@
-import { FeedbackStatusLabels } from '@/components/Tags/FeedbackStatusTag';
 import type { Feedback } from '@/types';
 import { FeedbackStatus } from '@/types';
 import { stringifyError } from '@/utils/errors';
@@ -6,6 +5,7 @@ import { MessageOutlined } from '@ant-design/icons';
 import { Button, Form, Input, message, Modal, Select, Space } from 'antd';
 import axios from 'axios';
 import { useState } from 'react';
+import { FeedbackStatusLabels } from '../FeedbackList/utils';
 
 type FormValues = {
   status?: FeedbackStatus;

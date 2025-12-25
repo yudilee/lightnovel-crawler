@@ -35,7 +35,7 @@ export const JobFilterBox: React.FC<
         />
       </Flex>
 
-      {lg && <Divider type="vertical" />}
+      {lg && <Divider orientation="vertical" />}
 
       <Flex align="center" gap={5} style={lg ? { flex: 1 } : { width: '100%' }}>
         <Typography.Text

@@ -28,7 +28,7 @@ export type SourceFilterState = {
   sortOrder: SortOrder;
 };
 
-export const defaultSourceFilters: SourceFilterState = {
+const defaultSourceFilters: SourceFilterState = {
   search: '',
   language: undefined,
   features: {},
