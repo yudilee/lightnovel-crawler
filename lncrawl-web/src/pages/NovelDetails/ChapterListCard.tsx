@@ -5,7 +5,7 @@ import { DownloadOutlined, RightCircleOutlined } from '@ant-design/icons';
 import { Button, Collapse, message, theme } from 'antd';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ChapterDetailsCard } from './ChapterDetailsCard';
 
 export const ChapterListCard: React.FC<{
@@ -39,7 +39,12 @@ export const ChapterListCard: React.FC<{
         }}
         items={chapters.map((chapter) => ({
           key: chapter.id,
-          label: chapter.title,
+          label:
+            autoFetch || chapter.is_available ? (
+              <Link to={`/read/${chapter.id}`}>{chapter.title}</Link>
+            ) : (
+              chapter.title
+            ),
           children: <ChapterDetailsCard inner chapter={chapter} />,
           styles: {
             body: { padding: 0 },

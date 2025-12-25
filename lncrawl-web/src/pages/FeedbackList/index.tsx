@@ -4,7 +4,15 @@ import { LoadingState } from '@/components/Loading/LoadingState';
 import { FeedbackStatusLabels } from '@/components/Tags/FeedbackStatusTag';
 import { FeedbackTypeLabels } from '@/components/Tags/FeedbackTypeTag';
 import { CommentOutlined } from '@ant-design/icons';
-import { Divider, Flex, Input, Pagination, Select, Typography } from 'antd';
+import {
+  Divider,
+  Empty,
+  Flex,
+  Input,
+  Pagination,
+  Select,
+  Typography,
+} from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { FeedbackListItemCard } from './FeedbackListItemCard';
 import { useFeedbackList } from './hooks';
@@ -50,20 +58,20 @@ export const FeedbackListPage: React.FC<any> = () => {
 
       <Divider size="small" />
 
-      <Flex align="center" gap="middle" wrap>
+      <Flex align="center" gap={7} wrap>
         <Input.Search
           defaultValue={initialSearch}
           onSearch={(search) => updateParams({ search, page: 1 })}
           placeholder="Search feedback"
           allowClear
           size="large"
-          style={{ flex: 1, minWidth: 200 }}
+          style={{ flex: 3, minWidth: 200 }}
         />
         <Select
           placeholder="Filter by type"
           allowClear
           size="large"
-          style={{ width: 150 }}
+          style={{ flex: 1, width: 150 }}
           value={initialType}
           onChange={(type) => updateParams({ type, page: 1 })}
           options={Object.entries(FeedbackTypeLabels).map(([value, label]) => ({
@@ -75,7 +83,7 @@ export const FeedbackListPage: React.FC<any> = () => {
           placeholder="Filter by status"
           allowClear
           size="large"
-          style={{ width: 150 }}
+          style={{ flex: 1, width: 150 }}
           value={initialStatus}
           onChange={(status) => updateParams({ status, page: 1 })}
           options={Object.entries(FeedbackStatusLabels).map(
@@ -86,15 +94,20 @@ export const FeedbackListPage: React.FC<any> = () => {
 
       <Divider size="small" />
 
-      <div>
-        {feedbackList.map((feedback) => (
-          <FeedbackListItemCard
-            key={feedback.id}
-            feedback={feedback}
-            onClick={() => navigate(`/feedback/${feedback.id}`)}
-          />
-        ))}
-      </div>
+      {feedbackList.map((feedback) => (
+        <FeedbackListItemCard
+          key={feedback.id}
+          feedback={feedback}
+          onClick={() => navigate(`/feedback/${feedback.id}`)}
+        />
+      ))}
+
+      {!feedbackList.length && (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description="No feedbacks yet"
+        />
+      )}
 
       <Pagination
         current={currentPage}

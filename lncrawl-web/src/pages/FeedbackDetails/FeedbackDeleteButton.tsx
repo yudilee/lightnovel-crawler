@@ -33,7 +33,7 @@ export const FeedbackDeleteButton: React.FC<{
 
       <Popconfirm
         title="Delete feedback"
-        description="Are you sure you want to delete this feedback? This action cannot be undone."
+        description="Are you sure you want to permanently delete this feedback?"
         onConfirm={handleDelete}
         okText="Yes, delete"
         okType="danger"

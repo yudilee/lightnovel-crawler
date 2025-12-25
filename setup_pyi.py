@@ -9,9 +9,10 @@ if sys.version_info[:2] < (3, 8):
 
 ROOT = Path(__file__).resolve().parent
 
-AVAILABLE_SITE_PACKAGES = list(ROOT.glob(".venv/**/site-packages"))
+VENV_DIR = Path(os.getenv("VIRTUAL_ENV", ".venv")).relative_to(ROOT).as_posix()
+AVAILABLE_SITE_PACKAGES = list(ROOT.glob(f"{VENV_DIR}/**/site-packages"))
 if not AVAILABLE_SITE_PACKAGES:
-    raise RuntimeError("No site-packages found in .venv")
+    raise RuntimeError(f"No site-packages found in {VENV_DIR}")
 
 SITE_PACKAGES = AVAILABLE_SITE_PACKAGES[0]
 DIST_DIR = ROOT / "dist"
@@ -41,7 +42,7 @@ def gather_data_files():
     file_map = {
         ROOT / "lncrawl": "lncrawl",
         ROOT / "sources": "sources",
-        SITE_PACKAGES / "cloudscraper": "cloudscraper",
+        # SITE_PACKAGES / "cloudscraper": "cloudscraper",
         SITE_PACKAGES / "wcwidth" / "version.json": "wcwidth",
         SITE_PACKAGES / "text_unidecode" / "data.bin": "text_unidecode",
     }

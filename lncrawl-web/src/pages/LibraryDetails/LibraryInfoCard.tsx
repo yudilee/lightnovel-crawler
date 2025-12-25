@@ -1,7 +1,7 @@
 import type { Library } from '@/types';
 import { getGradientForId } from '@/utils/gradients';
 import { BookOutlined, UserOutlined } from '@ant-design/icons';
-import { Card, Divider, Flex, Grid, Switch, Typography } from 'antd';
+import { Card, Divider, Flex, Grid, Space, Switch, Typography } from 'antd';
 import { DeleteLibraryButton } from './DeleteLibraryButton';
 import { EditLibraryButton } from './EditLibraryButton';
 
@@ -98,17 +98,17 @@ export const LibraryInfoCard: React.FC<LibraryInfoCardProps> = ({
         <Flex
           vertical
           gap={7}
-          style={{ width: 250 }}
+          style={{ width: 300 }}
           align={lg ? 'flex-end' : 'center'}
         >
-          <Flex align="center" gap={8} wrap justify={lg ? 'end' : 'center'}>
+          <Space>
             <Typography.Text>Public</Typography.Text>
             <Switch
               checked={library.is_public}
               onChange={onTogglePublic}
               disabled={loading}
             />
-          </Flex>
+          </Space>
 
           <Flex gap={4} align="center" wrap justify={lg ? 'end' : 'center'}>
             <EditLibraryButton library={library} onSuccess={onLibraryUpdated} />

@@ -26,16 +26,16 @@ export const JobListItemCard: React.FC<{
           {lg && <JobProgressCircle job={job} size={48} />}
 
           <div style={{ flex: 1, minWidth: lg ? 0 : '100%' }}>
-            <Typography.Text
+            <Typography.Paragraph
+              ellipsis={{ rows: 2 }}
               style={{
-                display: 'block',
-                whiteSpace: 'wrap',
+                margin: 0,
                 fontSize: '1.15rem',
                 fontFamily: "'Roboto Slab', serif",
               }}
             >
               {job.job_title || `Request ${job.id}`}
-            </Typography.Text>
+            </Typography.Paragraph>
 
             <Space wrap style={{ marginTop: 5 }}>
               <JobStatusTag job={job} />

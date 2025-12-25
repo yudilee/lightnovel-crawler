@@ -1,7 +1,7 @@
 import type { Library } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { DeleteOutlined } from '@ant-design/icons';
-import { Button, message, Modal } from 'antd';
+import { Button, message, Popconfirm } from 'antd';
 import axios from 'axios';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -17,56 +17,41 @@ export const DeleteLibraryButton: React.FC<DeleteLibraryButtonProps> = ({
 }) => {
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [deleting, setDeleting] = useState<boolean>(false);
 
-  const handleDelete = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    setIsDeleting(true);
+  const handleDelete = async () => {
+    setDeleting(true);
     try {
       await axios.delete(`/api/library/${library.id}`);
       messageApi.success('Library deleted successfully');
       navigate('/libraries');
     } catch (err) {
       messageApi.error(stringifyError(err));
-      setIsDeleting(false);
+      setDeleting(false);
     }
   };
 
   return (
     <>
       {contextHolder}
-      <Button
-        danger
-        icon={<DeleteOutlined />}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          handleDelete();
-        }}
-        loading={isDeleting}
-        disabled={disabled || isDeleting}
-      >
-        Delete
-      </Button>
 
-      <Modal
-        title="Delete Library"
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        onOk={handleDeleteConfirm}
+      <Popconfirm
+        title="Delete library"
+        description="Are you sure you want to permanently delete this library?"
+        onConfirm={handleDelete}
+        okText="Yes, delete"
+        okType="danger"
         cancelText="Cancel"
-        okText="Delete"
-        width={500}
       >
-        <p>
-          Are you sure you want to delete the library &quot;{library.name}
-          &quot;?
-        </p>
-      </Modal>
+        <Button
+          danger
+          icon={<DeleteOutlined />}
+          loading={deleting}
+          disabled={disabled || deleting}
+        >
+          Delete
+        </Button>
+      </Popconfirm>
     </>
   );
 };

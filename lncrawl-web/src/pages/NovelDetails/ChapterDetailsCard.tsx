@@ -17,9 +17,7 @@ export const ChapterDetailsCard: React.FC<{
       title={inner ? undefined : chapter.title}
       variant={inner ? 'borderless' : 'outlined'}
       styles={{
-        body: {
-          padding: 10,
-        },
+        body: { padding: 0 },
         title: {
           fontSize: 22,
           whiteSpace: 'wrap',
