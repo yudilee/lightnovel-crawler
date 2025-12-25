@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   generate_html:
-    if: github.repository == 'dipu-bd/lightnovel-crawler'
+    if: github.repository == 'lncrawl/lightnovel-crawler'
     runs-on: ubuntu-latest
     permissions:
       contents: write

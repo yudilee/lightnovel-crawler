@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   validate:
-    if: github.repository == 'dipu-bd/lightnovel-crawler'
+    if: github.repository == 'lncrawl/lightnovel-crawler'
     name: Validate Build
     runs-on: ubuntu-latest
     strategy:
@@ -50,7 +50,7 @@ jobs:
           lncrawl -s 'https://novelfull.com/the-kings-avatar-for-the-glory.html' --first 2 -f --format epub --suppress -lll
 
   build-windows:
-    if: github.repository == 'dipu-bd/lightnovel-crawler'
+    if: github.repository == 'lncrawl/lightnovel-crawler'
     needs: validate
     name: Build Windows Executable
     runs-on: windows-latest
@@ -85,7 +85,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   build-mac:
-    if: github.repository == 'dipu-bd/lightnovel-crawler'
+    if: github.repository == 'lncrawl/lightnovel-crawler'
     needs: validate
     name: Build MacOS Executable
     runs-on: macos-latest
@@ -115,7 +115,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   build-linux:
-    if: github.repository == 'dipu-bd/lightnovel-crawler'
+    if: github.repository == 'lncrawl/lightnovel-crawler'
     needs: validate
     name: Build & Publish Linux
     runs-on: ubuntu-latest

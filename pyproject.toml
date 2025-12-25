@@ -29,9 +29,9 @@ readme = "README.rst"
 requires-python = ">=3.8"
 
 [project.urls]
-"Documentation" = "https://github.com/dipu-bd/lightnovel-crawler/blob/master/README.md"
-"Issue Tracker" = "https://github.com/dipu-bd/lightnovel-crawler/issues"
-"Source Code" = "https://github.com/dipu-bd/lightnovel-crawler"
+"Documentation" = "https://github.com/lncrawl/lightnovel-crawler/blob/master/README.md"
+"Issue Tracker" = "https://github.com/lncrawl/lightnovel-crawler/issues"
+"Source Code" = "https://github.com/lncrawl/lightnovel-crawler"
 
 [project.scripts]
 lightnovel-crawler = "lncrawl:main"

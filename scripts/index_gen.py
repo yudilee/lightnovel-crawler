@@ -140,7 +140,7 @@ ctx.sources.load(False)
 ctx.sources.ensure_load()
 
 logger.info("Getting contributors")
-repo_data = call_github_api("https://api.github.com/repos/dipu-bd/lightnovel-crawler/contributors")
+repo_data = call_github_api("https://api.github.com/repos/lncrawl/lightnovel-crawler/contributors")
 repo_contribs = {x["login"]: x for x in repo_data}
 
 logger.info("Loading username cache")

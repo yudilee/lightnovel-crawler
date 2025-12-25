@@ -374,7 +374,7 @@ class CrawlerConfig(_Section):
 
     @property
     def index_file_download_url(self) -> str:
-        return "https://raw.githubusercontent.com/dipu-bd/lightnovel-crawler/dev/sources/_index.zip"
+        return "https://raw.githubusercontent.com/lncrawl/lightnovel-crawler/dev/sources/_index.zip"
 
     @property
     def runner_concurrency(self) -> int:

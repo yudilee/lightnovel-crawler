@@ -44,7 +44,7 @@ def get_color_banner():
     link_text = (
         Icons.LINK
         + Fore.CYAN
-        + " https://github.com/dipu-bd/lightnovel-crawler"
+        + " https://github.com/lncrawl/lightnovel-crawler"
         + Fore.RESET
     )
     text = text.replace("<version>", Fore.RESET + version_text + Fore.YELLOW)

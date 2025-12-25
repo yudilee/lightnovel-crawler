@@ -36,14 +36,14 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.00'
+          cpus: "2.00"
           memory: 3G
         reservations:
-          cpus: '1.00'
+          cpus: "1.00"
           memory: 2G
 
   server:
-    image: ghcr.io/dipu-bd/lightnovel-crawler:server
+    image: ghcr.io/lncrawl/lightnovel-crawler:server
     ports:
       - "23457:8080"
     command: -ll server
@@ -58,10 +58,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '3.50'
+          cpus: "3.50"
           memory: 5G
         reservations:
-          cpus: '2.00'
+          cpus: "2.00"
           memory: 3G
 
 volumes:

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 STYLE_FILE_NAME = "style.css"
 COVER_IMAGE_NAME = "cover.jpg"
-PROJECT_URL = "https://github.com/dipu-bd/lightnovel-crawler"
+PROJECT_URL = "https://github.com/lncrawl/lightnovel-crawler"
 
 RE_WHITESPACE = re.compile(r'^\s+|\n', re.MULTILINE)
 

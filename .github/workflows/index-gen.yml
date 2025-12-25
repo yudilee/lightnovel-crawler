@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   index_gen:
-    if: github.repository == 'dipu-bd/lightnovel-crawler'
+    if: github.repository == 'lncrawl/lightnovel-crawler'
     runs-on: ubuntu-latest
     permissions:
       contents: write

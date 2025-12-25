@@ -5,13 +5,13 @@ VERSION=$(head -n 1 lncrawl/VERSION)
 # SHLINK_API_KEY=
 
 
-EXE_LINK="https://github.com/dipu-bd/lightnovel-crawler/releases/download/v$VERSION/lncrawl.exe"
+EXE_LINK="https://github.com/lncrawl/lightnovel-crawler/releases/download/v$VERSION/lncrawl.exe"
 EXE_TITLE="Lightnovel Crawler v$VERSION (Windows)"
 
-LINUX_LINK="https://github.com/dipu-bd/lightnovel-crawler/releases/download/v$VERSION/lncrawl-linux"
+LINUX_LINK="https://github.com/lncrawl/lightnovel-crawler/releases/download/v$VERSION/lncrawl-linux"
 LINUX_TITLE="Lightnovel Crawler v$VERSION (Linux)"
 
-MAC_LINK="https://github.com/dipu-bd/lightnovel-crawler/releases/download/v$VERSION/lncrawl-mac"
+MAC_LINK="https://github.com/lncrawl/lightnovel-crawler/releases/download/v$VERSION/lncrawl-mac"
 MAC_TITLE="Lightnovel Crawler v$VERSION (Mac)"
 
 set -ex

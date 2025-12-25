@@ -35,8 +35,8 @@ class MyCrawlerName(Crawler):
     # TODO: [OPTIONAL] This is called once per session before searching and fetching novel info.
     def login(self, username_or_email: str, password_or_token: str) -> None:
         # Examples:
-        # - https://github.com/dipu-bd/lightnovel-crawler/blob/master/sources/multi/mtlnovel.py
-        # - https://github.com/dipu-bd/lightnovel-crawler/blob/master/sources/multi/ranobes.py
+        # - https://github.com/lncrawl/lightnovel-crawler/blob/master/sources/multi/mtlnovel.py
+        # - https://github.com/lncrawl/lightnovel-crawler/blob/master/sources/multi/ranobes.py
         pass
 
     # TODO: [OPTIONAL] Return a list of search results using the query.

@@ -5,11 +5,11 @@ VERSION=$(head -n 1 lncrawl/VERSION)
 #REBRANDLY_API_KEY=
 
 LINUX_LINK_ID=d29bfd6a75b34993b77ac7d69869eefd
-LINUX_LINK="https://github.com/dipu-bd/lightnovel-crawler/releases/download/v$VERSION/lncrawl"
+LINUX_LINK="https://github.com/lncrawl/lightnovel-crawler/releases/download/v$VERSION/lncrawl"
 LINUX_TITLE="Lightnovel Crawler v$VERSION (Linux)"
 
 EXE_LINK_ID=8e556b9bb13e456c9bbe2c4e29aa0833
-EXE_LINK="https://github.com/dipu-bd/lightnovel-crawler/releases/download/v$VERSION/lncrawl.exe"
+EXE_LINK="https://github.com/lncrawl/lightnovel-crawler/releases/download/v$VERSION/lncrawl.exe"
 EXE_TITLE="Lightnovel Crawler v$VERSION.exe"
 
 set -ex
