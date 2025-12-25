@@ -7,6 +7,7 @@ import {
   FileDoneOutlined,
   FolderOpenOutlined,
   HeartOutlined,
+  QuestionCircleOutlined,
   SettingOutlined,
   TeamOutlined,
   UserOutlined,
@@ -30,6 +31,7 @@ export const MainLayoutSidebar: React.FC<any> = () => {
   return (
     <Flex vertical style={{ height: '100%' }}>
       <Menu
+        key={currentPath}
         mode="inline"
         inlineIndent={15}
         defaultOpenKeys={[
@@ -57,7 +59,10 @@ export const MainLayoutSidebar: React.FC<any> = () => {
         >
           <Link to="/novels">Novels</Link>
         </Menu.Item>
-        <Menu.Item icon={<FolderOpenOutlined />}>
+        <Menu.Item
+          icon={<FolderOpenOutlined />}
+          className={getClassName(currentPath, '/libraries')}
+        >
           <Link to="/libraries">Libraries</Link>
         </Menu.Item>
         <Menu.Item
@@ -84,6 +89,13 @@ export const MainLayoutSidebar: React.FC<any> = () => {
           className={getClassName(currentPath, '/settings')}
         >
           <Link to="/settings">Settings</Link>
+        </Menu.Item>
+        <Menu.Divider />
+        <Menu.Item
+          icon={<QuestionCircleOutlined />}
+          className={getClassName(currentPath, '/tutorial')}
+        >
+          <Link to="/tutorial">Tutorial</Link>
         </Menu.Item>
         {isAdmin && <Menu.Divider />}
         {isAdmin && (

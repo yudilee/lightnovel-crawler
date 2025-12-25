@@ -17,6 +17,7 @@ import { ResetPasswordPage } from './ResetPassword';
 import { SettingsPage } from './SettingsPage';
 import { SignupPage } from './Signup';
 import { SupportedSourcesPage } from './SupportedSources';
+import { TutorialPage } from './Tutorial';
 import { UserDetailsPage } from './UserDetails';
 import { UserListPage } from './UserList';
 import { UserProfilePage } from './UserProfile';
@@ -103,6 +104,10 @@ export const USER_ROUTES: RouteObject[] = [
       {
         path: 'settings',
         element: <SettingsPage />,
+      },
+      {
+        path: 'tutorial',
+        element: <TutorialPage />,
       },
     ],
   },
