@@ -46,4 +46,10 @@
   p > br {
     display: none;
   }
+
+  img {
+    width: 100%;
+    object-fit: contain;
+    object-position: center;
+  }
 }

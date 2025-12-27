@@ -50,10 +50,12 @@ export const NovelListItemCard: React.FC<{ novel: Novel }> = ({ novel }) => {
           height: '100%',
           width: '100%',
         }}
-        wrapperStyle={{
-          aspectRatio: 3 / 4,
-          minHeight: '100%',
-          maxHeight: '50vh',
+        styles={{
+          root: {
+            aspectRatio: 3 / 4,
+            minHeight: '100%',
+            maxHeight: '50vh',
+          },
         }}
       />
       <Favicon

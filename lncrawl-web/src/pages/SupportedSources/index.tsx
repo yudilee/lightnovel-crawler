@@ -9,6 +9,7 @@ import { Button, Divider, Empty, Flex, Grid, message, Typography } from 'antd';
 import axios from 'axios';
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 import { useSupportedSources } from './hooks';
 import { SupportedSourceFilter } from './SupportedSourceFilter';
 import { SupportedSourceList } from './SupportedSourceList';
@@ -16,13 +17,21 @@ import { filterAndSortSources } from './utils';
 
 export const SupportedSourcesPage: React.FC<any> = () => {
   const { sm } = Grid.useBreakpoint();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const isAdmin = useSelector(Auth.select.isAdmin);
   const [messageApi, contextHolder] = message.useMessage();
   const { data, loading, error, refresh } = useSupportedSources();
 
-  const [tabKey, setTabKey] = useState<string>('active');
   const [filteredSources, setFilteredSources] = useState<SourceItem[]>([]);
+
+  const tabKey = useMemo(
+    () => searchParams.get('tab') || 'active',
+    [searchParams]
+  );
+  const setTabKey = (tab: string) => {
+    setSearchParams({ tab });
+  };
 
   const languages = useMemo(
     () => Array.from(new Set(data.map((x) => x.language))).sort(),

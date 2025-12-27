@@ -52,6 +52,14 @@ export const UserListPage: React.FC<any> = () => {
 
       <Divider size="small" />
 
+      <Typography.Text
+        italic
+        type="secondary"
+        style={{ display: 'block', marginBottom: 5 }}
+      >
+        Found {total} users
+      </Typography.Text>
+
       <List
         itemLayout="horizontal"
         dataSource={users}

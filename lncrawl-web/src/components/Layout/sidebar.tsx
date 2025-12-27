@@ -99,7 +99,11 @@ export const MainLayoutSidebar: React.FC<any> = () => {
         </Menu.Item>
         {isAdmin && <Menu.Divider />}
         {isAdmin && (
-          <Menu.SubMenu title="Administration" icon={<ControlOutlined />}>
+          <Menu.SubMenu
+            key="admin"
+            title="Administration"
+            icon={<ControlOutlined />}
+          >
             <Menu.Item
               icon={<TeamOutlined />}
               className={getClassName(currentPath, '/admin/users')}

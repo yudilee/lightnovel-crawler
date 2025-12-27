@@ -236,6 +236,13 @@ class UserService:
             verified = sess.get(VerifiedEmail, email)
             return bool(verified)
 
+    def get_user_email(self, user_id: str) -> str:
+        with ctx.db.session() as sess:
+            email = sess.scalar(sa.select(User.email).where(User.id == user_id))
+            if not email:
+                raise ServerErrors.no_such_user
+            return email
+
     def set_verified(self, email: str) -> None:
         if self.is_verified(email):
             return

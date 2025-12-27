@@ -5,10 +5,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 export function useSupportedSources() {
   const [refreshId, setRefreshId] = useState(0);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
-
   const [data, setData] = useState<SourceItem[]>([]);
 
   const fetchSupportedSources = async () => {

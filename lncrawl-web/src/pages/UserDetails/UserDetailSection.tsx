@@ -25,6 +25,7 @@ import {
   message,
   Popconfirm,
   Space,
+  Tag,
   Typography,
 } from 'antd';
 import axios from 'axios';
@@ -43,6 +44,7 @@ export const UserDetailSection: React.FC<{ userId: string }> = ({ userId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
   const [deleting, setDeleting] = useState(false);
+  const [isVerified, setIsVerified] = useState<boolean>();
 
   useEffect(() => {
     const fetchUser = async (id: string) => {
@@ -57,6 +59,18 @@ export const UserDetailSection: React.FC<{ userId: string }> = ({ userId }) => {
       }
     };
     fetchUser(userId);
+  }, [userId, refreshId]);
+
+  useEffect(() => {
+    const fetchVerified = async (id: string) => {
+      try {
+        const { data } = await axios.get<boolean>(`/api/user/${id}/verified`);
+        setIsVerified(data);
+      } catch {
+        setIsVerified(undefined);
+      }
+    };
+    fetchVerified(userId);
   }, [userId, refreshId]);
 
   const handleDelete = async () => {
@@ -91,7 +105,7 @@ export const UserDetailSection: React.FC<{ userId: string }> = ({ userId }) => {
   }
 
   return (
-    <section style={{ maxWidth: 800, margin: '0 auto' }}>
+    <>
       {contextHolder}
 
       <Typography.Title level={2}>
@@ -141,7 +155,7 @@ export const UserDetailSection: React.FC<{ userId: string }> = ({ userId }) => {
         <Descriptions.Item
           label={
             <Space>
-              <SafetyCertificateOutlined /> Role
+              <IdcardOutlined /> Role
             </Space>
           }
         >
@@ -161,13 +175,24 @@ export const UserDetailSection: React.FC<{ userId: string }> = ({ userId }) => {
         <Descriptions.Item
           label={
             <Space>
+              <SafetyCertificateOutlined /> Verified
+            </Space>
+          }
+        >
+          <Tag color={isVerified ? 'success' : 'error'}>
+            {isVerified ? 'Yes' : 'No'}
+          </Tag>
+        </Descriptions.Item>
+
+        <Descriptions.Item
+          label={
+            <Space>
               <UserOutlined /> Status
             </Space>
           }
         >
-          <Space>
+          <Space separator={<Divider orientation="vertical" />}>
             <UserStatusTag value={user.is_active} />
-            <Divider orientation="vertical" />
             <UserActionButtons
               user={user}
               onChange={() => setRefreshId((v) => v + 1)}
@@ -231,6 +256,6 @@ export const UserDetailSection: React.FC<{ userId: string }> = ({ userId }) => {
           </Button>
         </Popconfirm>
       </Flex>
-    </section>
+    </>
   );
 };

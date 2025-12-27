@@ -2,7 +2,6 @@ import './fonts.css';
 import './index.scss';
 
 import { store } from '@/store';
-import { Auth } from '@/store/_auth';
 import { Reader } from '@/store/_reader';
 import { type Job, type ReadChapter } from '@/types';
 import { stringifyError } from '@/utils/errors';
@@ -11,6 +10,7 @@ import { Button, Flex, Result, Spin } from 'antd';
 import axios from 'axios';
 import { LRUCache } from 'lru-cache';
 import { useEffect, useState } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { ReaderVerticalLayout } from './ReaderLayoutVertical';
@@ -25,15 +25,17 @@ async function fetchChapter(id: string) {
       /<p>(\s+)|(&nbsp;)+<\/p>(\n|\s|<br\/>)+/gim,
       ''
     );
-    data.content = `
-      <h1 style="margin-bottom: 0">${data.chapter.title.trim()}</h1>
-      <div style="font-size: 12px; opacity: 0.8; margin-bottom: 25px">
-        ${data.chapter.serial} of ${data.novel.chapter_count}
-        <span> | </span>
-        Updated ${formatFromNow(data.chapter.updated_at)}
-      </div>
-      ${clean}
-    `;
+    data.content = renderToStaticMarkup(
+      <>
+        <h1 style={{ marginBottom: 6 }}>{data.chapter.title.trim()}</h1>
+        <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 25 }}>
+          {data.chapter.serial} of {data.novel.chapter_count}
+          <span> | </span>
+          Updated {formatFromNow(data.chapter.updated_at)}
+        </div>
+        <article dangerouslySetInnerHTML={{ __html: clean }} />
+      </>
+    );
   }
   return data;
 }
@@ -57,7 +59,6 @@ function createFetchJob(id: string) {
 
 export const NovelReaderPage: React.FC<any> = () => {
   const { id } = useParams<{ id: string }>();
-  const token = useSelector(Auth.select.authToken);
   const autoFetch = useSelector(Reader.select.autoFetch);
 
   const [refreshId, setRefreshId] = useState(0);
@@ -68,30 +69,30 @@ export const NovelReaderPage: React.FC<any> = () => {
 
   // current chapter content data
   useEffect(() => {
-    const fetchChapter = async (id: string) => {
-      setError(undefined);
-      try {
-        if (fetchJobs.has(id)) {
-          cache.delete(id);
-        } else {
-          setJob(undefined);
-        }
-        const data = await fetchChapterCached(id);
-        setData(data);
-      } catch (err) {
-        setError(stringifyError(err));
-      } finally {
-        setLoading(false);
-      }
-    };
     if (id) {
-      fetchChapter(id);
+      const fetchChapter = async () => {
+        setError(undefined);
+        try {
+          if (fetchJobs.has(id)) {
+            cache.delete(id);
+          } else {
+            setJob(undefined);
+          }
+          const data = await fetchChapterCached(id);
+          setData(data);
+        } catch (err) {
+          setError(stringifyError(err));
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchChapter();
     } else {
       setData(undefined);
       setJob(undefined);
       setError('No chapter ID in URL');
     }
-  }, [id, token, refreshId]);
+  }, [id, refreshId]);
 
   // preload previous chapter
   useEffect(() => {

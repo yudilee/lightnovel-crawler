@@ -25,7 +25,7 @@ export const ReaderVerticalLayout: React.FC<{
   return (
     <Flex
       vertical
-      style={{ fontSize, lineHeight, fontFamily, ...theme }}
+      style={{ fontSize, lineHeight, fontFamily, ...theme, width: '100%' }}
       className={cx('novel-reader', styles.layout, { [styles.mobile]: !md })}
     >
       <div style={{ textAlign: 'center' }}>

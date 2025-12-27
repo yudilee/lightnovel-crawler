@@ -1,7 +1,7 @@
 import { ErrorState } from '@/components/Loading/ErrorState';
-import { DeploymentUnitOutlined } from '@ant-design/icons';
+import { DeploymentUnitOutlined, LeftOutlined } from '@ant-design/icons';
 import { Divider, Typography } from 'antd';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { JobListPage } from '../JobList';
 import { UserDetailSection } from './UserDetailSection';
 
@@ -14,6 +14,10 @@ export const UserDetailsPage: React.FC<any> = () => {
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto' }}>
+      <Link to={'/users'}>
+        <LeftOutlined /> All Users
+      </Link>
+
       <UserDetailSection userId={id} />
 
       <Divider size="large" />
@@ -22,12 +26,9 @@ export const UserDetailsPage: React.FC<any> = () => {
         userId={id}
         autoRefresh
         title={
-          <>
-            <Divider style={{ margin: 0 }} />
-            <Typography.Title level={3}>
-              <DeploymentUnitOutlined /> User Requests
-            </Typography.Title>
-          </>
+          <Typography.Title level={3}>
+            <DeploymentUnitOutlined /> User Requests
+          </Typography.Title>
         }
       />
     </div>

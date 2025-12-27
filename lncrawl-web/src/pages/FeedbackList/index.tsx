@@ -49,7 +49,7 @@ export const FeedbackListPage: React.FC<any> = () => {
   return (
     <>
       <Flex justify="space-between" align="center">
-        <Typography.Title level={2} style={{ margin: 0 }}>
+        <Typography.Title level={2}>
           <CommentOutlined style={{ color: '#0ca3f2' }} /> Feedback
         </Typography.Title>
         <FeedbackButton onSubmit={refresh} />
@@ -58,14 +58,6 @@ export const FeedbackListPage: React.FC<any> = () => {
       <Divider size="small" />
 
       <Flex align="center" gap={7} wrap>
-        <Input.Search
-          defaultValue={initialSearch}
-          onSearch={(search) => updateParams({ search, page: 1 })}
-          placeholder="Search feedback"
-          allowClear
-          size="large"
-          style={{ flex: 3, minWidth: 200 }}
-        />
         <Select
           placeholder="Filter by type"
           allowClear
@@ -74,7 +66,7 @@ export const FeedbackListPage: React.FC<any> = () => {
           value={initialType}
           onChange={(type) => updateParams({ type, page: 1 })}
           options={Object.entries(FeedbackTypeLabels).map(([value, label]) => ({
-            value,
+            value: Number(value),
             label,
           }))}
         />
@@ -86,8 +78,19 @@ export const FeedbackListPage: React.FC<any> = () => {
           value={initialStatus}
           onChange={(status) => updateParams({ status, page: 1 })}
           options={Object.entries(FeedbackStatusLabels).map(
-            ([value, label]) => ({ value, label })
+            ([value, label]) => ({
+              value: Number(value),
+              label,
+            })
           )}
+        />
+        <Input.Search
+          defaultValue={initialSearch}
+          onSearch={(search) => updateParams({ search, page: 1 })}
+          placeholder="Search feedback"
+          allowClear
+          size="large"
+          style={{ flex: 3, minWidth: 200 }}
         />
       </Flex>
 
