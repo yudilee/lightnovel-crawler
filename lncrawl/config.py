@@ -12,20 +12,20 @@ from typing import Any, Callable, Dict, Optional, Type, TypeVar, Union, cast
 import dotenv
 import typer
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 logger = logging.getLogger(__name__)
 
 ROOT_DIR = Path(__file__).parent.absolute()
 APP_DIR = Path(
-    os.getenv('LNCRAWL_DATA_PATH')
+    os.getenv("LNCRAWL_DATA_PATH")
     or typer.get_app_dir(
         "LNCrawl",
         force_posix=True,
         roaming=True,
     )
 ).absolute()
-DEFAULT_CONFIG_FILE = APP_DIR / 'config.json'
+DEFAULT_CONFIG_FILE = APP_DIR / "config.json"
 
 
 # ------------------------------------------------------------------ #
@@ -56,7 +56,7 @@ def _deserialize(val: Any, typ: Type[T]) -> T:
         return cast(T, datetime.fromisoformat(val))
     if typ in (list, tuple, set):
         seq = json.loads(val) if isinstance(val, str) else val
-        return cast(T, typ(seq))   # type: ignore
+        return cast(T, typ(seq))  # type: ignore
     if typ == dict:
         return cast(T, json.loads(val) if isinstance(val, str) else val)
     return cast(T, val)
@@ -144,7 +144,7 @@ class Config(object):
         - Loads from `LNCRAWL_CONFIG` env var if available
         - Loads from default config file otherwise
         """
-        env_file = os.getenv('LNCRAWL_CONFIG')
+        env_file = os.getenv("LNCRAWL_CONFIG")
         if not file and env_file:
             file = Path(env_file)
 
@@ -159,18 +159,18 @@ class Config(object):
 
                 self.config_file = None
                 self._data = self._defaults.copy()
-                old_deprecated = source.pop('__deprecated__', {})
+                old_deprecated = source.pop("__deprecated__", {})
                 new_deprecated = _update(self._data, source)
                 _merge(new_deprecated, old_deprecated)
 
                 if new_deprecated:
-                    self._data['__deprecated__'] = new_deprecated
+                    self._data["__deprecated__"] = new_deprecated
             except Exception:
-                logger.error(f'Failed to load config file: {file}', exc_info=True)
+                logger.error(f"Failed to load config file: {file}", exc_info=True)
                 return
 
         self.config_file = file
-        logger.info(f'Config file: {file}')
+        logger.info(f"Config file: {file}")
 
         self.save()
 
@@ -179,7 +179,7 @@ class Config(object):
             return
         self.config_file.parent.mkdir(parents=True, exist_ok=True)
         tid = time.thread_time_ns() % 1000
-        tmp = self.config_file.with_suffix(f'.json.tmp{tid}')
+        tmp = self.config_file.with_suffix(f".json.tmp{tid}")
         content = json.dumps(self._data, indent=2, ensure_ascii=False)
         tmp.write_text(content, encoding="utf-8")
         os.replace(tmp, self.config_file)
@@ -194,7 +194,7 @@ class Config(object):
             elif default is not None:
                 sub[key] = default
             else:
-                raise ValueError(f'{section}.{key} is not set')
+                raise ValueError(f"{section}.{key} is not set")
         return _deserialize(sub[key], type(sub[key]))
 
     def set(self, section: str, key: str, value: T) -> None:
@@ -214,7 +214,7 @@ class _Section(object):
     def __init__(self, parent: Config) -> None:
         self.root = parent
         if not self.section:
-            raise ValueError(f'section is not defined for {self}')
+            raise ValueError(f"section is not defined for {self}")
 
     def _get(self, key: str, default: Union[T, Callable[[], Any]]) -> T:
         return self.root.get(self.section, key, default)
@@ -254,7 +254,7 @@ class DatabaseConfig(_Section):
     section = "database"
 
     def __url(self) -> str:
-        env_url = os.getenv('DATABASE_URL')
+        env_url = os.getenv("DATABASE_URL")
         sqlite_url = f"sqlite:///{(APP_DIR / 'sqlite.db').resolve().as_posix()}"
         return env_url or sqlite_url
 
@@ -342,7 +342,7 @@ class CrawlerConfig(_Section):
             folder = dir / "sources"
             if folder.is_dir():
                 return folder
-        raise ValueError('No local sources')
+        raise ValueError("No local sources")
 
     @cached_property
     def local_index_file(self) -> Path:
@@ -357,12 +357,12 @@ class CrawlerConfig(_Section):
         return self.user_sources / "_index.json"
 
     @property
-    def ignore_images(self) -> bool:
-        return self._get("ignore_images", False)
+    def can_use_browser(self) -> bool:
+        return self._get("can_use_browser", True)
 
-    @property
-    def add_source_url_in_chapter_content(self) -> bool:
-        return self._get("add_source_url_in_chapter_content", False)
+    @can_use_browser.setter
+    def can_use_browser(self, v: bool) -> None:
+        self._set("can_use_browser", v)
 
     @property
     def selenium_grid(self) -> str:
@@ -378,7 +378,7 @@ class CrawlerConfig(_Section):
 
     @property
     def runner_concurrency(self) -> int:
-        '''Scheduler concurrency'''
+        """Scheduler concurrency"""
         return self._get("runner_concurrency", 5)
 
     @runner_concurrency.setter
@@ -387,7 +387,7 @@ class CrawlerConfig(_Section):
 
     @property
     def runner_cooldown(self) -> int:
-        '''Crawler job cooldown in seconds'''
+        """Crawler job cooldown in seconds"""
         return self._get("runner_cooldown", 1)
 
     @runner_cooldown.setter
@@ -396,7 +396,7 @@ class CrawlerConfig(_Section):
 
     @property
     def cleaner_cooldown(self) -> int:
-        '''Cleaner job cooldown in seconds'''
+        """Cleaner job cooldown in seconds"""
         return self._get("cleaner_cooldown", 30 * 60)
 
     @cleaner_cooldown.setter
@@ -405,7 +405,7 @@ class CrawlerConfig(_Section):
 
     @property
     def runner_reset_interval(self) -> int:
-        '''Scheduler restart interval in seconds'''
+        """Scheduler restart interval in seconds"""
         return self._get("runner_reset_interval", 4 * 3600)
 
     @runner_reset_interval.setter
@@ -414,7 +414,7 @@ class CrawlerConfig(_Section):
 
     @property
     def disk_size_limit(self) -> int:
-        '''Maximum disk size limit of crawled data in bytes'''
+        """Maximum disk size limit of crawled data in bytes"""
         mb = self._get("disk_size_limit_mb", 0)
         return mb * 1024 * 1024
 
