@@ -1,7 +1,8 @@
 import { Button, Modal, Typography } from 'antd';
+import type { LinkProps } from 'antd/es/typography/Link';
 import { useState } from 'react';
 
-export const PrivacyPolicy: React.FC<any> = () => {
+export const PrivacyPolicy: React.FC<LinkProps> = (props) => {
   const [error, setError] = useState<string>();
   const [privacyModalOpen, setPrivacyModalOpen] = useState<boolean>(false);
   const [privacyContent, setPrivacyContent] = useState<string>('');
@@ -32,11 +33,18 @@ export const PrivacyPolicy: React.FC<any> = () => {
   return (
     <>
       <Typography.Link
+        {...props}
         onClick={(e) => {
           e.preventDefault();
           loadPrivacyPolicy();
         }}
-        style={{ padding: 0 }}
+        style={{
+          padding: 0,
+          fontSize: 'inherit',
+          fontFamily: 'inherit',
+          fontWeight: 'inherit',
+          ...props.style,
+        }}
       >
         Privacy Policy
       </Typography.Link>

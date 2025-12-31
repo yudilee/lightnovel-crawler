@@ -1,8 +1,9 @@
 import { Button, Modal, Typography } from 'antd';
+import type { LinkProps } from 'antd/es/typography/Link';
 import { useState } from 'react';
 import './policy-content.scss';
 
-export const TermsOfService: React.FC<any> = () => {
+export const TermsOfService: React.FC<LinkProps> = (props) => {
   const [error, setError] = useState<string>();
   const [termsModalOpen, setTermsModalOpen] = useState<boolean>(false);
   const [termsContent, setTermsContent] = useState<string>('');
@@ -33,11 +34,18 @@ export const TermsOfService: React.FC<any> = () => {
   return (
     <>
       <Typography.Link
+        {...props}
         onClick={(e) => {
           e.preventDefault();
           loadTermsOfService();
         }}
-        style={{ padding: 0 }}
+        style={{
+          padding: 0,
+          fontSize: 'inherit',
+          fontFamily: 'inherit',
+          fontWeight: 'inherit',
+          ...props.style,
+        }}
       >
         Terms of Service
       </Typography.Link>

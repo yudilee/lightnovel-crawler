@@ -49,12 +49,9 @@ export const SignupPage: React.FC<any> = () => {
         name="name"
         label="Full Name"
         rules={[
-          {
-            validator: (_, value) =>
-              value && value.trim().length >= 2
-                ? Promise.resolve()
-                : Promise.reject('Please enter a valid name'),
-          },
+          { required: true, message: 'Please enter your full name' },
+          { min: 2, message: 'Full name must be at least 2 characters' },
+          { max: 100, message: 'Full name must be less than 100 characters' },
         ]}
       >
         <Input placeholder="Enter full name" autoComplete="name" />
@@ -66,6 +63,7 @@ export const SignupPage: React.FC<any> = () => {
         rules={[
           { required: true, message: 'Please enter your email' },
           { type: 'email', message: 'Please enter a valid email' },
+          { max: 250, message: 'Email must be less than 250 characters' },
         ]}
       >
         <Input placeholder="Enter email" autoComplete="new-user" />
@@ -77,6 +75,7 @@ export const SignupPage: React.FC<any> = () => {
         rules={[
           { required: true, message: 'Please enter a password' },
           { min: 6, message: 'Password must be at least 6 characters' },
+          { max: 100, message: 'Password must be less than 100 characters' },
         ]}
         hasFeedback
       >
@@ -103,14 +102,15 @@ export const SignupPage: React.FC<any> = () => {
       </Typography.Text>
 
       <Form.Item
-        name="acceptTerms"
+        name="terms"
         valuePropName="checked"
         rules={[
           {
-            validator: async (_, value) =>
-              value
-                ? null
-                : 'You must accept the Privacy Policy and Terms of Service to continue',
+            async validator(_, value) {
+              if (!value) {
+                throw new Error('You must accept to continue');
+              }
+            },
           },
         ]}
       >

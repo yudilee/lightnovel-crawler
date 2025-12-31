@@ -14,6 +14,7 @@ export function useSupportedSources() {
       setError(undefined);
       const res = await axios.get<SourceItem[]>('/api/meta/supported-sources');
       setData(res.data.sort((a, b) => a.domain.localeCompare(b.domain)));
+      fetchNovelSources();
     } catch (err) {
       setError(stringifyError(err));
     } finally {
@@ -41,7 +42,6 @@ export function useSupportedSources() {
 
   useEffect(() => {
     fetchSupportedSources();
-    fetchNovelSources();
   }, [refreshId]);
 
   const refresh = useCallback(() => {

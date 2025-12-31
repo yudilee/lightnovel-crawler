@@ -1,3 +1,5 @@
+import { PrivacyPolicy } from '@/pages/Signup/PrivacyPolicy';
+import { TermsOfService } from '@/pages/Signup/TermsOfService';
 import { Auth } from '@/store/_auth';
 import {
   BookOutlined,
@@ -12,7 +14,7 @@ import {
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Button, Flex, Menu } from 'antd';
+import { Button, Divider, Flex, Menu } from 'antd';
 import { useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
 import { UserInfoCard } from '../UserInfoCard';
@@ -34,9 +36,7 @@ export const MainLayoutSidebar: React.FC<any> = () => {
         key={currentPath}
         mode="inline"
         inlineIndent={15}
-        defaultOpenKeys={[
-          'admin', // keep open by default
-        ]}
+        defaultOpenKeys={['admin']}
         style={{ flex: 1, overflow: 'auto' }}
       >
         <Menu.ItemGroup
@@ -113,7 +113,9 @@ export const MainLayoutSidebar: React.FC<any> = () => {
           </Menu.SubMenu>
         )}
       </Menu>
+
       <div style={{ padding: '12px 16px' }}>
+        <Divider size="small" />
         <Button
           type="primary"
           icon={<HeartOutlined twoToneColor="red" />}
@@ -124,6 +126,16 @@ export const MainLayoutSidebar: React.FC<any> = () => {
         >
           Donate
         </Button>
+        <Divider style={{ margin: '5px 0' }} />
+        <Flex
+          gap={5}
+          align="center"
+          justify="space-between"
+          style={{ fontSize: 11 }}
+        >
+          <PrivacyPolicy />
+          <TermsOfService />
+        </Flex>
       </div>
     </Flex>
   );
