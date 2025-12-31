@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 _lock = EventLock()
 _queue: Dict[str, Event] = {}
+_users: Dict[str, str] = {}
 
 
 class JobRunner:
@@ -23,7 +24,17 @@ class JobRunner:
     def run(signal: Event, artifact: bool):
         try:
             with _lock.using(signal):
-                job = ctx.jobs._pending(artifact, _queue.keys())
+                job = ctx.jobs._pending(
+                    artifact,
+                    skip_job_ids=_queue.keys(),
+                    skip_user_ids=_users.values(),
+                )
+                if not job:
+                    job = ctx.jobs._pending(
+                        artifact,
+                        skip_user_ids=_users,
+                    )
+                    return
                 if not job:
                     return
                 if job.parent_job_id:
@@ -31,6 +42,7 @@ class JobRunner:
                         logger.debug(f'Dangling job [b]{job.id}[/b] | {job.job_title}')
                         return
                 _queue[job.id] = Event()
+                _users[job.id] = job.user_id
 
             try:
                 JobRunner(job, _queue[job.id]).process()
@@ -38,6 +50,7 @@ class JobRunner:
                 with _lock.using(signal):
                     if job.id in _queue:
                         _queue.pop(job.id).set()
+                        _users.pop(job.id)
         except Exception:
             logger.error('Unexpected error in runner', exc_info=True)
 
@@ -45,6 +58,7 @@ class JobRunner:
     def cancel(job_id: str):
         if job_id in _queue:
             _queue.pop(job_id).set()
+            _users.pop(job_id)
         for job_id in ctx.jobs.get_children_ids(job_id):
             JobRunner.cancel(job_id)
 
@@ -53,6 +67,7 @@ class JobRunner:
         for signal in _queue.values():
             signal.set()
         _queue.clear()
+        _users.clear()
 
     def __init__(self, job: Job, signal=Event()) -> None:
         self.job = job

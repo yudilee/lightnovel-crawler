@@ -458,7 +458,8 @@ class JobService:
     def _pending(
         self,
         artifact: Optional[bool] = None,
-        skip_job_ids: Iterable[str] = []
+        skip_job_ids: Iterable[str] = [],
+        skip_user_ids: Iterable[str] = []
     ) -> Optional[Job]:
         with ctx.db.session() as sess:
             stmt = sq.select(Job)
@@ -489,6 +490,14 @@ class JobService:
 
             if skip_job_ids:
                 stmt = stmt.where(sq.col(Job.id).not_in(skip_job_ids))
+
+            if skip_user_ids:
+                stmt = stmt.where(
+                    sq.or_(
+                        Job.priority != JobPriority.LOW,
+                        sq.col(Job.user_id).not_in(skip_user_ids)
+                    )
+                )
 
             if artifact is not None:
                 if artifact:
