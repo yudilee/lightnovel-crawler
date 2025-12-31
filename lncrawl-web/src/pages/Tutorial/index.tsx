@@ -61,6 +61,17 @@ const items: CollapseProps['items'] = [
           <Link to="/">Requests page</Link> and paste a novel URL from a
           supported source to get started.
         </Paragraph>
+        <Paragraph>The Requests page features two tabs:</Paragraph>
+        <ul>
+          <li>
+            <Text strong>My Requests:</Text> View and manage all novel requests
+            that you have submitted. This is the default view for regular users.
+          </li>
+          <li>
+            <Text strong>All Requests:</Text> View all novel requests from all
+            users.
+          </li>
+        </ul>
       </div>
     ),
   },
@@ -88,13 +99,19 @@ const items: CollapseProps['items'] = [
           </li>
           <li>
             <Text strong>Paste and submit:</Text> Go to the{' '}
-            <Link to="/">Requests page</Link>, paste the URL in the input box,
-            and click the submit button or press Enter.
+            <Link to="/">Requests page</Link>, paste the URL in the input box at
+            the top of the page, and click the submit button or press Enter.
           </li>
           <li>
             <Text strong>Wait for processing:</Text> The system will create a
             request to fetch the novel. You can monitor the progress on the
             request details page.
+          </li>
+          <li>
+            <Text strong>View your requests:</Text> After submitting, your
+            request will appear in the <Text strong>"My Requests"</Text> tab.
+            You can switch to the <Text strong>"All Requests"</Text> tab to see
+            requests from all users.
           </li>
         </ol>
         <Paragraph>
@@ -261,13 +278,14 @@ const items: CollapseProps['items'] = [
               <li>ZIP - Archive containing HTML files</li>
             </ul>
           </li>
-          <li>Click "Create" to start the artifact generation job.</li>
-          <li>Monitor the job progress and download when complete.</li>
+          <li>Click "Create" to start the artifact generation request.</li>
+          <li>Monitor the request progress and download when complete.</li>
         </ol>
         <Paragraph>
           <Text type="secondary">
             Tip: Artifact generation may take some time depending on the novel's
-            size. You can check the job status from the job details page.
+            size. You can check the request status from the request details
+            page.
           </Text>
         </Paragraph>
       </div>
@@ -302,20 +320,20 @@ const items: CollapseProps['items'] = [
           </li>
           <li>
             <Text strong>When any request starts running:</Text> Be notified
-            when any job (novel fetch, artifact generation, etc.) begins
+            when any request (novel fetch, artifact generation, etc.) begins
             processing.
           </li>
           <li>
             <Text strong>When any request is successful:</Text> Receive a
-            notification whenever any job completes successfully.
+            notification whenever any request completes successfully.
           </li>
           <li>
-            <Text strong>When any request failed:</Text> Get alerted when a job
-            fails, so you can take action or retry.
+            <Text strong>When any request failed:</Text> Get alerted when a
+            request fails, so you can take action or retry.
           </li>
           <li>
             <Text strong>When any request canceled:</Text> Be notified if you or
-            the system cancels a running job.
+            the system cancels a running request.
           </li>
         </ul>
         <Text type="warning">
@@ -461,8 +479,8 @@ const items: CollapseProps['items'] = [
             have completed.
           </li>
           <li>
-            <Text strong>Monitor jobs:</Text> Keep an eye on your job list to
-            see the status of novel requests and artifact generation.
+            <Text strong>Monitor requests:</Text> Keep an eye on your requests
+            to see the status of novel requests and artifact generation.
           </li>
           <li>
             <Text strong>Refresh novels:</Text> If a novel has been updated on
