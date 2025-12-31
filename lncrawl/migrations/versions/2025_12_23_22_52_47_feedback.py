@@ -60,6 +60,6 @@ def downgrade() -> None:
 
     op.drop_table("feedback")
 
-    if dialect != "sqlite":
+    if dialect == "postgresql":
         op.execute("DROP TYPE IF EXISTS feedbacktype")
         op.execute("DROP TYPE IF EXISTS feedbackstatus")
