@@ -184,26 +184,16 @@ export const ReaderVerticalContent: React.FC<{
 
   useEffect(() => {
     if (!speaking) return;
-
-    const removeFocus = () => {
-      contentEl?.querySelectorAll('[data-focus]').forEach((el) => {
-        el.removeAttribute('data-focus');
-      });
-    };
-
-    const applyFocus = () => {
-      removeFocus();
-      contentEl?.children[position]?.setAttribute('data-focus', 'true');
-    };
-
-    const iid = setInterval(applyFocus, 100);
-    applyFocus();
-
+    const fid = requestAnimationFrame(() => {
+      const childEl = contentEl?.children[position];
+      childEl?.setAttribute('data-focus', 'true');
+    });
     return () => {
-      clearInterval(iid);
-      removeFocus();
+      cancelAnimationFrame(fid);
+      const childEl = contentEl?.children[position];
+      childEl?.removeAttribute('data-focus');
     };
-  }, [speaking, contentEl, position]);
+  });
 
   const handleClick = (e: React.MouseEvent<HTMLElement>) => {
     let target = e.target as HTMLElement | null;

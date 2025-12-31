@@ -21,11 +21,7 @@ const cache = new LRUCache<string, Promise<ReadChapter>>({ max: 1000 });
 async function fetchChapter(id: string) {
   const { data } = await axios.get<ReadChapter>(`/api/chapter/${id}/read`);
   if (data.content) {
-    const clean = data.content.replace(
-      /<p>(\s+)|(&nbsp;)+<\/p>(\n|\s|<br\/>)+/gim,
-      ''
-    );
-    data.content = renderToStaticMarkup(
+    const header = renderToStaticMarkup(
       <>
         <h1 style={{ marginBottom: 6 }}>{data.chapter.title.trim()}</h1>
         <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 25 }}>
@@ -33,9 +29,13 @@ async function fetchChapter(id: string) {
           <span> | </span>
           Updated {formatFromNow(data.chapter.updated_at)}
         </div>
-        <article dangerouslySetInnerHTML={{ __html: clean }} />
       </>
     );
+    const clean = data.content.replace(
+      /<p>(\s+)|(&nbsp;)+<\/p>(\n|\s|<br\/>)+/gim,
+      ''
+    );
+    data.content = header + clean;
   }
   return data;
 }
