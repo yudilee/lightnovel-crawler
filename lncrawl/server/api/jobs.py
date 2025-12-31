@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Body, Path, Query, Security
 
 from ...context import ctx
-from ...dao import Job, JobPriority, JobStatus, JobType, User, UserRole
+from ...dao import Job, JobPriority, JobStatus, JobType, User
 from ...exceptions import ServerErrors
 from ..models import (FetchChaptersRequest, FetchImagesRequest,
                       FetchNovelRequest, FetchVolumesRequest,
@@ -26,8 +26,6 @@ def list_jobs(
     parent_job_id: Optional[str] = Query(default=None),
     is_done: Optional[bool] = Query(default=None),
 ) -> Paginated[Job]:
-    if user.role == UserRole.USER:
-        user_id = user.id
     return ctx.jobs.list(
         limit=limit,
         offset=offset,

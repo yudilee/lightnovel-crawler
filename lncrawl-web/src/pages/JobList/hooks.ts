@@ -1,10 +1,8 @@
-import { Auth } from '@/store/_auth';
 import { JobType, type Job, type Paginated } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import axios from 'axios';
 import { debounce } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import { JobStatusFilterParams, JobTypeFilterParams } from './constants';
 
@@ -19,8 +17,6 @@ export function useJobList(
   customUserId?: string,
   parentJobId?: string
 ) {
-  const isAdmin = useSelector(Auth.select.isAdmin);
-  const currentUser = useSelector(Auth.select.user);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [refreshId, setRefreshId] = useState(0);
@@ -58,7 +54,6 @@ export function useJobList(
       setError(undefined);
       try {
         const offset = (currentPage - 1) * perPage;
-        const userId = isAdmin ? customUserId : currentUser?.id;
         const statusParams = JobStatusFilterParams.find(
           (v) => v.value === status
         )?.params;
@@ -67,7 +62,7 @@ export function useJobList(
             offset,
             limit: perPage,
             type,
-            user_id: userId,
+            user_id: customUserId,
             parent_job_id: parentJobId,
             ...statusParams,
           },
@@ -85,8 +80,6 @@ export function useJobList(
   }, [
     parentJobId,
     customUserId,
-    currentUser?.id,
-    isAdmin,
     currentPage,
     type,
     status,

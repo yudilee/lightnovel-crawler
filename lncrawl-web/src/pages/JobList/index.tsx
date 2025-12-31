@@ -60,9 +60,9 @@ export const JobListPage: React.FC<{
   return (
     <>
       {title}
+      {title && <Divider size="small" />}
       {!disableFilters && (
         <>
-          <Divider size="small" />
           <JobFilterBox
             status={status}
             type={type}
