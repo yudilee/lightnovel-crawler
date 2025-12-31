@@ -377,6 +377,14 @@ class CrawlerConfig(_Section):
         return "https://raw.githubusercontent.com/lncrawl/lightnovel-crawler/dev/sources/_index.zip"
 
     @property
+    def ignore_images(self) -> bool:
+        return self._get("ignore_images", False)
+
+    @ignore_images.setter
+    def ignore_images(self, v: bool) -> None:
+        self._set("ignore_images", v)
+
+    @property
     def runner_concurrency(self) -> int:
         """Scheduler concurrency"""
         return self._get("runner_concurrency", 5)
