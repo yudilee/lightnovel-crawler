@@ -12,7 +12,7 @@ import {
   LeftOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Card, Divider, Flex, Space, Typography } from 'antd';
+import { Card, Divider, Flex, Grid, Space, Typography } from 'antd';
 import axios from 'axios';
 import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -25,6 +25,7 @@ import { JobDetailsCard } from '../JobDetails/JobDetailsCard';
 
 export const FeedbackDetailsPage: React.FC<any> = () => {
   const { id } = useParams<{ id: string }>();
+  const { sm } = Grid.useBreakpoint();
   const navigate = useNavigate();
   const user = useSelector(Auth.select.user);
   const isAdmin = useSelector(Auth.select.isAdmin);
@@ -111,24 +112,29 @@ export const FeedbackDetailsPage: React.FC<any> = () => {
     <>
       {/* Feedback Details Header */}
       <Flex
-        justify="space-between"
-        align="center"
-        gap={8}
+        justify={'space-between'}
+        align={'center'}
         style={{ marginBottom: 16 }}
+        gap={8}
       >
         <Typography.Link
           style={{ flex: 1 }}
           onClick={() => navigate('/feedbacks')}
         >
-          <LeftOutlined /> Back to Feedback
+          <LeftOutlined /> {sm ? 'Back to Feedback' : 'Back'}
         </Typography.Link>
-        {isAdmin && (
-          <FeedbackRespondButton feedback={feedback} onSuccess={setFeedback} />
-        )}
-        {isOwner && feedback.status === FeedbackStatus.PENDING && (
-          <FeedbackEditButton feedback={feedback} onSuccess={setFeedback} />
-        )}
-        {(isAdmin || isOwner) && <FeedbackDeleteButton feedback={feedback} />}
+        <Space size="small">
+          {isAdmin && (
+            <FeedbackRespondButton
+              feedback={feedback}
+              onSuccess={setFeedback}
+            />
+          )}
+          {isOwner && feedback.status === FeedbackStatus.PENDING && (
+            <FeedbackEditButton feedback={feedback} onSuccess={setFeedback} />
+          )}
+          {(isAdmin || isOwner) && <FeedbackDeleteButton feedback={feedback} />}
+        </Space>
       </Flex>
 
       {/* Owner Details Section */}
@@ -136,7 +142,12 @@ export const FeedbackDetailsPage: React.FC<any> = () => {
 
       {/* Feedback Details Section */}
       <Card style={{ marginTop: 16 }}>
-        <Flex align="center" justify="space-between" gap={16}>
+        <Flex
+          vertical={!sm}
+          align={sm ? 'center' : 'start'}
+          justify={sm ? 'space-between' : 'center'}
+          gap={sm ? 16 : 4}
+        >
           <Typography.Title level={4} style={{ margin: 0, flex: 1 }}>
             {feedback.subject}
           </Typography.Title>

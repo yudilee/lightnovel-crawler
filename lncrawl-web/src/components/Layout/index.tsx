@@ -48,7 +48,7 @@ export const MainLayout: React.FC<{
               }
         }
       >
-        <MainLayoutSidebar />
+        <MainLayoutSidebar isCollapsed={collapsed} />
       </Layout.Sider>
       <Layout.Content
         style={{

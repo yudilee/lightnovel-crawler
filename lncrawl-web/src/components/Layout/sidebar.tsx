@@ -26,7 +26,9 @@ function getClassName(currentPath: string, path: string): string | undefined {
   return undefined;
 }
 
-export const MainLayoutSidebar: React.FC<any> = () => {
+export const MainLayoutSidebar: React.FC<{
+  isCollapsed?: boolean;
+}> = ({ isCollapsed }) => {
   const { pathname: currentPath } = useLocation();
   const isAdmin = useSelector(Auth.select.isAdmin);
 
@@ -36,8 +38,8 @@ export const MainLayoutSidebar: React.FC<any> = () => {
         key={currentPath}
         mode="inline"
         inlineIndent={15}
-        defaultOpenKeys={['admin']}
         style={{ flex: 1, overflow: 'auto' }}
+        openKeys={isCollapsed ? undefined : ['admin']}
       >
         <Menu.ItemGroup
           title={<UserInfoCard />}
