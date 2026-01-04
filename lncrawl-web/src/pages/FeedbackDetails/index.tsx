@@ -3,7 +3,7 @@ import { LoadingState } from '@/components/Loading/LoadingState';
 import { FeedbackStatusTag } from '@/components/Tags/FeedbackStatusTag';
 import { FeedbackTypeTag } from '@/components/Tags/FeedbackTypeTag';
 import { Auth } from '@/store/_auth';
-import type { Feedback, User } from '@/types';
+import type { Feedback, Job, User } from '@/types';
 import { FeedbackStatus } from '@/types';
 import { stringifyError } from '@/utils/errors';
 import { formatFromNow } from '@/utils/time';
@@ -21,6 +21,7 @@ import { UserDetailsCard } from '../JobDetails/UserDetailsCard';
 import { FeedbackDeleteButton } from './FeedbackDeleteButton';
 import { FeedbackEditButton } from './FeedbackEditButton';
 import { FeedbackRespondButton } from './FeedbackRespondButton';
+import { JobDetailsCard } from '../JobDetails/JobDetailsCard';
 
 export const FeedbackDetailsPage: React.FC<any> = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +31,7 @@ export const FeedbackDetailsPage: React.FC<any> = () => {
 
   const [feedback, setFeedback] = useState<Feedback>();
   const [owner, setOwner] = useState<User>();
+  const [job, setJob] = useState<Job>();
   const [refreshId, setRefreshId] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -40,6 +42,18 @@ export const FeedbackDetailsPage: React.FC<any> = () => {
   );
 
   useEffect(() => {
+    const fetchJob = async (jobId: string) => {
+      setError(undefined);
+      try {
+        const { data } = await axios.get<Job>(`/api/job/${jobId}`);
+        setJob(data);
+      } catch (err: any) {
+        setError(stringifyError(err));
+      } finally {
+        setLoading(false);
+      }
+    };
+
     const fetchFeedback = async (feedbackId: string) => {
       setError(undefined);
       try {
@@ -47,12 +61,16 @@ export const FeedbackDetailsPage: React.FC<any> = () => {
           `/api/feedback/${feedbackId}`
         );
         setFeedback(data);
+        if (data.extra?.job_id) {
+          fetchJob(data.extra.job_id);
+        }
       } catch (err: any) {
         setError(stringifyError(err));
       } finally {
         setLoading(false);
       }
     };
+
     if (id) {
       fetchFeedback(id);
     }
@@ -150,6 +168,13 @@ export const FeedbackDetailsPage: React.FC<any> = () => {
           )}
         </Space>
       </Card>
+
+      {/* Job Details Section */}
+      {job && (
+        <div style={{ marginTop: 16 }}>
+          <JobDetailsCard job={job} hideActions />
+        </div>
+      )}
 
       {/* Admin Notes Section */}
       {feedback.admin_notes && (
