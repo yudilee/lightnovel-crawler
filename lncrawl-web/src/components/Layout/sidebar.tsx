@@ -17,6 +17,7 @@ import { Divider, Flex, Menu } from 'antd';
 import { useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
 import { UserInfoCard } from '../UserInfoCard';
+import { DonateButton } from '../DonateButton';
 
 function getClassName(currentPath: string, path: string): string | undefined {
   if (currentPath === path) {
@@ -115,22 +116,22 @@ export const MainLayoutSidebar: React.FC<{
         )}
       </Menu>
 
-      {/* <Divider style={{ margin: '5px 0' }} />
+      <Divider style={{ margin: 0 }} />
       <Flex
         gap={5}
         align="center"
         justify="center"
-        style={{ fontSize: 11, padding: '5px 16px' }}
+        style={{ fontSize: 11, padding: '8px 12px' }}
       >
         <DonateButton />
-      </Flex> */}
+      </Flex>
 
       <Divider style={{ margin: 0 }} />
       <Flex
         gap={5}
         align="center"
         justify="center"
-        style={{ fontSize: 11, padding: '5px 16px' }}
+        style={{ fontSize: 11, padding: '5px' }}
       >
         <PrivacyPolicy />
         <Divider orientation="vertical" />
