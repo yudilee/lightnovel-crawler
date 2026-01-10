@@ -14,7 +14,7 @@ RUN yarn build
 ##
 # Application
 ##
-FROM ghcr.io/dipu-bd/lncrawl-base:latest AS app
+FROM ghcr.io/lncrawl/lncrawl-base:latest AS app
 
 WORKDIR /app
 
