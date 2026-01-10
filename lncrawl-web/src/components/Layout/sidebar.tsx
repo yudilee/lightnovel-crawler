@@ -8,13 +8,12 @@ import {
   DeploymentUnitOutlined,
   FileDoneOutlined,
   FolderOpenOutlined,
-  HeartOutlined,
   QuestionCircleOutlined,
   SettingOutlined,
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Button, Divider, Flex, Menu } from 'antd';
+import { Divider, Flex, Menu } from 'antd';
 import { useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
 import { UserInfoCard } from '../UserInfoCard';
@@ -116,29 +115,27 @@ export const MainLayoutSidebar: React.FC<{
         )}
       </Menu>
 
-      <div style={{ padding: '12px 16px' }}>
-        <Divider size="small" />
-        <Button
-          type="primary"
-          icon={<HeartOutlined twoToneColor="red" />}
-          block
-          href="https://paypal.me/bitan0n"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Donate
-        </Button>
-        <Divider style={{ margin: '5px 0' }} />
-        <Flex
-          gap={5}
-          align="center"
-          justify="space-between"
-          style={{ fontSize: 11 }}
-        >
-          <PrivacyPolicy />
-          <TermsOfService />
-        </Flex>
-      </div>
+      {/* <Divider style={{ margin: '5px 0' }} />
+      <Flex
+        gap={5}
+        align="center"
+        justify="center"
+        style={{ fontSize: 11, padding: '5px 16px' }}
+      >
+        <DonateButton />
+      </Flex> */}
+
+      <Divider style={{ margin: 0 }} />
+      <Flex
+        gap={5}
+        align="center"
+        justify="center"
+        style={{ fontSize: 11, padding: '5px 16px' }}
+      >
+        <PrivacyPolicy />
+        <Divider orientation="vertical" />
+        <TermsOfService />
+      </Flex>
     </Flex>
   );
 };
