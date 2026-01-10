@@ -28,7 +28,7 @@ export const DonateButton = () => {
         open={open}
         onCancel={() => setOpen(false)}
         footer={null}
-        width={600}
+        width={650}
         destroyOnHidden
       >
         <Typography.Text
