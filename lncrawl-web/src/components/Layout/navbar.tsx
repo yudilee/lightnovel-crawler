@@ -84,7 +84,7 @@ export const MobileNavbar: React.FC = () => {
         onClose={() => setDrawerOpen(false)}
         styles={{ body: { padding: 0 } }}
       >
-        <MainLayoutSidebar />
+        <MainLayoutSidebar fullWidth />
         <Button
           type="text"
           shape="circle"

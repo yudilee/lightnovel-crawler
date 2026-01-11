@@ -13,7 +13,7 @@ import {
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Divider, Flex, Grid, Layout, Menu, theme } from 'antd';
+import { Divider, Flex, Layout, Menu, theme } from 'antd';
 import { useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
 import { DonateButton } from '../DonateButton';
@@ -26,17 +26,21 @@ function getClassName(currentPath: string, path: string): string | undefined {
   return undefined;
 }
 
-export const MainLayoutSidebar: React.FC = () => {
+export const MainLayoutSidebar: React.FC<{
+  fullWidth?: boolean;
+}> = ({ fullWidth }) => {
   const { token } = theme.useToken();
-  const { md } = Grid.useBreakpoint();
   const { pathname: currentPath } = useLocation();
   const isAdmin = useSelector(Auth.select.isAdmin);
 
   return (
     <Layout.Sider
       theme="light"
-      width={md ? 250 : '100%'}
-      style={{ height: md ? '100vh' : '100%' }}
+      collapsible={false}
+      width={fullWidth ? '100%' : 250}
+      style={{
+        height: fullWidth ? '100%' : '100vh',
+      }}
     >
       <Flex
         vertical
