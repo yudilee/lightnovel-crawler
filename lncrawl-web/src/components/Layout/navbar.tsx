@@ -39,7 +39,7 @@ export const MobileNavbar: React.FC = () => {
           left: 0,
           right: 0,
           zIndex: 1000,
-          padding: '4px 16px',
+          padding: '0 5px',
           background: token.colorBgContainer,
           boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.06)',
           borderTop: `1px solid ${token.colorBorderSecondary}`,
@@ -111,16 +111,24 @@ const NavbarButton: React.FC<{
       align="center"
       onClick={onClick}
       style={{
-        fontSize: 11,
-        fontWeight: 500,
+        flex: 1,
         cursor: 'pointer',
-        padding: '4px 8px',
-        opacity: active ? 1 : 0.9,
-        color: active ? token.colorSuccess : token.colorText,
+        padding: '8px 16px',
+        ...(active
+          ? {
+              opacity: 1,
+              color: token.colorSuccess,
+              boxShadow: `inset 0 -2px 2px #f48c4833`,
+              background: `linear-gradient(to top, #f48c4810 0%, transparent 80%)`,
+            }
+          : {
+              opacity: 0.9,
+              color: token.colorText,
+            }),
       }}
     >
-      <span style={{ fontSize: 18 }}>{icon}</span>
-      <span>{label}</span>
+      <div style={{ fontSize: 18 }}>{icon}</div>
+      <div style={{ fontSize: 11, fontWeight: 500 }}>{label}</div>
     </Flex>
   );
 };

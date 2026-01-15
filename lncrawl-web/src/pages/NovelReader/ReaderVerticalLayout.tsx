@@ -8,8 +8,8 @@ import { Button, Divider, Empty, Flex, Grid, Typography } from 'antd';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { JobDetailsCard } from '../JobDetails/JobDetailsCard';
-import { ReaderVerticalContent } from './ReaderVerticalContent';
 import { ReaderNavBar } from './ReaderNavBar';
+import { ReaderVerticalContent } from './ReaderVerticalContent';
 
 export const ReaderVerticalLayout: React.FC<{
   data: ReadChapter;
@@ -19,13 +19,20 @@ export const ReaderVerticalLayout: React.FC<{
   const theme = useSelector(Reader.select.theme);
   const fontSize = useSelector(Reader.select.fontSize);
   const lineHeight = useSelector(Reader.select.lineHeight);
+  const textAlign = useSelector(Reader.select.textAlign);
   const fontFamily = useSelector(Reader.select.fontFamily);
   const autoFetch = useSelector(Reader.select.autoFetch);
 
   return (
     <Flex
       vertical
-      style={{ fontSize, lineHeight, fontFamily, ...theme }}
+      style={{
+        fontSize,
+        lineHeight,
+        fontFamily,
+        textAlign: textAlign as any,
+        ...theme,
+      }}
       className={cx('novel-reader', styles.layout, { [styles.mobile]: !md })}
     >
       <div style={{ textAlign: 'center' }}>
