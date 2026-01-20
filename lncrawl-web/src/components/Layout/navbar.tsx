@@ -5,6 +5,7 @@ import {
   FileDoneOutlined,
   FolderOpenOutlined,
   MenuFoldOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons';
 import { Button, Drawer, Flex, theme } from 'antd';
 import { useEffect, useState } from 'react';
@@ -50,6 +51,12 @@ export const MobileNavbar: React.FC = () => {
           icon={<DeploymentUnitOutlined />}
           active={currentPath === '/'}
           onClick={() => handleNavClick('/')}
+        />
+        <NavbarButton
+          label="Search"
+          icon={<GlobalOutlined />}
+          active={currentPath === '/search-online'}
+          onClick={() => handleNavClick('/search-online')}
         />
         <NavbarButton
           label="Novels"
@@ -116,15 +123,15 @@ const NavbarButton: React.FC<{
         padding: '8px 16px',
         ...(active
           ? {
-              opacity: 1,
-              color: token.colorSuccess,
-              boxShadow: `inset 0 -2px 2px #f48c4833`,
-              background: `linear-gradient(to top, #f48c4810 0%, transparent 80%)`,
-            }
+            opacity: 1,
+            color: token.colorSuccess,
+            boxShadow: `inset 0 -2px 2px #f48c4833`,
+            background: `linear-gradient(to top, #f48c4810 0%, transparent 80%)`,
+          }
           : {
-              opacity: 0.9,
-              color: token.colorText,
-            }),
+            opacity: 0.9,
+            color: token.colorText,
+          }),
       }}
     >
       <div style={{ fontSize: 18 }}>{icon}</div>

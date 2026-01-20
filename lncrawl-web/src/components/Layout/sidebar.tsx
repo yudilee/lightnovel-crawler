@@ -12,6 +12,7 @@ import {
   SettingOutlined,
   TeamOutlined,
   UserOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons';
 import { Divider, Flex, Layout, Menu, theme } from 'antd';
 import { useSelector } from 'react-redux';
@@ -74,6 +75,12 @@ export const MainLayoutSidebar: React.FC<{
             className={getClassName(currentPath, '/')}
           >
             <Link to="/">Requests</Link>
+          </Menu.Item>
+          <Menu.Item
+            icon={<GlobalOutlined />}
+            className={getClassName(currentPath, '/search-online')}
+          >
+            <Link to="/search-online">Online Search</Link>
           </Menu.Item>
           <Menu.Item
             icon={<BookOutlined />}

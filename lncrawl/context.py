@@ -119,6 +119,11 @@ class AppContext:
         from .services.scheduler import JobScheduler
         return JobScheduler()
 
+    @cached_property
+    def search(self):
+        from .services.search import SearchService
+        return SearchService()
+
     def __new__(cls):
         global _cache
         if _cache is None:

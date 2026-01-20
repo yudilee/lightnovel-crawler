@@ -6,11 +6,8 @@ import { useSelector } from 'react-redux';
 export const JobErrorDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
   const isAdmin = useSelector(Auth.select.isAdmin);
 
-  if (!job.error) {
-    return null;
-  }
-
   const html = useMemo(() => {
+    if (!job.error) return '';
     const lines = (job.error || '')
       .split('\n')
       .filter(Boolean)
@@ -22,6 +19,10 @@ export const JobErrorDetailsCard: React.FC<{ job: Job }> = ({ job }) => {
     }
     return 'Unknown error';
   }, [job.error, isAdmin]);
+
+  if (!job.error) {
+    return null;
+  }
 
   return (
     <div style={{ margin: '15px 0' }}>

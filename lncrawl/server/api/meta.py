@@ -21,11 +21,14 @@ router = APIRouter()
 )
 def list_supported_sources():
     result = ctx.sources.list(include_rejected=True)
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Listing supported sources: {len(result)} items found")
     return JSONResponse(
         content=[item.model_dump() for item in result],
         headers={
             "ETag": str(ctx.sources.version),
-            "Cache-Control": "public, max-age=14400",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
         }
     )
 

@@ -5,12 +5,13 @@ from bs4 import BeautifulSoup
 from requests.cookies import RequestsCookieJar
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.wait import WebDriverWait
-from selenium.types import WaitExcTypes
 
 from ..webdriver import ChromeOptions, WebDriver, create_new
 from ..webdriver.elements import EC, By, WebElement
 from ..webdriver.job_queue import check_active
 from .soup import SoupMaker
+
+WaitExcTypes = Optional[List[type]]
 
 logger = logging.getLogger(__name__)
 

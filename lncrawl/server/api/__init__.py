@@ -11,6 +11,7 @@ from .jobs import router as job
 from .libraries import router as library
 from .meta import router as metadata
 from .novels import router as novel
+from .search import router as search
 from .settings import router as settings
 from .users import router as user
 from .volumes import router as volume
@@ -48,6 +49,13 @@ router.include_router(
     novel,
     prefix='/novel',
     tags=['Novels'],
+    dependencies=[Depends(ensure_user)],
+)
+
+router.include_router(
+    search,
+    prefix='/search',
+    tags=['Search'],
     dependencies=[Depends(ensure_user)],
 )
 

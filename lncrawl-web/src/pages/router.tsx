@@ -22,6 +22,7 @@ import { TutorialPage } from './Tutorial';
 import { UserDetailsPage } from './UserDetails';
 import { UserListPage } from './UserList';
 import { UserProfilePage } from './UserProfile';
+import { OnlineSearchPage } from './OnlineSearch';
 
 export const AUTH_ROUTES: RouteObject[] = [
   {
@@ -68,6 +69,10 @@ export const USER_ROUTES: RouteObject[] = [
       {
         path: 'job/:id',
         element: <JobDetailsPage />,
+      },
+      {
+        path: 'search-online',
+        element: <OnlineSearchPage />,
       },
       {
         path: 'novels',

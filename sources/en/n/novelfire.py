@@ -15,16 +15,19 @@ class NovelFireCrawler(Crawler):
         self.init_executor(ratelimit=3)
 
     def read_novel_info(self) -> None:
+        self.novel_url = self.novel_url.replace('/chapters', '')
         soup = self.get_soup(self.novel_url)
+        logger.info(f"Fetching: {self.novel_url}")
+        logger.info(f"Page Title: {soup.title.string if soup.title else 'No Title'}")
 
-        self.novel_title = soup.find("h1").text.strip()
-        self.novel_author = soup.select_one('span[itemprop="author"]').text.strip()
+        self.novel_title = soup.select_one(".novel-title").text.strip()
+        self.novel_author = soup.select_one(".author span[itemprop='author']").text.strip()
 
         img = soup.select_one(".cover img")
         self.novel_cover = self.absolute_url(img["src"])
 
         vol_id = 1
-        vol_url = self.novel_url + "/chapters"
+        vol_url = self.novel_url.strip('/') + "/chapters"
 
         while vol_url:
             soup = self.get_soup(self.absolute_url(vol_url))
